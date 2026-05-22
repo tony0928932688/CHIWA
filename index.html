@@ -1,7 +1,8 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="frame-src https://player.vimeo.com https://vimeo.com; default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>台灣最懂I人的AI自媒體變現系統 | 吉娃 AI</title>
 <meta name="description" content="吉娃 AI 是台灣專為 I 人設計的 AI 自媒體變現系統。只需錄一次 60 秒影片，AI 分身替你經營短影音，讓你的專業知識觸及精準客群。">
@@ -1035,6 +1036,86 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 }
 
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const _SB = supabase.createClient('https://nsauscojruqjcprvsfsn.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zYXVzY29qcnVxamNwcnZzZnNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjAzMTksImV4cCI6MjA5NDU5NjMxOX0.gXX7cBcqohoHqvPkZM-FFrnZVDS59g5OBJPBqH73H_w');
+let currentUser = '';
+let currentUserData = null;
+
+// Supabase 登入：取代原本的 localStorage 登入
+async function doLogin() {
+  const u = document.getElementById('lu').value.trim();
+  const p = document.getElementById('lp').value.trim();
+  const err = document.getElementById('lerr');
+  if (!u || !p) { if(err) err.style.display='block'; return; }
+
+  try {
+    const { data, error } = await _SB
+      .from('students')
+      .select('*')
+      .eq('id', u)
+      .eq('password', p)
+      .single();
+
+    if (error || !data) {
+      if (err) { err.style.display='block'; err.textContent='帳號或密碼錯誤'; }
+      return;
+    }
+
+    currentUser = u;
+    currentUserData = data;
+    if (err) err.style.display = 'none';
+
+    const adminTab = document.getElementById('sb-admin-item');
+    if (data.is_admin) {
+      if (adminTab) adminTab.style.display = 'flex';
+    } else {
+      if (adminTab) adminTab.style.display = 'none';
+    }
+
+    // 更新側邊欄資訊
+    const unameEl = document.querySelector('.sb-uname');
+    if (unameEl) unameEl.textContent = data.name || u;
+    const avEl = document.querySelector('.sb-av');
+    if (avEl) avEl.textContent = (data.name || u).substring(0,2).toUpperCase();
+
+    // 更新次數顯示
+    updateUsageUI(data.ai_usage, data.voice_seconds);
+
+    goPage('workspace');
+    buildWM();
+    renderUnitGrid();
+    renderVoiceList();
+    updateVoiceDropdown();
+    toast('🔓 登入成功！歡迎回來 ' + (data.name || u));
+  } catch(e) {
+    if (err) { err.style.display='block'; err.textContent='登入失敗，請稍後再試'; }
+  }
+}
+
+// 次數顯示更新
+function updateUsageUI(aiUsage, voiceSec) {
+  const un = document.getElementById('ai-num');
+  const uf = document.getElementById('ai-bar');
+  const vs = document.getElementById('voice-sec');
+  if (un) un.innerHTML = aiUsage + '<span style="font-size:11px;color:var(--t3);font-weight:400">/300</span>';
+  if (uf) uf.style.width = Math.round(aiUsage / 3) + '%';
+  if (vs) vs.textContent = Math.floor(voiceSec/60) + ':' + String(voiceSec%60).padStart(2,'0');
+}
+
+// 扣 AI 次數（寫回 Supabase）
+async function decrAI() {
+  if (!currentUser || !currentUserData) return;
+  currentUserData.ai_usage = Math.max(0, currentUserData.ai_usage - 1);
+  updateUsageUI(currentUserData.ai_usage, currentUserData.voice_seconds);
+  try {
+    await _SB.from('students').update({ ai_usage: currentUserData.ai_usage }).eq('id', currentUser);
+  } catch(e) { console.error('decrAI error:', e); }
+  // 相容舊程式碼用的 aiUse 變數
+  aiUse = currentUserData.ai_usage;
+}
+</script>
 </head>
 <body>
 
@@ -1043,8 +1124,8 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
   <nav class="nav">
     <div class="nav-logo">吉娃 AI</div>
     <div class="nav-links">
-      <span class="nav-link" onclick="scrollTo_('#solutions-section')">服務與方案</span>
-      <span class="nav-link" onclick="scrollTo_('#faq')">常見問題</span>
+      <span class="nav-link" onclick="scrollTo_('#solutions-anchor')">服務方案</span>
+      <span class="nav-link" onclick="scrollTo_('#faq-anchor')">常見問題</span>
       <span class="nav-link" onclick="window.open('https://forms.gle/HTbVXWsQBUNUujA57','_blank')">預約諮詢</span>
     </div>
     <div class="nav-btns">
@@ -1071,9 +1152,11 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
   <div class="vsl-feature-section" id="vsl-feature-container" style="max-width:760px; margin:0 auto 80px; padding:0 24px; text-align:center;">
     <h2 style="font-size: clamp(20px, 3.5vw, 28px); font-weight: 800; color: var(--gold); margin-bottom: 8px;">AI代替你來口播</h2>
     <p style="font-size: clamp(12px, 2vw, 15px); color: var(--t2); margin-bottom: 24px;">讓你傳達商品/服務/知識更輕鬆</p>
+    
     <div class="vsl-wrap" id="vsl-feature-video-wrap" style="padding:0; margin:0 auto;"></div>
   </div>
 
+  <div id="solutions-anchor" style="position:relative;top:-80px;"></div>
   <div class="split-solutions-container section" id="solutions-section">
     <!-- Left Column: Option A -->
     <div class="split-solution-left">
@@ -1198,6 +1281,11 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
           </div>
         </div>
       </div>
+    
+      <!-- 方案A CTA 按鈕 -->
+      <div style="text-align:center; margin-top:32px;">
+        <button class="btn-gold" style="font-size:15px;padding:13px 36px;min-width:220px;justify-content:center;" onclick="window.open('https://forms.gle/HTbVXWsQBUNUujA57','_blank')">預約免費諮詢 →</button>
+      </div>
     </div>
     
     <!-- Right Column: Option B -->
@@ -1291,16 +1379,21 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
           </div>
         </div>
       </div>
+
+      <!-- 方案B 按鈕 -->
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button style="flex:1;font-size:12px;padding:9px 0;border-radius:8px;border:none;background:linear-gradient(135deg,#e8c55a,#c8993a);color:#1a1205;font-weight:700;cursor:pointer;" onclick="window.open('https://forms.gle/HTbVXWsQBUNUujA57','_blank')">預約免費諮詢</button>
+        <button style="flex:1;font-size:12px;padding:9px 0;border-radius:8px;border:1px solid rgba(232,197,90,.4);background:rgba(232,197,90,.08);color:#e8c55a;font-weight:700;cursor:pointer;" onclick="window.open('https://p.ecpay.com.tw/20FFCB5','_blank')">購買課程</button>
+      </div>
+
     </div>
     
     <!-- Centered Bottom CTA -->
-    <div class="split-solutions-cta" style="grid-column: 1 / -1; text-align: center; margin-top: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;">
-      <button class="btn-gold" style="font-size: 16px; padding: 14px 48px; min-width: 280px; justify-content: center;" onclick="window.open('https://forms.gle/HTbVXWsQBUNUujA57','_blank')">預約免費諮詢 →</button>
-      <div style="font-size: 13px; color: var(--t3); font-weight: 500;">諮詢完全免費 · 了解後再決定是否加入 · 名額有限</div>
+          </div>
     </div>
-  </div>
 
 
+  <div id="faq-anchor" style="position:relative;top:-80px;"></div>
   <div class="section" id="faq" style="padding-bottom:80px">
     <div class="section-tag">FAQ</div>
     <div class="section-h">常見問題</div>
@@ -2186,7 +2279,7 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
           <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
             <div style="flex: 2; min-width: 200px;">
               <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:6px;">Vimeo 影片 ID 或完整連結</label>
-              <input type="text" id="adm-vimeo-input" placeholder="例: 76979871 或 https://vimeo.com/..." class="tinput" style="background: var(--card)">
+              <input type="text" id="adm-vimeo-input" placeholder="例: 1194740595 或 https://vimeo.com/1194740595" class="tinput" style="background: var(--card)">
             </div>
             <div style="flex: 1; min-width: 100px;">
               <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:6px;">影片時長 (MM:SS)</label>
@@ -2480,6 +2573,121 @@ document.addEventListener('keydown', function(e) {
     return false;
   }
 });
+
+/* 頁面路由與導覽系統 */
+function goPage(pageId) {
+  if (pageId === 'voice-trial') {
+    toast('💡 免費體驗已整合至工作台「語音克隆」面板中！請先登入學員帳號。');
+    goPage('login');
+    return;
+  }
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const targetPage = document.getElementById('page-' + pageId);
+  if (targetPage) {
+    targetPage.classList.add('active');
+    if (pageId === 'workspace') {
+      const items = document.querySelectorAll('.sb-item');
+      if (items.length > 0) {
+        swP('topic', items[0]);
+      }
+    }
+  } else {
+    toast('🚧 頁面開發中：' + pageId);
+  }
+}
+
+/* 登入與登出系統 */
+// doLogin 已移至 Supabase 版本（見頁面頂部）
+
+function doLogout() {
+  goPage('home');
+  toast('👋 您已安全登出');
+  document.getElementById('lu').value = '';
+  document.getElementById('lp').value = '';
+  const adminTab = document.getElementById('sb-admin-item');
+  if (adminTab) adminTab.style.display = 'none';
+}
+
+/* 忘記密碼面板切換 */
+function showForgot() {
+  document.getElementById('login-panel').classList.add('hide');
+  document.getElementById('forgot-panel').classList.add('show');
+}
+
+function hideForgot() {
+  document.getElementById('login-panel').classList.remove('hide');
+  document.getElementById('forgot-panel').classList.remove('show');
+  const sent = document.getElementById('forgot-sent');
+  const form = document.getElementById('forgot-form');
+  if (sent) sent.style.display = 'none';
+  if (form) form.style.display = 'block';
+}
+
+function sendReset() {
+  const email = document.getElementById('forgot-email').value.trim();
+  const err = document.getElementById('forgot-err');
+  if (!email || !email.includes('@')) {
+    if (err) err.style.display = 'block';
+    toast('❌ 請輸入有效的電子郵件');
+  } else {
+    if (err) err.style.display = 'none';
+    const form = document.getElementById('forgot-form');
+    const sent = document.getElementById('forgot-sent');
+    if (form) form.style.display = 'none';
+    if (sent) sent.style.display = 'block';
+    toast('✉️ 重設密碼連結已發送！');
+  }
+}
+
+/* 面板切換 */
+function swP(name, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('on'));
+  const panel = document.getElementById('p-' + name);
+  if (panel) panel.classList.add('on');
+  if (el) el.classList.add('on');
+}
+
+/* 手機版導覽切換 */
+function swPM(name, idx) {
+  const items = document.querySelectorAll('.sb-item');
+  const mobileNavItems = document.querySelectorAll('.mn-item');
+  if (mobileNavItems.length > 0) {
+    mobileNavItems.forEach(i => i.classList.remove('on'));
+    if (mobileNavItems[idx]) mobileNavItems[idx].classList.add('on');
+  }
+  if (items[idx]) {
+    swP(name, items[idx]);
+  } else {
+    swP(name);
+  }
+}
+
+/* Chip 選取 */
+function selC(el) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  selChip = el.dataset.t;
+}
+
+/* 用量更新 */
+function decrAI() {
+  if (aiUse > 0) aiUse--;
+  const un = document.getElementById('ai-num');
+  const uf = document.getElementById('ai-bar');
+  const mun = document.getElementById('m-ai-num');
+  if (un) un.innerHTML = aiUse + '<span style="font-size:11px;color:var(--t3);font-weight:400">/300</span>';
+  if (uf) {
+    uf.style.width = Math.round(aiUse / 3) + '%';
+    if (aiUse < 30) uf.style.background = 'var(--red)';
+  }
+  if (mun) mun.textContent = aiUse;
+}
+
+/* 常見問題摺疊卡片切換 */
+function toggleFaq(el) {
+  el.classList.toggle('open');
+}
 
 let selChip='', aiUse=285, scriptTxt='', marketingTxt='', isRec=false, recSec=0, recTmr=null;
 // \uD83D\uDEE1\uFE0F UTF-8 Base64
@@ -4443,7 +4651,7 @@ function getVSLConfig() {
     var config = JSON.parse(localStorage.getItem('chiwa_vsl_video_config'));
     if (config && config.vimeoId && config.status) return config;
   } catch(e) {}
-  return { vimeoId: '76979871', status: 'publish' }; // 預設值
+  return { vimeoId: '1194740595', status: 'publish' }; // 預設值
 }
 
 function saveVSLConfigFromAdmin() {
@@ -4480,7 +4688,7 @@ function renderVSLVideo() {
     <div class="vsl-box" id="vsl-box-element" onclick="playVSLVideo('${config.vimeoId}')">
       <div class="vsl-play">▶</div>
       <div class="vsl-label">點擊播放服務介紹影片</div>
-      <div style="font-size:11px;color:var(--t3);margin-top:4px">了解吉娃 AI 如何幫助你不露臉經營品牌</div>
+      
     </div>
   `;
 }
@@ -4508,7 +4716,7 @@ function getVSLFeatureConfig() {
     var config = JSON.parse(localStorage.getItem('chiwa_vsl_feature_config'));
     if (config && config.vimeoId && config.status) return config;
   } catch(e) {}
-  return { vimeoId: '76979871', status: 'publish' };
+  return { vimeoId: '1194785351', status: 'publish' };
 }
 
 function saveVSLFeatureConfigFromAdmin() {
@@ -4568,6 +4776,13 @@ function updateAdminVSLFeatureUI() {
 /* Enter 送出 */
 const ki=document.getElementById('key-input');
 if(ki)ki.addEventListener('keydown',e=>{if(e.key==='Enter')saveKey();});
+</script>
+<script>
+// 頁面載入時初始化 VSL 影片
+document.addEventListener('DOMContentLoaded', function() {
+  renderVSLVideo();
+  renderVSLFeatureVideo();
+});
 </script>
 </body>
 </html>
