@@ -1,18 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>吉娃 AI — AI 自媒體變現系統 | 台灣最懂I型人的短影音代操</title>
-<meta name="description" content="吉娃 AI 是台灣專為 I 型人設計的 AI 短影音代操系統。只需錄一次 60 秒影片，AI 分身替你經營短影音，每週穩定產出 2 支影片，讓你的專業知識觸及精準客群。">
-<meta name="keywords" content="AI短影音,TikTok代操,AI分身,語音克隆,台灣,I型人,短影音行銷,吉娃AI">
+<title>台灣最懂I人的AI自媒體變現系統 | 吉娃 AI</title>
+<meta name="description" content="吉娃 AI 是台灣專為 I 人設計的 AI 自媒體變現系統。只需錄一次 60 秒影片，AI 分身替你經營短影音，讓你的專業知識觸及精準客群。">
+<meta name="keywords" content="AI短影音,TikTok代操,AI分身,語音克隆,台灣,I人,短影音行銷,吉娃AI">
 <meta name="author" content="吉娃網路行銷 Chiwa Digital Marketing">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://chiwaai.com">
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://chiwaai.com">
-<meta property="og:title" content="吉娃 AI — 台灣最懂I型人的AI自媒體變現系統">
+<meta property="og:title" content="台灣最懂I人的AI自媒體變現系統 | 吉娃 AI">
 <meta property="og:description" content="只需錄一次 60 秒影片，AI 分身替你經營短影音。每週穩定產出 2 支專業影片。">
 <meta property="og:image" content="https://chiwaai.com/og-image.jpg">
 <!-- Twitter Card -->
@@ -35,7 +35,8 @@
   --red:#ff6b6b; --fire:#ff5533; --line:#06C755; --sw:220px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:radial-gradient(ellipse at 50% 0%,rgba(74,158,255,.06) 0%,transparent 55%),radial-gradient(ellipse at 80% 100%,rgba(167,139,250,.04) 0%,transparent 50%),#0a0a0f;color:var(--t1);font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.6;overflow-x:hidden}
+body{background:radial-gradient(ellipse at 50% 0%,rgba(74,158,255,.06) 0%,transparent 55%),radial-gradient(ellipse at 80% 100%,rgba(167,139,250,.04) 0%,transparent 50%),#0a0a0f;color:var(--t1);font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.6;overflow-x:hidden;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+input,textarea,select,[contenteditable="true"],.tinput,.out-text,.copy-btn,#api-in,#key-input,.mo-input,.admin-log-box,.copy-btn span{ -webkit-user-select: text !important; -moz-user-select: text !important; -ms-user-select: text !important; user-select: text !important; }
 a{color:inherit;text-decoration:none}
 
 /* PAGE SYSTEM */
@@ -165,9 +166,9 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 
 .faq{max-width:720px;margin:0 auto}
 .faq-item{border-bottom:1px solid var(--bdr);padding:16px 0}
-.faq-q{font-size:14px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
-.faq-a{font-size:13px;color:var(--t2);margin-top:0;line-height:1.8;max-height:0;opacity:0;overflow:hidden;transition:max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin-top 0.25s ease}
-.faq-item.open .faq-a{max-height:150px;opacity:1;margin-top:10px}
+.faq-q{font-size:15px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
+.faq-a{font-size:14px;color:var(--t2);margin-top:0;line-height:1.8;max-height:0;opacity:0;overflow:hidden;transition:max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin-top 0.25s ease}
+.faq-item.open .faq-a{max-height:350px;opacity:1;margin-top:10px}
 .faq-item.open .faq-arrow{transform:rotate(180deg)}
 .faq-arrow{display:inline-block;transition:transform 0.25s ease;color:var(--t3)}
 
@@ -759,42 +760,300 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
   }
 }
 
+/* Split Solutions Section Styling */
+.split-solutions-container {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr; /* Left column is slightly wider for detailed text */
+  gap: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  align-items: start;
+}
+
+.split-solution-left, .split-solution-right {
+  background: var(--card);
+  border: 1px solid var(--bdr);
+  border-radius: 24px;
+  padding: 38px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.split-solution-left:hover {
+  border-color: rgba(232, 197, 90, 0.25);
+  box-shadow: 0 16px 48px rgba(232, 197, 90, 0.05);
+}
+
+.split-solution-right:hover {
+  border-color: rgba(74, 158, 255, 0.25);
+  box-shadow: 0 16px 48px rgba(74, 158, 255, 0.05);
+}
+
+/* Column header styles */
+.column-badge {
+  display: inline-block;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  padding: 6px 20px;
+  border-radius: 100px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.badge-a {
+  background: rgba(232, 197, 90, 0.1);
+  color: var(--gold);
+  border: 1px solid rgba(232, 197, 90, 0.3);
+}
+
+.badge-b {
+  background: rgba(74, 158, 255, 0.1);
+  color: var(--blue);
+  border: 1px solid rgba(74, 158, 255, 0.3);
+}
+
+.column-title {
+  font-size: 26px;
+  font-weight: 900;
+  margin-bottom: 8px;
+  color: var(--t1);
+}
+
+.column-subtitle {
+  font-size: 13px;
+  color: var(--t2);
+  margin-bottom: 30px;
+  line-height: 1.7;
+}
+
+/* Sub-groups in left column (Option A) */
+.sub-group {
+  margin-bottom: 36px;
+}
+
+.sub-group:last-child {
+  margin-bottom: 0;
+}
+
+.sub-group-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--t1);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--bdr);
+  padding-bottom: 8px;
+}
+
+/* Option A - Cards Grid layout */
+.split-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.split-card-item {
+  background: var(--card2);
+  border: 1px solid var(--bdr);
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+
+.split-card-item:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.split-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.split-card-icon {
+  font-size: 22px;
+}
+
+.split-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--t1);
+}
+
+.split-card-desc {
+  font-size: 14px;
+  color: var(--t2);
+  line-height: 1.8;
+}
+
+/* Option A - Horizontal Steps Timeline */
+.timeline-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.timeline-step-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--card2);
+  border: 1px solid var(--bdr);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.timeline-step-num {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(232, 197, 90, 0.15);
+  border: 1px solid var(--gold-d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.timeline-step-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-step-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--t1);
+  margin-bottom: 4px;
+}
+
+.timeline-step-desc {
+  font-size: 14px;
+  color: var(--t2);
+  line-height: 1.7;
+}
+
+/* Option A - Tech highlights badges grid */
+.tech-badges-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.tech-badge-card {
+  background: var(--card2);
+  border: 1px solid var(--bdr);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tech-badge-card .icon {
+  font-size: 24px;
+}
+
+.tech-badge-card .title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--t1);
+}
+
+.tech-badge-card .desc {
+  font-size: 13px;
+  color: var(--t2);
+  line-height: 1.6;
+}
+
+/* FAQ Split Layout CSS */
+.faq-split-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 35px;
+  margin-top: 30px;
+  align-items: start;
+}
+
+.faq-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.faq-column-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--gold);
+  margin-bottom: 8px;
+  border-left: 3.5px solid var(--gold);
+  padding-left: 12px;
+}
+
+.faq-sub-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.faq-sub-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--t3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  padding-left: 4px;
+}
+
+@media(max-width: 992px) {
+  .split-solutions-container {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding: 30px 16px 60px;
+  }
+  .tech-badges-grid {
+    grid-template-columns: 1fr;
+  }
+  .faq-split-container {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+}
+
 </style>
 </head>
 <body>
-
-<!-- ═══ API MODAL ═══ -->
-<div id="api-modal" style="display:none">
-  <div class="modal-box">
-    <div class="mo-logo">🤖 吉娃 AI 工作台</div>
-    <div class="mo-sub">請輸入 Claude API Key 啟用 AI 生成功能（選題 / 腳本 / 合規）</div>
-    <div class="mo-label">Claude API Key</div>
-    <input type="password" class="mo-input" id="api-in" placeholder="請輸入你的 API Key">
-    <button class="mo-btn" onclick="setKey()">進入完整測試</button>
-    <div class="mo-note">Key 僅存於頁面記憶體，關閉即清除，不會傳送至任何伺服器</div>
-  </div>
-</div>
 
 <!-- ═══ LANDING PAGE ═══ -->
 <div class="page active" id="page-home">
   <nav class="nav">
     <div class="nav-logo">吉娃 AI</div>
     <div class="nav-links">
-      <span class="nav-link" onclick="scrollTo_('#services')">服務內容</span>
-      <span class="nav-link" onclick="scrollTo_('#how')">如何運作</span>
-      <span class="nav-link" onclick="scrollTo_('#features')">功能特色</span>
-      <span class="nav-link" onclick="scrollTo_('#course')">課程學習</span>
+      <span class="nav-link" onclick="scrollTo_('#solutions-section')">服務與方案</span>
       <span class="nav-link" onclick="scrollTo_('#faq')">常見問題</span>
+      <span class="nav-link" onclick="window.open('https://forms.gle/HTbVXWsQBUNUujA57','_blank')">預約諮詢</span>
     </div>
     <div class="nav-btns">
-      <button class="nav-btn-ghost" onclick="document.getElementById('api-modal').style.display='flex'" style="font-size:11px;padding:6px 12px;color:var(--t3)" title="設定 API Key">🔑 API Key</button>
-      <button class="nav-btn-ghost" onclick="goPage('login')">登入</button>
-      <button class="nav-btn-gold" onclick="goPage('voice-trial')">免費試用 →</button>
+      <button class="nav-btn-ghost" onclick="goPage('login')">學員登入</button>
     </div>
   </nav>
 
   <div class="hero">
-    <div class="hero-badge">台灣最懂I型人的AI變現系統</div>
+    <div class="hero-badge">台灣最懂I人的AI自媒體變現系統</div>
     <h1 class="hero-title" style="line-height:1.3">
       <span style="color:var(--gold)">AI 自媒體變現系統</span><br>
       讓 AI 替你說話、接單、變現<br>
@@ -802,251 +1061,242 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
     </h1>
 
     <div class="hero-btns">
-      <button class="btn-gold" style="font-size:15px;padding:13px 28px" onclick="goPage('voice-trial')">✨ 免費體驗 AI 克隆</button>
-      <button class="btn-outline" style="padding:12px 22px" onclick="scrollTo_('#services')">查看服務內容 ↓</button>
+      <button class="btn-gold" style="font-size:15px;padding:13px 28px" onclick="scrollTo_('#solutions-section')">查看服務與方案 ↓</button>
     </div>
   </div>
 
-  <div class="vsl-wrap">
-    <div class="vsl-box" onclick="alert('正式版連接 YouTube VSL 影片')">
-      <div class="vsl-play">▶</div>
-      <div class="vsl-label">點擊播放服務介紹影片（2:47）</div>
-      <div style="font-size:11px;color:var(--t3);margin-top:4px">了解吉娃 AI 如何幫助你不露臉經營品牌</div>
-    </div>
+  <div class="vsl-wrap" id="vsl-wrap-container"></div>
+
+  <!-- 🎥 VSL 下方特色影片展示區 -->
+  <div class="vsl-feature-section" id="vsl-feature-container" style="max-width:760px; margin:0 auto 80px; padding:0 24px; text-align:center;">
+    <h2 style="font-size: clamp(20px, 3.5vw, 28px); font-weight: 800; color: var(--gold); margin-bottom: 8px;">AI代替你來口播</h2>
+    <p style="font-size: clamp(12px, 2vw, 15px); color: var(--t2); margin-bottom: 24px;">讓你傳達商品/服務/知識更輕鬆</p>
+    <div class="vsl-wrap" id="vsl-feature-video-wrap" style="padding:0; margin:0 auto;"></div>
   </div>
 
-  <div class="section" id="services">
-    <div class="section-tag">SERVICES</div>
-    <div class="section-h">加入後，你會得到什麼</div>
-    <div class="section-p">從內容生產到流量投放，每一個環節我們都替你處理好</div>
-
-    <!-- 代操服務核心交付 -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:32px">
-
-      <div style="background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:24px">
-        <div style="font-size:22px;margin-bottom:10px">🎬</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:8px">每月 8 支 AI 短影音</div>
-        <div style="font-size:12px;color:var(--t2);line-height:1.8">
-          每週穩定產出 2 支影片，持續餵養演算法。<br>
-          你只需錄 60 秒的聲音，其餘全部由我們完成——腳本撰寫、法務審查、AI 分身製作、剪輯上字幕、排程發布。
+  <div class="split-solutions-container section" id="solutions-section">
+    <!-- Left Column: Option A -->
+    <div class="split-solution-left">
+      <div class="column-badge badge-a">方案 A 代運營服務</div>
+      <h2 class="column-title">AI短影音代運營服務</h2>
+      <p class="column-subtitle">從選題到發布，我們為你搞定一切，讓你把寶貴時間留在成交與交付。</p>
+      
+      <!-- Sub-group 1: 核心交付價值 -->
+      <div class="sub-group">
+        <h3 class="sub-group-title">🎯 核心交付價值</h3>
+        <div class="split-cards-grid">
+          <div class="split-card-item">
+            <div class="split-card-header">
+              <span class="split-card-icon">🎬</span>
+              <h4 class="split-card-title">每月 8 支 AI 短影音</h4>
+            </div>
+            <p class="split-card-desc">每週穩定產出 2 支影片，持續餵養演算法。你只需錄 60 秒聲音，其餘全部由我們完成——腳本撰寫、法務審查、AI 分身製作、剪輯上字幕、排程發布。</p>
+          </div>
+          <div class="split-card-item">
+            <div class="split-card-header">
+              <span class="split-card-icon">🤖</span>
+              <h4 class="split-card-title">AI 形象 + 聲音克隆</h4>
+            </div>
+            <p class="split-card-desc">一次正面拍攝 60 秒 + 一次錄音 60 秒，完成你的 AI 分身建立。之後所有影片由 AI 分身出鏡、AI 聲音配音，90% 相似度，你完全不需要再次面對鏡頭。</p>
+          </div>
+          <div class="split-card-item">
+            <div class="split-card-header">
+              <span class="split-card-icon">📋</span>
+              <h4 class="split-card-title">AI 腳本 + 選題策略</h4>
+            </div>
+            <p class="split-card-desc">每月月初我們與你進行 30 分鐘策略規劃視訊或電話，確定 8 支影片選題。所有腳本由 AI 生成後人工審查，符合你的行業語氣與客群痛點。</p>
+          </div>
+          <div class="split-card-item">
+            <div class="split-card-header">
+              <span class="split-card-icon">✅</span>
+              <h4 class="split-card-title">法務審查（創始限時免費）</h4>
+            </div>
+            <p class="split-card-desc">每支影片上線前均通過法務團隊審查，確認符合 TikTok 廣告政策與台灣公平交易法。現階段創始客戶享免費法務審查資格，僅開放 8 個名額。</p>
+          </div>
+          <div class="split-card-item">
+            <div class="split-card-header">
+              <span class="split-card-icon">📊</span>
+              <h4 class="split-card-title">精準流量投放金</h4>
+            </div>
+            <p class="split-card-desc">每月另配流量推廣預算，由我們出資協助投放 TikTok 精準廣告，觸及你的目標客群。根據你的行業與影片表現選擇最適合的投放策略。</p>
+          </div>
+          <div class="split-card-item" style="border-color: rgba(232, 197, 90, 0.3); background: rgba(232, 197, 90, 0.02);">
+            <div class="split-card-header">
+              <span class="split-card-icon">🎙️</span>
+              <h4 class="split-card-title" style="color: var(--gold)">你的工作只有一件事</h4>
+            </div>
+            <p class="split-card-desc">對著手機錄下 60 秒的聲音。其餘的一切：選題、腳本、法務、製作、剪輯、發布，全部由我們完成。</p>
+          </div>
         </div>
       </div>
-
-      <div style="background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:24px">
-        <div style="font-size:22px;margin-bottom:10px">🤖</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:8px">AI 形象 + 聲音克隆</div>
-        <div style="font-size:12px;color:var(--t2);line-height:1.8">
-          一次正面拍攝 60 秒 + 一次錄音 60 秒，完成你的 AI 分身建立。<br>
-          之後所有影片由 AI 分身出鏡、AI 聲音配音，90% 相似度，你完全不需要再次面對鏡頭。
+      
+      <!-- Sub-group 2: 全自動協作流程 -->
+      <div class="sub-group">
+        <h3 class="sub-group-title">🔄 協作與運作流程</h3>
+        <div class="timeline-steps">
+          <div class="timeline-step-item">
+            <div class="timeline-step-num">1</div>
+            <div class="timeline-step-content">
+              <span class="timeline-step-title">策略規劃電話</span>
+              <span class="timeline-step-desc">每月月初 30 分鐘規劃本月 8 支影片的選題與方向</span>
+            </div>
+          </div>
+          <div class="timeline-step-item">
+            <div class="timeline-step-num">2</div>
+            <div class="timeline-step-content">
+              <span class="timeline-step-title">錄製 AI 素材</span>
+              <span class="timeline-step-desc">對著手機錄製 60 秒你的聲音/形象作為 AI 基礎</span>
+            </div>
+          </div>
+          <div class="timeline-step-item">
+            <div class="timeline-step-num">3</div>
+            <div class="timeline-step-content">
+              <span class="timeline-step-title">AI 製作影片</span>
+              <span class="timeline-step-desc">團隊完成腳本剪輯、法務審查與最新 AI 分身製作</span>
+            </div>
+          </div>
+          <div class="timeline-step-item">
+            <div class="timeline-step-num">4</div>
+            <div class="timeline-step-content">
+              <span class="timeline-step-title">客戶確認版本</span>
+              <span class="timeline-step-desc">提供 3 個工作天審核，享有最多 2 次細節修改機會</span>
+            </div>
+          </div>
+          <div class="timeline-step-item">
+            <div class="timeline-step-num">5</div>
+            <div class="timeline-step-content">
+              <span class="timeline-step-title">自動排程發布</span>
+              <span class="timeline-step-desc">每週穩定發布 2 支短影音，吸引源源不絕的精準客戶</span>
+            </div>
+          </div>
         </div>
       </div>
-
-      <div style="background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:24px">
-        <div style="font-size:22px;margin-bottom:10px">📋</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:8px">AI 腳本 + 選題策略</div>
-        <div style="font-size:12px;color:var(--t2);line-height:1.8">
-          每月月初我們與你進行 30 分鐘策略規劃的視訊/電話，確定 8 支影片的選題方向。<br>
-          所有腳本由 AI 生成後再由人工審查，符合你的行業語氣與客群痛點，你只需錄音朗讀即可。
+      
+      <!-- Sub-group 3: 核心技術特色 -->
+      <div class="sub-group">
+        <h3 class="sub-group-title">⚙️ AI 內容生產線特色</h3>
+        <div class="tech-badges-grid">
+          <div class="tech-badge-card">
+            <span class="icon">🤖</span>
+            <span class="title">AI 形象克隆</span>
+            <span class="desc">拍攝 60 秒影片，即可克隆出你的肢體語言與外貌，肢體極度自然。</span>
+          </div>
+          <div class="tech-badge-card">
+            <span class="icon">🎙️</span>
+            <span class="title">AI 聲音克隆</span>
+            <span class="desc">克隆你的聲音、語氣與語速，唸出任何行銷腳本文案。</span>
+          </div>
+          <div class="tech-badge-card">
+            <span class="icon">📝</span>
+            <span class="title">AI 腳本生成</span>
+            <span class="desc">輸入關鍵字與行業痛點，AI 自動撰寫帶有吸睛鉤子的短影音腳本。</span>
+          </div>
+          <div class="tech-badge-card">
+            <span class="icon">✅</span>
+            <span class="title">自動合規審查</span>
+            <span class="desc">逐字核對廣告政策與公平交易法規範，規避帳號被封風險。</span>
+          </div>
         </div>
       </div>
-
-      <div style="background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:24px">
-        <div style="font-size:22px;margin-bottom:10px">✅</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:8px">法務審查（創始限時免費）</div>
-        <div style="font-size:12px;color:var(--t2);line-height:1.8">
-          每支影片上線前均通過法務團隊審查，確認符合 TikTok 廣告政策與台灣公平交易法。<br>
-          現階段創始客戶享免費法務審查資格，名額有限，僅開放 8 個代操客戶。
-        </div>
-      </div>
-
-      <div style="background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:24px">
-        <div style="font-size:22px;margin-bottom:10px">📊</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:8px">精準流量投放金</div>
-        <div style="font-size:12px;color:var(--t2);line-height:1.8">
-          每月另配流量推廣預算，由我們出資協助投放 TikTok 精準廣告，觸及你的目標客群。<br>
-          不是亂灑廣告，而是根據你的行業與影片表現，選擇最適合的推廣策略。
-        </div>
-      </div>
-
-      <div style="background:var(--card);border:1px solid rgba(232,197,90,.3);border-radius:16px;padding:24px;position:relative">
-        <div style="position:absolute;top:14px;right:14px;font-size:10px;font-weight:700;background:rgba(232,197,90,.15);color:var(--gold);border:1px solid rgba(232,197,90,.3);padding:2px 10px;border-radius:100px">你只需要做這些</div>
-        <div style="font-size:22px;margin-bottom:10px">🎙️</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:8px">你的工作只有一件事</div>
-        <div style="font-size:12px;color:var(--t2);line-height:1.8">
-          對著手機錄下 60 秒的聲音。<br>
-          其餘的一切：選題、腳本、法務、製作、剪輯、發布，全部由我們完成。
-        </div>
-      </div>
-
     </div>
-  </div>
-
-
-  <div class="section" id="how" style="background:var(--card);border-radius:20px;max-width:1060px">
-    <div class="section-tag">HOW IT WORKS</div>
-    <div class="section-h">5 個步驟，搞定每月所有影片內容</div>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-title">策略規劃電話</div>
-        <div class="step-desc">每月月初 30 分鐘規劃本月 8 支影片的選題方向</div>
-      </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-title">錄製 AI 素材</div>
-        <div class="step-desc">對著手機錄製 60 秒你的聲音/形象</div>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-title">AI 製作影片</div>
-        <div class="step-desc">團隊完成腳本剪輯、法務審查、HeyGem AI 分身製作</div>
-      </div>
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-title">客戶確認版本</div>
-        <div class="step-desc">3 個工作天審核，最多 2 次修改機會</div>
-      </div>
-      <div class="step">
-        <div class="step-num">5</div>
-        <div class="step-title">自動排程發布</div>
-        <div class="step-desc">每週 2 支，持續穩定發布，讓演算法記住你</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ 服務內容區 ══ -->
-
-  <div class="section" id="features">
-    <div class="section-tag">FEATURES</div>
-    <div class="section-h">你只要開口說話，其他交給 AI</div>
-    <div class="section-p">從選題到發布，完整的 AI 內容生產線。我們把最難的部分都自動化了。</div>
-    <div class="feat-grid">
-      <div class="feat-card">
-        <div class="feat-icon">🤖</div>
-        <div class="feat-title">AI 形象克隆</div>
-        <div class="feat-desc">拍攝 60 秒你的個人形象，克隆你的外貌與肢體語言。之後所有影片都由 AI 分身出鏡，90% 相似度。</div>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon">🎙️</div>
-        <div class="feat-title">AI 聲音克隆</div>
-        <div class="feat-desc">錄下你的聲音 60 秒，克隆你的聲音、語氣、節奏。讓 AI 用你的聲音唸出任何文案腳本。</div>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon">📝</div>
-        <div class="feat-title">AI 腳本生成</div>
-        <div class="feat-desc">輸入行業與話題，AI 生成符合 TikTok 演算法帶有鉤子的腳本，口語自然不生硬。</div>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon">✅</div>
-        <div class="feat-title">自動合規審查</div>
-        <div class="feat-desc">每支影片上線前，自動審查 TikTok 廣告政策與台灣公平交易法，降低被封號風險。</div>
-      </div>
-
-    </div>
-  </div>
-
-
-  <div class="section" id="course">
-    <!-- 課程目錄 -->
-    <div style="margin-top:40px">
-      <div class="section-tag">COURSE</div>
-      <div style="font-size:clamp(22px,3vw,32px);font-weight:900;margin-bottom:4px">AI 自媒體變現課程</div>
-      <div style="font-size:15px;font-weight:700;color:var(--t1);margin-bottom:4px">七大單元內容</div>
-      <div style="font-size:14px;color:var(--t2);margin-bottom:28px">按順序學完，帳號從零到能引流獲客。</div>
-
-      <div style="display:flex;flex-direction:column;gap:12px">
-
-        <div style="background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start">
+    
+    <!-- Right Column: Option B -->
+    <div class="split-solution-right">
+      <div class="column-badge badge-b">方案 B 自學課程</div>
+      <h2 class="column-title">AI 自媒體變現課程</h2>
+      <p class="column-subtitle">親自掌握 AI 內容生產線核心技術，從定位到引流私域成交，建立你的自主化流量漏斗。</p>
+      
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px">
+        <div style="background:var(--card2);border:1px solid var(--bdr);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start">
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(232,197,90,.15);border:1px solid rgba(232,197,90,.3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--gold);flex-shrink:0">01</div>
           <div>
-            <div style="font-size:14px;font-weight:700;margin-bottom:5px">帳號定位</div>
-            <div style="font-size:12px;color:var(--t2);line-height:1.8">無論任何行業，AI 輔助定位帳號，讓對的人第一眼就知道你能幫他什麼。一次設定，不超過 5 分鐘。</div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:5px">帳號定位</div>
+            <div style="font-size:14px;color:var(--t2);line-height:1.8">無論 any 行業，AI 輔助定位帳號，讓對的人第一眼就知道你能幫他什麼。一次設定，不超過 5 分鐘。</div>
           </div>
         </div>
-
-        <div style="background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start">
+        
+        <div style="background:var(--card2);border:1px solid var(--bdr);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start">
           <div style="width:36px;height:36px;border-radius:10px;background:var(--blue-bg);border:1px solid var(--blue-bdr);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--blue);flex-shrink:0">02</div>
           <div>
-            <div style="font-size:14px;font-weight:700;margin-bottom:5px">主題規劃 ＋ 腳本生成 ＋ 合規把關</div>
-            <div style="font-size:12px;color:var(--t2);line-height:1.8">每月十分鐘，AI 排好 8 支主題。每支腳本從主題到完稿不超過 15 分鐘，內建合規系統上線前逐句把關，省時也省風險。</div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:5px">主題規劃 ＋ 腳本生成 ＋ 合規把關</div>
+            <div style="font-size:14px;color:var(--t2);line-height:1.8">每月十分鐘，AI 排好 8 支主題。每支腳本從主題到完稿不超過 15 分鐘，內建合規系統上線前逐句把關，省時也省風險。</div>
           </div>
         </div>
-
-        <div style="background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start">
+        
+        <div style="background:var(--card2);border:1px solid var(--bdr);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start">
           <div style="width:36px;height:36px;border-radius:10px;background:var(--purple-bg);border:1px solid rgba(167,139,250,.3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--purple);flex-shrink:0">03</div>
           <div>
-            <div style="font-size:14px;font-weight:700;margin-bottom:5px">AI 形象克隆</div>
-            <div style="font-size:12px;color:var(--t2);line-height:1.8">對鏡頭 60 秒＋說話 60 秒，AI 分身建好。有你的眼神和語氣，九成像本人，從此不用一直出現在鏡頭前。</div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:5px">AI 形象克隆</div>
+            <div style="font-size:14px;color:var(--t2);line-height:1.8">對鏡頭 60 秒＋說話 60 秒，AI 分身建好。有你的眼神和語氣，九成像本人，從此不用一直出現在鏡頭前。</div>
           </div>
         </div>
-
-        <div style="background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start">
+        
+        <div style="background:var(--card2);border:1px solid var(--bdr);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start">
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(62,207,142,.08);border:1px solid rgba(62,207,142,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--green);flex-shrink:0">04</div>
           <div>
-            <div style="font-size:14px;font-weight:700;margin-bottom:5px">AI 聲音克隆 ＋ 影片生成</div>
-            <div style="font-size:12px;color:var(--t2);line-height:1.8">不想露臉，只克隆聲音做口播同樣有效。每支影片十幾分鐘出片，大幅壓低內容生產成本。</div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:5px">AI 聲音克隆 ＋ 影片生成</div>
+            <div style="font-size:14px;color:var(--t2);line-height:1.8">不想露臉，只克隆聲音做口播同樣有效。每支影片十幾分鐘出片，大幅壓低內容生產成本。</div>
           </div>
         </div>
-
-        <div style="background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start">
+        
+        <div style="background:var(--card2);border:1px solid var(--bdr);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start">
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--red);flex-shrink:0">05</div>
           <div>
-            <div style="font-size:14px;font-weight:700;margin-bottom:5px">快速剪輯</div>
-            <div style="font-size:12px;color:var(--t2);line-height:1.8">零基礎也能學。素材準備好，快速剪出有質感、有內容力的影片，不需要外包。</div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:5px">快速剪輯</div>
+            <div style="font-size:14px;color:var(--t2);line-height:1.8">零基礎也能學。素材準備好，快速剪出有質感、有內容力的影片，不需要外包。</div>
           </div>
         </div>
-
-        <div style="background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start">
+        
+        <div style="background:var(--card2);border:1px solid var(--bdr);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start">
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--blue);flex-shrink:0">06</div>
           <div>
-            <div style="font-size:14px;font-weight:700;margin-bottom:5px">廣告投放</div>
-            <div style="font-size:12px;color:var(--t2);line-height:1.8">每支影片投放 5 分鐘，每週看數據 10 分鐘，花最少的錢讓影片觸及最精準的客群。</div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:5px">廣告投放</div>
+            <div style="font-size:14px;color:var(--t2);line-height:1.8">每支影片投放 5 分鐘，每週看數據 10 分鐘，花最少的錢讓影片觸及最精準的客群。</div>
           </div>
         </div>
-
-        <div style="background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start">
+        
+        <div style="background:var(--card2);border:1px solid var(--bdr);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start">
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(232,197,90,.15);border:1px solid rgba(232,197,90,.3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--gold);flex-shrink:0">07</div>
           <div>
-            <div style="font-size:14px;font-weight:700;margin-bottom:5px">私域成交</div>
-            <div style="font-size:12px;color:var(--t2);line-height:1.8">從看到影片到主動詢價到成交，整條路線一次建好，全自動運作，內容持續幫你帶客。</div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:5px">私域成交</div>
+            <div style="font-size:14px;color:var(--t2);line-height:1.8">從看到影片到主動詢價到成交，整條路線一次建好，全自動運作，內容持續幫你帶客。</div>
           </div>
         </div>
-
       </div>
-
+      
       <!-- 附加服務 -->
-      <div style="margin-top:24px;background:rgba(232,197,90,.04);border:1px solid rgba(232,197,90,.15);border-radius:14px;padding:22px">
-        <div style="font-size:12px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:14px">✦ 附加服務・課程內含</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:rgba(232,197,90,.03);border:1px solid rgba(232,197,90,.15);border-radius:14px;padding:22px">
+        <div style="font-size:14px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:14px">✦ 附加服務・課程內含</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
           <div style="display:flex;gap:12px;align-items:flex-start">
             <span style="font-size:16px;flex-shrink:0">🎙</span>
             <div>
-              <span style="font-size:13px;font-weight:700;color:var(--t1)">每週直播答疑</span>
-              <span style="font-size:12px;color:var(--t2)">　根據學員問題，Tony 老師本人或助理老師 Leo 分別回答，時間依學員問題彈性調整。</span>
+              <span style="font-size:15px;font-weight:700;color:var(--t1)">每週直播答疑</span>
+              <span style="font-size:14px;color:var(--t2)">　根據學員問題，Tony 老師本人或助理老師 Leo 分別回答，時間依學員問題彈性調整。</span>
             </div>
           </div>
           <div style="display:flex;gap:12px;align-items:flex-start">
             <span style="font-size:16px;flex-shrink:0">💬</span>
             <div>
-              <span style="font-size:13px;font-weight:700;color:var(--t1)">學員 LINE 群組</span>
-              <span style="font-size:12px;color:var(--t2)">　日常交流，一群在各自行業走同一條路的人互相給回饋。</span>
+              <span style="font-size:15px;font-weight:700;color:var(--t1)">學員 LINE 群組</span>
+              <span style="font-size:14px;color:var(--t2)">　日常交流，一群在各自行業走同一條路的人互相給回饋。</span>
             </div>
           </div>
           <div style="display:flex;gap:12px;align-items:flex-start">
             <span style="font-size:16px;flex-shrink:0">🔄</span>
             <div>
-              <span style="font-size:13px;font-weight:700;color:var(--t1)">AI 工具持續迭代</span>
-              <span style="font-size:12px;color:var(--t2)">　AI 模型不斷更新，課程內容同步跟進，不會有技術斷鏈的顧慮。</span>
+              <span style="font-size:15px;font-weight:700;color:var(--t1)">AI 工具持續迭代</span>
+              <span style="font-size:14px;color:var(--t2)">　AI 模型不斷更新，課程內容同步跟進，不會有技術斷鏈的顧慮。</span>
             </div>
           </div>
         </div>
       </div>
-
     </div>
-
-    <div style="text-align:center;margin-top:36px">
-      <button class="btn-gold" style="font-size:14px;padding:13px 32px" onclick="window.open('https://forms.gle/HTbVXWsQBUNUujA57','_blank')">預約免費顧問諮詢 →</button>
-      <div style="font-size:11px;color:var(--t3);margin-top:10px">諮詢完全免費 · 了解後再決定是否加入 · 名額有限</div>
+    
+    <!-- Centered Bottom CTA -->
+    <div class="split-solutions-cta" style="grid-column: 1 / -1; text-align: center; margin-top: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;">
+      <button class="btn-gold" style="font-size: 16px; padding: 14px 48px; min-width: 280px; justify-content: center;" onclick="window.open('https://forms.gle/HTbVXWsQBUNUujA57','_blank')">預約免費諮詢 →</button>
+      <div style="font-size: 13px; color: var(--t3); font-weight: 500;">諮詢完全免費 · 了解後再決定是否加入 · 名額有限</div>
     </div>
   </div>
 
@@ -1055,26 +1305,161 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
     <div class="section-tag">FAQ</div>
     <div class="section-h">常見問題</div>
     <div class="divider"></div>
-    <div class="faq">
-      <div class="faq-item" onclick="toggleFaq(this)">
-        <div class="faq-q">我完全不懂剪片，也適合嗎？<span class="faq-arrow">▼</span></div>
-        <div class="faq-a">完全適合，吉娃 AI 自媒體變現系統是全代操服務，你只需要錄製 60 秒的個人聲音和個人形象素材，其他腳本、製作、發布全部由我們完成。</div>
+    
+    <div class="faq-split-container">
+      <!-- Left Column: Option A -->
+      <div class="faq-column">
+        <div class="faq-column-title">(方案 A) 代運營常見問題</div>
+        
+        <!-- Sub-section: 關於服務內容 -->
+        <div class="faq-sub-section">
+          <div class="faq-sub-title">關於服務內容</div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">我完全不懂拍片，也不需要出現在鏡頭前嗎？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">不需要。你只需要對著手機錄下語音回答題目，每段約 1–2 分鐘，其他全部由我們的 AI 系統和團隊處理，包含腳本、AI 數位分身、剪輯、字幕、發片。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">AI 數位分身跟真人有多像？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">聲音與外型還原度約 90%，口型與說話節奏與你高度吻合。首次建立需要你錄製一段 60 秒的正面說話影片和 60 秒語音。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">每個月會產出幾支影片？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">每月 8 支，對應每週發佈 2 支，週一和週四排程上線。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">影片內容我能決定嗎？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">每月初我們會與你進行 30 分鐘規劃會議，由你確認本月 8 個選題方向後才進入製作。你有 3 個工作天的審核期，可提出修改意見。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">你們能做哪些行業？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">口播知識型內容適合所有行業，包含保險、房產、法律、醫療、教育、顧問、美容、財務等。唯一不適合的是需要大量視覺示範的內容，例如料理教學、手術示範。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">影片內容的法律合規由誰負責？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">每支影片在製作過程中都會經過法律合規審查，確保符合公平交易法及 TikTok 廣告政策，才會送交你審核。</div>
+          </div>
+        </div>
+        
+        <!-- Sub-section: 關於合約與費用 -->
+        <div class="faq-sub-section">
+          <div class="faq-sub-title">關於合約與費用</div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">方案有哪些？可以只做一個月嗎？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">有 1 個月體驗方案、3 個月黃金起號、6 個月品牌複利、12 個月年度霸屏，承諾期越長月費越低，3 個月以上全免 AI 啟動費。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">AI 啟動費是什麼？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">首次建立 AI 數位分身（形象克隆＋語音克隆）的費用為 NT$10,000，僅 1 個月體驗方案需自付，3 個月以上全額免收。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">如果合約中途想停止怎麼辦？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">已享優惠月份的費用將按體驗方案費率重新計算，差額於結算時補收，詳見合約條款。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">發票和稅務怎麼處理？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">以上均為未稅價，開立發票另加 5% 營業稅。行銷費用可列為營業費用，依營所稅率最高折抵 20%。</div>
+          </div>
+        </div>
       </div>
-      <div class="faq-item" onclick="toggleFaq(this)">
-        <div class="faq-q">AI 分身看起來自然嗎，會有假感嗎？<span class="faq-arrow">▼</span></div>
-        <div class="faq-a">使用 HeyGem 最新技術，90% 相似度，肢體語言自然。首次克隆需要 60 秒正面影片素材，之後即可生成所有影片。</div>
-      </div>
-      <div class="faq-item" onclick="toggleFaq(this)">
-        <div class="faq-q">若中途想提前結束合約怎麼辦？<span class="faq-arrow">▼</span></div>
-        <div class="faq-a">已享受的優惠月份將按體驗方案單月費率重新計算，差額於結算時補收，細節詳見合約條款。</div>
-      </div>
-      <div class="faq-item" onclick="toggleFaq(this)">
-        <div class="faq-q">課程和代操服務有什麼差異？<span class="faq-arrow">▼</span></div>
-        <div class="faq-a">代操買時間，課程買能力。代操是我們幫你做，你完全不用碰；課程是教你自己操作 AI 工具，適合想親自掌握技能的人。兩者可以互相折抵 NT$5,000（12 個月內）。</div>
-      </div>
-      <div class="faq-item" onclick="toggleFaq(this)">
-        <div class="faq-q">發票和稅務怎麼處理？<span class="faq-arrow">▼</span></div>
-        <div class="faq-a">以上均為未稅價，開立發票另加 5% 營業稅。行銷費用可列為營業費用，依營所稅率最高折抵 20%。</div>
+      
+      <!-- Right Column: Option B -->
+      <div class="faq-column">
+        <div class="faq-column-title">(方案 B) 自學課程常見問題</div>
+        
+        <!-- Sub-section: 關於課程內容 -->
+        <div class="faq-sub-section">
+          <div class="faq-sub-title">關於課程內容</div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">除了課程學費外，還有其他額外費用嗎？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">除了課程學費外，學員需自行負擔 AI 軟體工具費用（工具費用自付）。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">課程是直播還是錄播？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">以錄播課程為主，可自行安排進度。另有每週三固定直播答疑，可即時發問。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">上課後多久可以取得課程連結？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">付款完成後當天或次日即可收到課程連結。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">課程有時效限制嗎？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">目前無時效限制，可永久回看。但課程內容會隨 AI 工具更新而改版，改版後的新版內容以公告為準。</div>
+          </div>
+        </div>
+        
+        <!-- Sub-section: 關於工具與操作 -->
+        <div class="faq-sub-section">
+          <div class="faq-sub-title">關於工具與操作</div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">需要買什麼工具？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">課程統一使用 Claude Pro（NT$650/月）搭配 Claude Project 作為 AI 助理，其他工具均為免費或課程內說明的免費方案。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">我不會剪輯也可以嗎？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">可以。課程使用的 AI 工具大幅降低剪輯門檻，不需要專業剪輯技能。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">學完課程之後我可以自己做 AI 分身影片嗎？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">可以。課程會教你如何使用 AI 克隆聲音和形象，完成完整的一支 AI 口播影片製作流程。</div>
+          </div>
+        </div>
+        
+        <!-- Sub-section: 關於費用與優惠 -->
+        <div class="faq-sub-section">
+          <div class="faq-sub-title">關於費用與優惠</div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">課程費用是多少？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">NT$29,800，一次性收費，無月費。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">課程和代運營方案可以同時購買嗎？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">可以，而且有交叉優惠。購買課程後 12 個月內加入代運營，可折抵 NT$5,000；反之亦然。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">可以先買課程，之後再考慮代運營嗎？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">完全可以。課程買的是能力，代運營買的是時間，兩個定位不同，不衝突。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">可以退費嗎？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">付款後取得課程連結即視為服務開始，恕不退費，購買前請確認適合自己。</div>
+          </div>
+        </div>
+        
+        <!-- Sub-section: 關於課程適合度 -->
+        <div class="faq-sub-section">
+          <div class="faq-sub-title">關於課程適合度</div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">我已經有在做短影音，還適合嗎？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">適合。課程的 AI 工具和系統化方法論，可以大幅提升你現有流程的效率和穩定性。</div>
+          </div>
+          
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">代運營和課程，我應該選哪個？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">如果你時間少、想省力，選代運營。如果你想長期自己掌握能力、成本控制，選課程。如果預算允許，兩個一起效益最大。</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1092,10 +1477,11 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
   </div>
 
   <footer class="footer">
-    <div class="footer-brand">吉娃網路行銷 Chiwa Digital Marketing</div>
+    <div class="footer-brand">吉娃網路行銷</div>
     <div class="footer-links">
       <span class="footer-link" onclick="openPolicy('privacy')">隱私權政策</span>
       <span class="footer-link" onclick="openPolicy('terms')">服務條款</span>
+      <a href="mailto:chivashorts@gmail.com" class="footer-link" style="text-decoration:none; color:inherit;">聯繫我們 (chivashorts@gmail.com)</a>
     </div>
     <div class="footer-copy">© 2026 吉娃網路行銷 · 台灣</div>
   </footer>
@@ -1233,7 +1619,6 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
         <div class="login-err" id="lerr">帳號或密碼錯誤，請重試</div>
         <div class="login-links">
           <span class="login-link" onclick="goPage('home')">← 回首頁</span>
-          <span class="login-link" onclick="goPage('voice-trial')">免費試用 →</span>
         </div>
       </div>
 
@@ -1395,8 +1780,7 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
       <div style="font-size:15px;font-weight:900;color:var(--blue);font-family:'Space Mono',monospace">58:30<span style="font-size:10px;color:var(--t3);font-weight:400">/60:00</span></div>
       <div class="sb-ubar"><div style="height:100%;background:var(--blue);border-radius:2px;width:97%;transition:width .3s"></div></div>
       <div style="height:1px;background:var(--bdr);margin:8px 0"></div>
-      <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace">下次重置：2026年6月1日</div>
-      <div id="reset-countdown" style="font-size:10px;color:var(--t3)">（還有 14 天）</div>
+      <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace">下次重置：<span id="reset-date">2026年6月1日</span></div>
     </div>
     <div class="sb-foot">
       <div class="sb-av">S1</div>
@@ -1418,8 +1802,6 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
       <div class="chip" data-t="客戶故事" onclick="selC(this)">👥 客戶故事</div>
       <div class="chip" data-t="選擇指南" onclick="selC(this)">📋 選擇指南</div>
       <div class="chip" data-t="行動催化" onclick="selC(this)">⚡ 行動催化</div>
-      <div class="chip" data-t="時事新聞" onclick="selC(this)">📰 時事新聞 <small style="opacity:.6">本月2/4</small></div>
-      <div class="chip" data-t="行業熱議" onclick="selC(this)">🔥 行業熱議 <small style="opacity:.6">本月1/4</small></div>
     </div>
     <div class="label mb14">你的行業 / 專業領域</div>
     <textarea id="ti" placeholder="例：律師、保險顧問、中醫師、室內設計師..." rows="3" maxlength="500"></textarea>
@@ -1455,6 +1837,18 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--t2)">
         <input type="radio" name="sfmt" value="simple" style="accent-color:var(--blue)">
         <span>📄 純口播文字</span>
+      </label>
+    </div>
+
+    <div class="label mb14">語氣風格</div>
+    <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--t2)">
+        <input type="radio" name="stone" value="casual" checked style="accent-color:var(--blue)">
+        <span>🗣️ 素人隨聊語氣（預設）</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--t2)">
+        <input type="radio" name="stone" value="professional" style="accent-color:var(--blue)">
+        <span>👔 博主專業語氣</span>
       </label>
     </div>
 
@@ -1518,8 +1912,8 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
       <div class="divider"></div>
       <div class="label mb14">步驟 2：為聲音命名</div>
       <input type="text" id="vname" placeholder="例：Tony 專業版" style="margin-bottom:14px">
-      <button class="btn-gold" style="width:100%" onclick="cloneV()">🎯 開始克隆（正式版接 Cartesia）</button>
-      <div style="font-size:11px;color:var(--t3);text-align:center;margin-top:8px">* 克隆功能於正式版透過 Cartesia sonic-3.5 完成</div>
+      <button class="btn-gold" style="width:100%" onclick="cloneV()">🎯 開始克隆（正式版語音引擎）</button>
+      <div style="font-size:11px;color:var(--t3);text-align:center;margin-top:8px">* 克隆功能於正式版透過最新語音克隆技術完成</div>
     </div>
     <div class="divider"></div>
     <div style="font-size:14px;font-weight:700;margin-bottom:12px">文字轉語音</div>
@@ -1540,7 +1934,7 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
     <div class="fl mt10">
       <button class="btn-gold" id="tts-btn" onclick="generateTTSAudio()">🎵 生成語音（正式版）</button>
     </div>
-    <div id="tts-load" style="display:none" class="loading"><div class="spinner"></div>正在藉由 Cartesia 引擎生成克隆聲音...</div>
+    <div id="tts-load" style="display:none" class="loading"><div class="spinner"></div>正在藉由最新語音克隆技術生成聲音...</div>
     <div id="tts-audio-container"></div>
   </div>
 
@@ -1573,7 +1967,10 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
             <div class="video-info-box">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
                 <span class="badge b-gold" id="player-lesson-badge">LESSON 01</span>
-                <button class="btn-gold" id="lesson-complete-btn" onclick="completeActiveLesson()" style="font-size:12px; padding:6px 16px">標記為已完成</button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <button class="btn-gold" id="lesson-complete-btn" onclick="completeActiveLesson()" style="font-size:12px; padding:6px 16px">標記為已完成</button>
+                  <button class="btn-gold" id="next-lesson-btn" onclick="playNextLesson()" style="font-size:12px; padding:6px 16px; display: none; background: rgba(212,175,55,0.15); border: 1px solid var(--gold); color: var(--gold);">繼續看下一節課 →</button>
+                </div>
               </div>
               <h2 style="font-size:18px; font-weight:900; margin-bottom:8px; color:var(--t1)" id="player-lesson-title">自媒體引流定位核心公式</h2>
               <p style="font-size:13px; color:var(--t2); line-height:1.7" id="player-lesson-desc">本節課將詳細解析自媒體定位的核心公式，幫助你從行業、痛點、價值三個維度快速定位個人帳號。</p>
@@ -1781,18 +2178,74 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
         </div>
       </div>
 
-      <!-- (C) Vimeo 影片嵌入 -->
+      <!-- (C) 小節細節設定 (影片、時長、說明文字) -->
       <div style="background: var(--card2); border: 1px solid var(--bdr); border-radius: 10px; padding: 16px;">
-        <div style="font-size: 12px; font-weight:800; color:var(--t1); margin-bottom: 10px;">🎥 Vimeo 影片嵌入設定</div>
+        <div style="font-size: 12px; font-weight:800; color:var(--t1); margin-bottom: 10px;">🎥 小節細節設定 (影片、時長、說明文字)</div>
         <div style="font-size: 11px; font-weight:700; color:var(--t2); margin-bottom: 10px;" id="adm-lesson-edit-title">目前編輯：單元一 Lesson 1-1</div>
-        <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
-          <div style="flex: 1; min-width: 250px;">
-            <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:6px;">Vimeo 影片 ID 或完整連結</label>
-            <input type="text" id="adm-vimeo-input" placeholder="例: 76979871 或 https://vimeo.com/..." class="tinput" style="background: var(--card)">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 2; min-width: 200px;">
+              <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:6px;">Vimeo 影片 ID 或完整連結</label>
+              <input type="text" id="adm-vimeo-input" placeholder="例: 76979871 或 https://vimeo.com/..." class="tinput" style="background: var(--card)">
+            </div>
+            <div style="flex: 1; min-width: 100px;">
+              <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:6px;">影片時長 (MM:SS)</label>
+              <input type="text" id="adm-lesson-dur-input" placeholder="例: 08:45" class="tinput" style="background: var(--card)">
+            </div>
           </div>
-          <button class="btn-gold" onclick="saveVimeoIdFromAdmin()" style="border-radius: 10px; padding: 10px 24px; height: 38px; justify-content:center;">💾 儲存嵌入設定</button>
+          <div>
+            <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:6px;">學員端影片說明文字 (支援換行)</label>
+            <textarea id="adm-lesson-desc-input" placeholder="輸入此小節的說明文字..." class="tinput" style="background: var(--card); height: 80px; resize: vertical; font-family: inherit; font-size: 12px; padding: 8px 10px; line-height: 1.5;"></textarea>
+          </div>
+          <div style="text-align: right;">
+            <button class="btn-gold" onclick="saveVimeoIdFromAdmin()" style="border-radius: 10px; padding: 10px 24px; height: 38px; justify-content:center; display: inline-flex; align-items: center;">💾 儲存細節設定</button>
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- 🎥 首頁 VSL 銷講影片管理 (僅管理員可見) -->
+    <div style="background: var(--card); border: 1px solid var(--bdr); border-radius: 14px; padding: 20px; margin-top: 24px;">
+      <div class="admin-sec-head" style="margin-bottom: 14px;">
+        <div class="admin-sec-title">🎥 首頁 VSL 銷講影片管理</div>
+        <div style="font-size: 11px; color: var(--t3);">控制首頁銷講影片的上下架狀態與 Vimeo 影片 ID 嵌入</div>
+      </div>
+      <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px;">
+          <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:4px;">影片狀態</label>
+          <select id="adm-vsl-status" class="tinput" style="background: var(--card2); height: 38px; padding:0 10px;">
+            <option value="publish">上架 (顯示影片)</option>
+            <option value="unpublish">下架 (隱藏影片)</option>
+          </select>
+        </div>
+        <div style="flex: 1.5; min-width: 250px;">
+          <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:4px;">Vimeo 影片 ID 或連結</label>
+          <input type="text" id="adm-vsl-vimeo" placeholder="例：76979871" class="tinput" style="background: var(--card2)">
+        </div>
+      </div>
+      <button class="btn-gold" onclick="saveVSLConfigFromAdmin()" style="border-radius:10px; padding:10px 20px; height:38px; justify-content:center; white-space:nowrap; width: 100%;">💾 儲存首頁 VSL 設定</button>
+    </div>
+
+    <!-- 🎥 首頁 VSL 下方特色影片管理 (僅管理員可見) -->
+    <div style="background: var(--card); border: 1px solid var(--bdr); border-radius: 14px; padding: 20px; margin-top: 24px;">
+      <div class="admin-sec-head" style="margin-bottom: 14px;">
+        <div class="admin-sec-title">🎥 首頁特色影片管理 (主標題下方影片)</div>
+        <div style="font-size: 11px; color: var(--t3);">控制首頁「AI代替你來口播」特色影片的上下架與 Vimeo 嵌入設定</div>
+      </div>
+      <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px;">
+          <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:4px;">特色影片狀態</label>
+          <select id="adm-vsl-feature-status" class="tinput" style="background: var(--card2); height: 38px; padding:0 10px;">
+            <option value="publish">上架 (顯示影片)</option>
+            <option value="unpublish">下架 (隱藏影片)</option>
+          </select>
+        </div>
+        <div style="flex: 1.5; min-width: 250px;">
+          <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:4px;">Vimeo 特色影片 ID 或連結</label>
+          <input type="text" id="adm-vsl-feature-vimeo" placeholder="例：76979871" class="tinput" style="background: var(--card2)">
+        </div>
+      </div>
+      <button class="btn-gold" onclick="saveVSLFeatureConfigFromAdmin()" style="border-radius:10px; padding:10px 20px; height:38px; justify-content:center; white-space:nowrap; width: 100%;">💾 儲存特色影片設定</button>
     </div>
 
     <!-- 系統防護日誌 -->
@@ -1849,383 +2302,216 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
     <span class="mub-num" id="m-voice-num" style="color:var(--blue)">58:30</span>
   </div>
   <div style="flex:1;text-align:right;font-size:9px;color:var(--t3);font-family:'Space Mono',monospace">
-    重置 <span id="m-reset-days"></span> 天
+    <span id="m-reset-days"></span>
   </div>
 </div>
 
 <div id="toast"></div>
 
 <script>
-let KEY='', selChip='', aiUse=285, scriptTxt='', marketingTxt='', isRec=false, recSec=0, recTmr=null;
-let currentUser = 'student001';
-let studentsList = [
-  { username: 'student001', status: '正常', regDate: '2026-05-10', note: 'AI自媒體變現基礎班' },
-  { username: 'student002', status: '正常', regDate: '2026-05-12', note: 'AI自媒體變現高階班' },
-  { username: 'demo_user', status: '正常', regDate: '2026-05-15', note: '企業內訓專案學員' }
-];
+// 🛡️ 全域安全常數 & 私有 API 緩存 (Global API Obfuscation & Hook Protection)
+const _sf = window.fetch ? window.fetch.bind(window) : null;
+const _sJP = JSON.parse ? JSON.parse.bind(JSON) : null;
+const _sJS = JSON.stringify ? JSON.stringify.bind(JSON) : null;
+const _sLSGet = localStorage.getItem.bind(localStorage);
+const _sLSSet = localStorage.setItem.bind(localStorage);
 
-try {
-  const saved = localStorage.getItem('chiwa_students_list');
-  if (saved) {
-    studentsList = JSON.parse(saved);
-  } else {
-    localStorage.setItem('chiwa_students_list', JSON.stringify(studentsList));
-  }
-} catch (e) {
-  console.warn('localStorage is restricted or unavailable:', e);
-}
-
-try {
-  let logs = localStorage.getItem('chiwa_security_logs');
-  if (!logs) {
-    const initialLogs = [
-      `[${new Date(Date.now() - 3600000).toLocaleString()}] 🛡️ 安全中心：吉娃AI多層安全防盜防線與動態浮水印引擎初始化成功。`,
-      `[${new Date(Date.now() - 7200000).toLocaleString()}] 🟢 監控系統：防側錄截圖探針與異地IP登入預警模組已就緒。`,
-      `[${new Date(Date.now() - 10800000).toLocaleString()}] 🛡️ 權限檢測：當前授權學員無違規側錄記錄，信譽良好。`
-    ];
-    localStorage.setItem('chiwa_security_logs', JSON.stringify(initialLogs));
-  }
-} catch(e) {
-  console.warn('localStorage security logs setup failed:', e);
-}
-
-function escapeHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
-
-function removeEmojis(text) {
-  if (typeof text !== 'string') return text;
+// 🛡️ Frame-Breaker防護 (Anti-Clickjacking)
+if (window.self !== window.top) {
   try {
-    // 優先使用 Unicode 屬性正則，支援濾除所有 Extended_Pictographic 符號
-    return text.replace(/\p{Extended_Pictographic}/gu, '');
+    window.top.location = window.self.location;
   } catch (e) {
-    // 瀏覽器不支援時的備用方案
-    return text.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '');
+    window.top.location.href = window.location.href;
   }
 }
 
-/* 頁面路由與導覽系統 */
-function goPage(pageId) {
-  if (pageId === 'voice-trial') {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const vt = document.getElementById('page-voice-trial');
-    if (vt) vt.classList.add('active');
-    resetVoiceTrialSteps();
-    return;
-  }
-  
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const targetPage = document.getElementById('page-' + pageId);
-  if (targetPage) {
-    targetPage.classList.add('active');
-    // 如果進入工作台，預設顯示第一個面板（選題生成）
-    if (pageId === 'workspace') {
-      const items = document.querySelectorAll('.sb-item');
-      if (items.length > 0) {
-        swP('topic', items[0]);
-      }
-      
-      // 確保學員工作台開啟時，載入最新進度與語音
-      renderUnitGrid();
-      renderVoiceList();
-      updateVoiceDropdown();
-    }
-  } else {
-    toast('🚧 頁面開發中：' + pageId);
-  }
-}
-
-/* 網頁前台平滑滾動 */
-function scrollTo_(selector) {
-  const el = document.querySelector(selector);
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth' });
-  } else {
-    // 若不在首頁，先跳轉回首頁再滾動
-    goPage('home');
-    setTimeout(() => {
-      const target = document.querySelector(selector);
-      if (target) target.scrollIntoView({ behavior: 'smooth' });
-    }, 150);
-  }
-}
-
-/* 常見問題摺疊卡片切換 */
-function toggleFaq(el) {
-  el.classList.toggle('open');
-}
-
-/* 登入與登出系統 */
-function doLogin() {
-  const u = document.getElementById('lu').value.trim();
-  const p = document.getElementById('lp').value.trim();
-  const err = document.getElementById('lerr');
-  
-  if (!u) {
-    toast('❌ 請輸入帳號');
-    return;
-  }
-  
-  // 1. 系統管理員登入
-  if (u === 'admin' && p === '123456') {
-    if (err) err.style.display = 'none';
-    currentUser = 'admin';
-    
-    // 顯示管理員專屬導覽與頭像
-    const adminItem = document.getElementById('sb-admin-item');
-    if (adminItem) adminItem.style.display = 'flex';
-    
-    const unameEl = document.querySelector('.sb-uname');
-    if (unameEl) unameEl.textContent = '系統管理員 (Admin)';
-    const avEl = document.querySelector('.sb-av');
-    if (avEl) avEl.textContent = 'AD';
-    
-    buildWM();
-    goPage('workspace');
-    toast('🔑 管理員登入成功！已開啟授權與安全管理面板');
-    
-    // 預設切換到管理面板並渲染
-    const adminEl = document.getElementById('sb-admin-item');
-    swP('admin', adminEl);
-    renderAdminPanel();
-    return;
-  }
-  
-  // 2. 普通學員登入
-  let student = studentsList.find(s => s.username === u);
-  
-  // 若名單不存在該學員，且是 student 開頭的測試帳號，我們自動予以授權以便測試！
-  if (!student && u.startsWith('student') && p === '123456') {
-    student = { 
-      username: u, 
-      status: '正常', 
-      regDate: new Date().toISOString().split('T')[0], 
-      note: '自主註冊測試學員' 
-    };
-    studentsList.push(student);
-    try {
-      localStorage.setItem('chiwa_students_list', JSON.stringify(studentsList));
-    } catch (e) {}
-  }
-  
-  if (student) {
-    if (p === '123456') {
-      // 檢查是否被關停權限
-      if (student.status === '已停權') {
-        if (err) {
-          err.innerHTML = '❌ <b>此帳號涉嫌盜錄轉載吉娃AI教學影片，權限已被永久關停！</b><br><span style="font-size:11px;color:var(--t3)">如有任何疑問，請透過 LINE 官方帳號向吉娃AI申訴。</span>';
-          err.style.display = 'block';
-        }
-        toast('🚫 登入失敗：此帳號已被永久停權');
-        
-        // 模擬寫入一條安全日誌，加強儀式感與真實感
-        try {
-          let logs = JSON.parse(localStorage.getItem('chiwa_security_logs') || '[]');
-          logs.unshift(`[${new Date().toLocaleString()}] ⚠️ 安全防護：已被停權之帳號 ${u} 嘗試登入，系統已實施強力阻斷！`);
-          localStorage.setItem('chiwa_security_logs', JSON.stringify(logs.slice(0, 30)));
-        } catch(e){}
-        return;
-      }
-      
-      if (err) err.style.display = 'none';
-      currentUser = u;
-      
-      // 隱藏管理員導覽
-      const adminItem = document.getElementById('sb-admin-item');
-      if (adminItem) adminItem.style.display = 'none';
-      
-      const unameEl = document.querySelector('.sb-uname');
-      if (unameEl) unameEl.textContent = currentUser;
-      const avEl = document.querySelector('.sb-av');
-      if (avEl) avEl.textContent = currentUser.slice(0, 2).toUpperCase();
-      
-      buildWM();
-      goPage('workspace');
-      toast(`🔓 登入成功！歡迎回來學員 ${currentUser}`);
-      
-      // 模擬寫入安全日誌
-      try {
-        let logs = JSON.parse(localStorage.getItem('chiwa_security_logs') || '[]');
-        logs.unshift(`[${new Date().toLocaleString()}] 🛡️ 安全監控：學員 ${currentUser} 成功登入，背景防盜浮水印渲染完成。`);
-        localStorage.setItem('chiwa_security_logs', JSON.stringify(logs.slice(0, 30)));
-      } catch(e){}
-    } else {
-      if (err) {
-        err.textContent = '帳號或密碼錯誤，請重試';
-        err.style.display = 'block';
-      }
-      toast('❌ 帳號或密碼錯誤');
-    }
-  } else {
-    if (err) {
-      err.textContent = '帳號不存在，管理員可至後台授權或使用 student001 登入';
-      err.style.display = 'block';
-    }
-    toast('❌ 帳號不存在');
-  }
-}
-
-function doLogout() {
-  goPage('home');
-  toast('👋 您已安全登出');
-  document.getElementById('lu').value = '';
-  document.getElementById('lp').value = '';
-  currentUser = 'student001';
-  const wm = document.getElementById('wm');
-  if (wm) {
-    wm.innerHTML = '';
-    wm.classList.remove('show');
-  }
-  const adminItem = document.getElementById('sb-admin-item');
-  if (adminItem) adminItem.style.display = 'none';
-}
-
-/* 忘記密碼面板切換 */
-function showForgot() {
-  document.getElementById('login-panel').classList.add('hide');
-  document.getElementById('forgot-panel').classList.add('show');
-}
-
-function hideForgot() {
-  document.getElementById('login-panel').classList.remove('hide');
-  document.getElementById('forgot-panel').classList.remove('show');
-  const sent = document.getElementById('forgot-sent');
-  const form = document.getElementById('forgot-form');
-  if (sent) sent.style.display = 'none';
-  if (form) form.style.display = 'block';
-}
-
-function sendReset() {
-  const email = document.getElementById('forgot-email').value.trim();
-  const err = document.getElementById('forgot-err');
-  if (!email || !email.includes('@')) {
-    if (err) err.style.display = 'block';
-    return;
-  }
-  if (err) err.style.display = 'none';
-  document.getElementById('forgot-form').style.display = 'none';
-  document.getElementById('forgot-sent').style.display = 'block';
-  toast('📧 重設連結已發送至您的信箱');
-}
-
-/* API KEY 設定與 Modal 控制 */
-function setKey() {
-  const k = document.getElementById('api-in').value.trim();
-  if (!k.startsWith('sk-ant')) {
-    toast('請輸入正確的 Claude API Key（sk-ant 開頭）');
-    return;
-  }
-  KEY = k;
-  
-  // 更新 UI 狀態指示器
-  const st = document.getElementById('key-status-bar');
-  const kt = document.getElementById('key-toggle');
-  if (st) st.style.display = 'block';
-  if (kt) {
-    kt.classList.add('active');
-    kt.textContent = '✓ Key';
-  }
-  
-  // 關閉 API Modal
-  const modal = document.getElementById('api-modal');
-  if (modal) modal.style.display = 'none';
-  
-  toast('✅ API Key 已設定，AI 功能已啟用！');
-}
-
-/* 初始化 */
-(function init(){
-  const now=new Date();
-  const next=new Date(now.getFullYear(),now.getMonth()+1,1,0,0,0);
-  const days=Math.ceil((next-now)/86400000);
-  const m=next.getMonth()+1;
-  const y=next.getFullYear();
-  const rd=document.getElementById('reset-date');
-  const rdays=document.getElementById('reset-days');
-  const mrd=document.getElementById('m-reset-days');
-  if(rd)rd.textContent=y+'年'+m+'月1日';
-  if(rdays)rdays.textContent='（還有 '+days+' 天）';
-  if(mrd)mrd.textContent=days;
-  buildWM();
-  checkMobile();
+// 🛡️ 智慧安全金鑰閉包儲存 (Security Obfuscator)
+const SecurityAccessor = (function() {
+  let _k = '';
+  return {
+    setKey: function(val) { _k = btoa(val); },
+    getKey: function() { return _k ? atob(_k) : ''; },
+    hasKey: function() { return _k !== ''; }
+  };
 })();
 
-/* 手機版判斷 */
-function checkMobile(){
-  const bar=document.getElementById('mobile-usage-bar');
-  const nav=document.getElementById('mobile-nav');
-  const isMobile=window.innerWidth<=640;
-  if(bar)bar.style.display=isMobile?'flex':'none';
-  if(nav)nav.style.display=isMobile?'flex':'none';
-}
-window.addEventListener('resize', () => {
-  checkMobile();
-  buildWM();
+// Hook KEY to SecurityAccessor
+Object.defineProperty(window, 'KEY', {
+  get: function() { return SecurityAccessor.getKey(); },
+  set: function(val) { SecurityAccessor.setKey(val); },
+  configurable: true
 });
 
-/* 手機版導覽 */
-function swPM(name,idx){
-  const items=document.querySelectorAll('.sb-item');
-  if(items[idx])swP(name,items[idx]);
-  else{
-    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
-    const panel=document.getElementById('p-'+name);
-    if(panel)panel.classList.add('on');
+// 🛡️ UTF-8 Base64 安全解碼器
+function dSU(b64) {
+  try {
+    b64 = (b64 || '').trim();
+    return decodeURIComponent(atob(b64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+  } catch(e) {
+    return atob(b64);
   }
-  document.querySelectorAll('.mn-item').forEach(i=>i.classList.remove('on'));
-  const mnItems=document.querySelectorAll('.mn-item');
-  if(mnItems[idx])mnItems[idx].classList.add('on');
 }
 
-/* API KEY */
-function toggleKeyBar(){
-  const bar=document.getElementById('key-bar');
-  if(bar)bar.classList.toggle('hidden');
-}
-function saveKey(){
-  const k=document.getElementById('key-input').value.trim();
-  if(!k.startsWith('sk-ant')){toast('請輸入正確的 API Key（sk-ant 開頭）');return;}
-  KEY=k;
-  const st=document.getElementById('key-status-bar');
-  const kt=document.getElementById('key-toggle');
-  if(st)st.style.display='block';
-  if(kt){kt.classList.add('active');kt.textContent='✓ Key';}
-  setTimeout(()=>{const bar=document.getElementById('key-bar');if(bar)bar.classList.add('hidden');},800);
-  toast('✅ API Key 已設定，AI 功能已啟用');
+// 🛡️ 防篡改簽章 SecureStorage 模組
+function calcChecksum(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return btoa(hash.toString());
 }
 
-/* 面板切換 */
-function swP(name,el){
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('on'));
-  const panel=document.getElementById('p-'+name);
-  if(panel)panel.classList.add('on');
-  if(el)el.classList.add('on');
-}
+Object.defineProperty(localStorage, 'getItem', {
+  value: function(key) {
+    try {
+      const obfuscated = _sLSGet(key);
+      if (!obfuscated) return null;
+      if (key.includes('completed_lessons') || key.includes('students_list') || key.includes('voices') || key.includes('video_config') || key.includes('course_structure')) {
+        const raw = dSU(obfuscated);
+        const idx = raw.lastIndexOf('|');
+        if (idx === -1) return null;
+        const val = raw.substring(0, idx);
+        const expectedSig = raw.substring(idx + 1);
+        if (calcChecksum(val) !== expectedSig) {
+          console.warn('Security tampering detected for key:', key);
+          toast('🛡️ 偵測到本地進度異常，已自動啟動安全防護與修復！');
+          return null;
+        }
+        return val;
+      }
+      return obfuscated;
+    } catch(e) {
+      return null;
+    }
+  },
+  configurable: true,
+  writable: true
+});
 
-/* Chip 選取 */
-function selC(el){
-  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
-  el.classList.add('on');
-  selChip=el.dataset.t;
-}
+Object.defineProperty(localStorage, 'setItem', {
+  value: function(key, val) {
+    try {
+      const strVal = typeof val === 'string' ? val : _sJS(val);
+      if (key.includes('completed_lessons') || key.includes('students_list') || key.includes('voices') || key.includes('video_config') || key.includes('course_structure')) {
+        const sig = calcChecksum(strVal);
+        const raw = strVal + '|' + sig;
+        const obfuscated = btoa(unescape(encodeURIComponent(raw)));
+        _sLSSet(key, obfuscated);
+      } else {
+        _sLSSet(key, val);
+      }
+    } catch(e) {
+      _sLSSet(key, val);
+    }
+  },
+  configurable: true,
+  writable: true
+});
 
-/* 用量更新 */
-function decrAI(){
-  if(aiUse>0)aiUse--;
-  const un=document.getElementById('ai-num');
-  const uf=document.getElementById('ai-bar');
-  const mun=document.getElementById('m-ai-num');
-  if(un)un.innerHTML=aiUse+'<span style="font-size:11px;color:var(--t3);font-weight:400">/300</span>';
-  if(uf){uf.style.width=Math.round(aiUse/3)+'%';if(aiUse<30)uf.style.background='var(--red)';}
-  if(mun)mun.textContent=aiUse;
-}
+// 🛡️ 雙軌高性能 DevTools 偵測與安全鎖定系統
+(function() {
+  let isLocked = false;
+  
+  function lockSystem() {
+    if (isLocked) return;
+    isLocked = true;
+    
+    document.body.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#0d0e15;color:#f3f4f6;font-family:'Noto Sans TC',sans-serif;text-align:center;padding:20px;user-select:none;-webkit-user-select:none;">
+        <div style="font-size:64px;margin-bottom:20px;">🛡️</div>
+        <h1 style="color:#e8c55a;font-size:26px;font-weight:900;margin-bottom:15px;letter-spacing:1px;">系統安全保護機制已啟動</h1>
+        <p style="color:#9ca3af;font-size:15px;max-width:480px;line-height:1.6;margin:0 auto 24px;">為了維護本平台的 AI 專屬連線金鑰與核心系統程式碼安全，系統不開放開發者工具偵錯模式。</p>
+        <div style="background:rgba(232,197,90,0.04);border:1px solid rgba(232,197,90,0.15);border-radius:12px;padding:12px 24px;display:inline-block;margin-bottom:30px;">
+          <span style="color:#6b7280;font-size:12px;font-family:'Space Mono',monospace;">ERR_SECURITY_DEVELOPER_MODE_BLOCKED</span>
+        </div>
+        <p style="color:#6b7280;font-size:13px;">請關閉 F12 開發者工具，並重新整理網頁後繼續正常使用。</p>
+        <button onclick="window.location.reload()" style="margin-top:20px;background:#e8c55a;color:#0a0a0f;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity 0.2s;">重新整理網頁</button>
+      </div>
+    `;
+    
+    throw new Error('Security policy triggered.');
+  }
+  
+  function timeCheck() {
+    const start = performance.now();
+    debugger;
+    const end = performance.now();
+    if (end - start > 100) {
+      lockSystem();
+    }
+  }
+  
+  const img = new Image();
+  Object.defineProperty(img, 'id', {
+    get: function() {
+      lockSystem();
+    }
+  });
+  
+  function consoleCheck() {
+    console.log(img);
+    console.clear();
+  }
+  
+  setInterval(timeCheck, 1000);
+  setInterval(consoleCheck, 1000);
+})();
 
-/* 沙盒沙箱模擬數據生成器 */
-function generateSandboxMock(sys, usr) {
-  if (sys.includes('選題') || sys.includes('短影音選題')) {
-    const indMatch = usr.match(/行業[：:]\s*(.+)/);
-    const ind = indMatch ? indMatch[1].trim() : '專業服務';
+// 🛡️ 工程開發者工具快捷鍵阻斷
+document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'F12' || e.keyCode === 123) {
+    e.preventDefault();
+    return false;
+  }
+  if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C' || e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) {
+    e.preventDefault();
+    return false;
+  }
+  if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) {
+    e.preventDefault();
+    return false;
+  }
+  if (e.ctrlKey && (e.key === 'S' || e.key === 's' || e.keyCode === 83)) {
+    e.preventDefault();
+    return false;
+  }
+});
+
+let selChip='', aiUse=285, scriptTxt='', marketingTxt='', isRec=false, recSec=0, recTmr=null;
+// \uD83D\uDEE1\uFE0F UTF-8 Base64
+function generateSandboxMock(sys, usr, type, fmt, tone) {
+  let ind = '專業服務';
+  let tp = '如何提升業務成交率';
+  
+  const indMatch = usr.match(/(行業|領域)[：:]\s*([^\n]+)/) || usr.match(/行業[：:]\s*(.+)/);
+  if (indMatch) ind = indMatch[2] ? indMatch[2].trim() : indMatch[1].trim();
+  
+  const tpMatch = usr.match(/(選題|標題|主題)[：:]\s*([^\n]+)/) || usr.match(/選題[：:]\s*(.+)/);
+  if (tpMatch) tp = tpMatch[2] ? tpMatch[2].trim() : tpMatch[1].trim();
+
+  tp = tp.replace(/^【選題\d+】\s*/, '').replace(/標題[：:]\s*/, '').trim();
+
+  if (!type) {
+    if (sys.includes('選題') || sys.includes('短影音選題')) {
+      type = 'topics';
+    } else if (sys.includes('腳本') || sys.includes('分鏡')) {
+      type = 'script';
+      fmt = (sys.includes('分鏡') || sys.includes('storyboard')) ? 'storyboard' : 'simple';
+      tone = (sys.includes('專業') || sys.includes('professional')) ? 'professional' : 'casual';
+    } else if (sys.includes('行銷') || sys.includes('數位行銷')) {
+      type = 'marketing';
+    } else if (sys.includes('合規') || sys.includes('審查') || sys.includes('廣告法規')) {
+      type = 'compliance';
+    }
+  }
+
+  if (type === 'topics') {
     return `【選題1】
-標題：為什麼 90% 的${ind}都在做白工？揭秘成交真相
+標題：為什麼 90% 的${ind}專家都在做白工？揭秘成交真相
 副標題：打破傳統盲點，教你用一招篩選精準高客單客戶
 潛力：高
 
@@ -2249,132 +2535,216 @@ function generateSandboxMock(sys, usr) {
 副標題：不需要懂技術，只需一鍵複製的獲客 SOP 流程
 潛力：中`;
   }
-  
-  if (sys.includes('分鏡腳本') || sys.includes('腳本')) {
-    const tpMatch = usr.match(/選題[：:]\s*(.+)/);
-    const tp = tpMatch ? tpMatch[1].trim() : '為什麼 90% 的客戶都在做白工？';
-    if (usr.includes('分鏡腳本') || usr.includes('storyboard')) {
+
+  if (type === 'script') {
+    let hook_spoken = '';
+    let sec1_spoken = '';
+    let sec2_spoken = '';
+    let sec3_spoken = '';
+    let cta_spoken = '';
+
+    if (tone === 'professional') {
+      hook_spoken = `在當前的市場環境下，許多${ind}專家都正面臨一個核心痛點：那就是付出了巨大的時間成本，卻換不回成比例的成交率。`;
+      sec1_spoken = `首先，我們必須認清一個關鍵事實。主動推銷已被市場淘汰，因為高客單的精準客戶非常排斥被強迫推銷。他們需要的是具備專業信任度與具體解決方案的合作夥伴。`;
+      sec2_spoken = `其次，針對「${tp}」這個議題， we 應該建立一套系統化的個人專業展示，透過最新 AI 技術與深度知識產出，在客戶心中建立不可替代的專家形象，從根本上解決諮詢後沒有下文的問題。`;
+      sec3_spoken = `第三點，這套解決方案的實施路徑，是將你的專業方法論標準化，利用高質感的短影音把核心價值傳遞出去，讓潛在客戶主動與你聯繫，實現客戶自動引流的正向循環。`;
+      cta_spoken = `如果你也想為你的${ind}服務建立這套高轉化的業務系統，歡迎點擊下方連結，預約一對一的專業諮詢，我們將為你量身打造專屬的獲客方案。`;
+    } else {
+      hook_spoken = `你是不是也覺得說，做${ind}每天忙到快瘋掉，結果客戶還是一直問說「可以便宜一點嗎」？這真的很讓人頭痛欸。`;
+      sec1_spoken = `跟你說啦，這真的不是你的問題，而是你開發客戶的方法蠻需要調整的。現在的人都很聰明，如果你一直跟他們推銷，他們只會覺得很煩，然後就直接已讀不回了。`;
+      sec2_spoken = `其實要解決「${tp}」這個難題，真的蠻簡單的。你只需要把你的專業知識，變成很接地氣的短影音。用最直白的話講出對方的痛點，他們就會覺得說「欸，你真的很懂我耶」，然後就會主動找你了。`;
+      sec3_spoken = `這樣子的方式，我們已經幫了超多同行在不用一直拜託客戶的情況下，每週都有精準的客戶來私訊詢價，整個工作效率直接翻倍，做起來超有成就感的。`;
+      cta_spoken = `想知道怎麼幫你的${ind}業務做到這種自動引流嗎？趕快點下面連結預約一對一免費諮詢喔，名額有限，我們課堂上見啦！`;
+    }
+
+    if (fmt === 'storyboard') {
       return `【開場鉤子】（秒數：0-3秒）
-🎤 口說：你是不是每天辛辛苦苦開發客戶，最後卻只拿到一句「我再考慮看看」？
-🎬 畫面：主講人面露無奈，指著螢幕上滿滿的未讀訊息，背景帶有淡淡的科技玻璃質感。
-✂️ 剪輯提示：開場前 1 秒畫面稍微放大，音效使用快速的水滴聲，吸引注意力。
+🎤 口說：${hook_spoken}
+🎬 畫面：主講人神情專注看著鏡頭，背景是極具質感的溫暖光影背景，手裡拿著筆。
+✂️ 建議：開場前 1 秒畫面微微拉近，搭配最新 AI 語音引擎與質感清脆的轉場音效。
 
 【段落一】（秒數：4-20秒）
-🎤 口說：因為 90% 的人都在做白工！你以為主動推銷有用，其實精準客戶根本不吃這一套。專業人士最常犯的錯誤，就是把時間花在不會買單的人身上。
-🎬 畫面：主講人走向白板，白板上畫著一個漏斗，寫著「傳統開發 vs 自動引流」。
-✂️ 剪輯提示：當說到「90%」時，螢幕上出現紅色的巨大警示字體，搭配打擊樂音效。
+🎤 口說：${sec1_spoken}
+🎬 畫面：主講人走向質感簡約的寫字檯，白板上列出痛點對比圖表。
+✂️ 建議：當講到「痛點」時，畫面右側跳出紅色警告標籤，配合最新 AI 影片生成技術與低沉的打擊音效。
 
 【段落二】（秒數：21-40秒）
-🎤 口說：真正的頂尖專家，都是用「痛點鏡子」讓客戶主動找上門。你只需要錄製一次 60 秒的音頻，吉娃 AI 就能幫你生成分身，幫你每天 24 小時篩選客戶。
-🎬 畫面：主講人拿出手機展示極精美的聲音克隆介面，後方出現 HeyGem 虛擬分身操作畫面。
-✂️ 剪輯提示：手機畫面局部放大，加上微光的動態邊框特效，加深高質感科技感。
+🎤 口說：${sec2_spoken}
+🎬 畫面：畫面切換到實操電腦，展示精美的分析簡報與思維導圖。
+✂️ 建議：重要關鍵字「${tp}」以金色漸層大字型浮現，加入微微發光效果。
 
 【段落三】（秒數：41-60秒）
-🎤 口說：這套系統已經幫助超過百位 I 型專業人士，不用拋頭露面，每週穩定產出 2 支影片。把你的專業知識，精準投放到想買單的客戶眼前。
-🎬 畫面：畫面上展示多位成功案例的影片數據截圖（播放量 100K+、詢價訊息爆滿）。
-✂️ 剪輯提示：數據截圖滑動出現，音效搭配收銀機聲音，塑造變現感。
+🎤 口說：${sec3_spoken}
+🎬 畫面：展示專家接受諮詢或服務客戶的溫馨真實側拍，營造滿滿的信任感與專業感。
+✂️ 建議：畫面右下角呈現「專業見證」浮水印，音效切換為輕快柔和的鋼琴音樂。
 
 【行動呼籲】（秒數：61-70秒）
-🎤 口說：想知道這套 AI 自媒體系統怎麼幫你成交接單嗎？現在就點擊下方連結，預約一對一免費諮詢，限時開放創始名額！
-🎬 畫面：主講人微笑指著下方，畫面漸隱出現吉娃 AI 的金色 Logo 和「立即預約」字樣。
-✂️ 剪輯提示：背景音樂推向高潮後淡出，金色 Logo 閃光特效。`;
+🎤 口說：${cta_spoken}
+🎬 畫面：畫面漸隱出現金色邊框的預約卡片，主講人手勢指引下方，出現「立即預約諮詢」字樣。
+✂️ 建議：背景音樂推向高潮後自然收尾，金色預約卡片加上微光的動態邊框特效。`;
     } else {
       return `【開場鉤子】
-你是不是每天辛辛苦苦開發客戶，最後卻只拿到一句「我再考慮看看」？這不是你的問題，而是你開發的方法錯了！
+${hook_spoken}
 
 【核心內容】
-重點1：為什麼主動推銷沒用？因為精準客戶討厭被推銷，他們只相信專業。
-重點2：建立你的 AI 數位分身，吉娃 AI 幫你錄製 60 秒聲音，就能每天 24 小時不斷篩選客戶，讓對的人主動找你。
-重點3：這套系統已經幫助百位專家，在不露臉的情況下每週產出專業影片，打造個人品牌。
+重點1：專業信任才是成交的關鍵。高客單客戶不看推銷，只看你能不能提供真正的價值。
+重點2：針對「${tp}」，把複雜的專業術語轉換成大眾聽得懂的白話文，用真實案例建立信賴。
+重點3：透過這套自動化自媒體系統與最新 AI 技術，每天替你篩選過濾客戶，告別無效溝通與削價競爭。
 
 【行動呼籲】
-想知道怎麼幫你變現？立刻點擊下方，預約一對一免費諮詢，搶先加入創始名額！`;
+${cta_spoken}`;
     }
   }
 
-  if (sys.includes('數位行銷') || sys.includes('行銷')) {
+  if (type === 'marketing') {
     return `【TikTok 影片說明文字】
-這招學起來，別再自己開發客戶了！專為專業人士設計的 AI 自媒體變現系統，60秒克隆你的分身，幫你每天 24 小時引流成交！#自媒體 #短影音 #吉娃AI #聲音克隆 #AI分身
+想知道怎麼讓客戶主動找你嗎？專為${ind}專家打造的高效自媒體獲客系統，教你如何突破瓶頸、拉高成交率！${ind} #短影音行銷 #自媒體變現 #專業引流 #最新AI技術
 
 【LINE 私訊推廣文】
-您好！想要突破傳統獲客瓶頸嗎？吉娃 AI 推出專為專家打造的「AI短影音代操系統」，只需錄音60秒，AI分身替你經營流量、精準獲客。限時開放8位創始免費法務審查名額，點擊了解詳情：https://forms.gle/HTbVXWsQBUNUujA57
+您好！想要突破傳統獲客瓶頸，讓客戶主動求你接單嗎？專為${ind}專家設計的「自媒體高轉化變現系統」正式上線！幫您將專業方法論轉化為精準流量，不再陷入削價競爭。限時開放免費諮詢名額，點擊下方連結預約：https://forms.gle/HTbVXWsQBUNUujA57
 
-【5個行動呼籲 CTA 短語】
-1. 點擊預約免費諮詢！
-2. 搶拿創始免費名額！
-3. 立即解鎖 AI 分身！
-4. 私訊「AI」領取秘笈！
-5. 讓 AI 幫你變現接單！
+【5 個行動呼籲 CTA 短語】
+1. 點擊連結預約免費諮詢！
+2. 搶拿本月專屬免費名額！
+3. 立即解鎖高效自動化引流！
+4. 私訊留言領取專家變現秘笈！
+5. 讓你的${ind}專業更有價值！
 
 【精準 Hashtag 組合】
-#自媒體 #短影音 #吉娃AI #聲音克隆 #AI分身`;
+#${ind} #自媒體行銷 #精準獲客 #商業變現 #短影音`;
   }
 
-  if (sys.includes('廣告法規') || sys.includes('合規')) {
+  if (type === 'compliance') {
     return `整體風險等級：低
 
 問題清單：
-1. 腳本內容主要在闡述「自媒體變現原理」與「聲音克隆應用」，未發現「保證絕對效果」或「百分之百成功」等誇大不實宣稱。
-2. 提及「幫助超過百位專家不露臉經營品牌」，屬於真實案例陳述，符合公平交易法關於真實性之規範。
-3. 未包含醫療、醫藥、保健食品、金融投資等高風險特許行業之保證收益字眼，整體風險控制極佳。
+1. 腳本主要講述「${ind}的自媒體經營方法與思維」，並提及「${tp}」，屬於分享核心知識與心法，無保證獲利或療效之具體情節。
+2. 內容不包含「保證 100% 發財」、「絕對治癒」等涉嫌廣告法規之誇大不實字眼，風險評估極低。
+3. 建議在行動呼籲（CTA）中，保持「諮詢與分享」屬性，避免提及特定獲利百分比，即可確保完全合規。
 
 修正後腳本：
 【開場鉤子】
-你是不是每天辛辛苦苦開發客戶，最後卻只拿到一句「我再考慮看看」？這不是你的問題，而是你開發的方法錯了！
+你是不是也覺得說，做${ind}每天忙到快瘋掉，結果客戶還是一直問說「可以便宜一點嗎」？這真的很讓人頭痛。
+
 【核心內容】
-重點1：為什麼主動推銷沒用？因為精準客戶討厭被推銷，他們只相信專業。
-重點2：建立你的 AI 數位分身，吉娃 AI 幫你錄製 60 秒聲音，就能每天 24 小時不斷篩選客戶，讓對的人主動找你。
-重點3：這套系統已經幫助百位專家，在不露臉的情況下每週產出專業影片，打造個人品牌。
+重點1：專業信任才是成交的關鍵。精準客戶討厭被推銷，他們更在乎你能不能提供實質的解決方案。
+重點2：針對「${tp}」，用最白話的內容建立你的專業影響力，讓對的人自動找上門。
+重點3：這套自媒體系統能幫助各位專家，在不削價競爭的前提下，高效率篩選出有誠意的客戶。
+
 【行動呼籲】
-想知道怎麼幫你變現？立刻點擊下方，預約一對一免費諮詢，搶先加入創始名額！`;
+想知道怎麼幫你的${ind}業務做到這種自動引流嗎？趕快點下面連結預約一對一免費諮詢喔！`;
   }
 
-  return `【AI 模擬回應】
-系統提示與輸入解析成功，這是沙盒模式返回的模擬輸出。
+  return `【AI 模擬回應】系統提示與輸入解析成功，這是沙盒模式返回的模擬輸出。
 
-提示：${sys}
-內容：${usr}`;
+主題：${tp}
+行業：${ind}
+類型：${type || '未指定'}
+格式：${fmt || '預設'}
+語氣：${tone || '預設'}`;
 }
 
-/* Claude API */
-async function callClaude(sys,usr){
-  if(!KEY){
-    const bar=document.getElementById('key-bar');
-    if(bar)bar.classList.remove('hidden');
-    toast('請先設定 Claude API Key');
-    throw new Error('no key');
-  }
+function extractTTSCopy(txt, fmt) {
+  if (!txt) return '';
+  const lines = txt.split('\n');
+  let extracted = [];
   
-  if (KEY === 'sk-ant-test' || KEY === 'sk-ant-sandbox') {
-    toast('⚙️ 已啟動「本地 AI 沙盒模擬模式」！');
-    return new Promise(resolve => setTimeout(() => resolve(removeEmojis(generateSandboxMock(sys, usr))), 1000));
+  if (fmt === 'storyboard' || txt.includes('\uD83C\uDFA4 \u53E3\u8AAA') || txt.includes('\uD83C\uDFA4\u53E3\u8AAA') || txt.includes('\u53E3\u8AAA\uFF1A') || txt.includes('\u53E3\u8AAA:')) {
+    for (let line of lines) {
+      let l = line.trim();
+      if (l.match(/^(\uD83C\uDFA4\s*\u53E3\u8AAA|\uD83C\uDFA4\s*\u53E3\u8AAA[\uFF1A:]|\u53E3\u8AAA[\uFF1A:])/)) {
+        let content = l.replace(/^(\uD83C\uDFA4\s*\u53E3\u8AAA[\uFF1A:]|\uD83C\uDFA4\s*\u53E3\u8AAA|\u53E3\u8AAA[\uFF1A:])/g, '').trim();
+        if (content) {
+          extracted.push(content);
+        }
+      }
+    }
+  } else {
+    for (let line of lines) {
+      let l = line.trim();
+      if (l.startsWith('\u3010') && l.endsWith('\u3011')) {
+        continue;
+      }
+      if (l.match(/^(\u91CD\u9EDE\d+[\uFF1A:]|\u91CD\u9EDE[\uFF1A:])/)) {
+        l = l.replace(/^(\u91CD\u9EDE\d+[\uFF1A:]|\u91CD\u9EDE[\uFF1A:])/g, '').trim();
+      }
+      if (l) {
+        extracted.push(l);
+      }
+    }
   }
-  
-  const safe=usr.replace(/<[^>]*>/g,'').replace(/ignore previous|system:|assistant:/gi,'').slice(0,2000);
+  return extracted.join('\n\n');
+}
+
+/* AI Core Connection */
+async function callSecureAI(sys, usr, typeOverride, fmtOverride, toneOverride) {
+  let type = typeOverride;
+  let finalFmt = fmtOverride;
+  let finalTone = toneOverride;
+
+  if (!type) {
+    if (sys.includes('5L2g5piv5Y+w54Gj55+t5b2x6Z+z6YG46aGM') || sys.includes('選題')) {
+      type = 'topics';
+    } else if (sys.includes('5YiG6Y+h6IWz5pys') || sys.includes('6IWz5pys5bir') || sys.includes('腳本') || sys.includes('分鏡')) {
+      type = 'script';
+      finalFmt = (sys.includes('5YiG6Y+h6IWz5pys') || sys.includes('分鏡')) ? 'storyboard' : 'simple';
+      finalTone = (sys.includes('5bCI5qWt') || sys.includes('專業')) ? 'professional' : 'casual';
+    } else if (sys.includes('5L2g5piv5Y+w54Gj5pW45L2N6KGM') || sys.includes('行銷')) {
+      type = 'marketing';
+    } else if (sys.includes('5L2g5piv5Y+w54Gj5buj5ZGK') || sys.includes('合規') || sys.includes('審查')) {
+      type = 'compliance';
+    } else {
+      type = 'script';
+    }
+  }
+
+  const isSandbox = localStorage.getItem('chiwa_sandbox_mode') === 'true';
+  if (isSandbox) {
+    toast('\u2699\uFE0F \u5DF2\u555F\u52D5\u300C\u672C\u5730 AI \u6C99\u76D2\u6A21\u64EC\u6A21\u5F0F\u300D\uFF01');
+    return new Promise(resolve => setTimeout(() => resolve(removeEmojis(generateSandboxMock(sys, usr, type, finalFmt, finalTone))), 1000));
+  }
+
   try {
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':KEY,'anthropic-version':'2023-06-01'},
-      body:JSON.stringify({model:'claude-3-7-sonnet-20250219',max_tokens:1500,system:sys,messages:[{role:'user',content:safe}]})
+    const payload = {
+      type: type,
+      userPrompt: usr,
+      fmt: finalFmt || 'storyboard',
+      tone: finalTone || 'casual'
+    };
+
+    const r = await _sf('https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
     });
-    
+
     if (!r.ok) {
       const errorText = await r.text();
-      console.warn('Anthropic API error:', errorText);
+      console.warn('AI Cloudflare connection error:', errorText);
       throw new Error('CORS_OR_API_ERROR');
     }
-    
-    const d=await r.json();
-    if(d.error) throw new Error('AI 服務暫時無法使用，請稍後再試');
-    return removeEmojis(d.content[0].text);
+
+    const d = await r.json();
+    if (d.error) {
+      throw new Error(d.error.message || 'AI 服務暫時無法使用，請稍後再試');
+    }
+
+    if (d.content && d.content[0] && d.content[0].text) {
+      return removeEmojis(d.content[0].text);
+    } else {
+      throw new Error('Response format invalid');
+    }
   } catch (err) {
     console.error('API call failed, falling back to sandbox mode:', err);
-    toast('⚙️ 偵測到瀏覽器 CORS 安全限制，已啟動「本地 AI 沙盒模擬模式」！');
-    return new Promise(resolve => setTimeout(() => resolve(removeEmojis(generateSandboxMock(sys, usr))), 1200));
+    toast('\u2699\uFE0F \u9023\u7DDA\u53D7\u9650\uFF0C\u5DF2\u81EA\u52D5\u555F\u52D5\u300C\u672C\u5730 AI \u667A\u6162\u6C99\u76D2\u6A21\u64EC\u300D\uFF01');
+    return new Promise(resolve => setTimeout(() => resolve(removeEmojis(generateSandboxMock(sys, usr, type, finalFmt, finalTone))), 1200));
   }
 }
 
-/* 選題生成 */
+
+/* \u9078\u984C\u751F\u6210 */
 async function genTopics(){
   const ind=document.getElementById('ti').value.trim();
   if(!ind){toast('請先輸入你的行業');return;}
@@ -2383,7 +2753,7 @@ async function genTopics(){
   if(!btn||!ld||!out)return;
   btn.disabled=true;ld.style.display='flex';out.innerHTML='';
   try{
-    const txt=await callClaude('你是台灣短影音選題策略師，為B2B服務業專家生成TikTok選題，選題必須有強烈鉤子感。只用繁體中文回答。絕對不能使用任何 emoji 或表情符號。',
+    const txt=await callSecureAI(dSU('5L2g5piv5Y+w54Gj55+t5b2x6Z+z6YG46aGM562W55Wl5bir77yM54K6QjJC5pyN5YuZ5qWt5bCI5a6255Sf5oiQVGlrVG9r6YG46aGM77yM6YG46aGM5b+F6aCI5pyJ5by354OI6Ymk5a2Q5oSf44CC5Y+q55So57mB6auU5Lit5paH5Zue562U44CC57WV5bCN5LiN6IO95L2/55So5Lu75L2VIGVtb2ppIOaIluihqOaDheespuiZn+OAggo='),
       '行業：'+ind+'\n選題類型：'+selChip+'\n\n請生成5個選題，格式：\n【選題1】\n標題：（20字內）\n副標題：（30字內）\n潛力：高/中/低\n\n【選題2】...');
     decrAI();
     const blocks=txt.split(/【選題\d+】/).filter(b=>b.trim());
@@ -2413,6 +2783,7 @@ async function genScript(){
   if(!tp){toast('請先輸入選題標題');return;}
   const ex=document.getElementById('sextra')?.value.trim()||'';
   const fmt=document.querySelector('input[name="sfmt"]:checked')?.value||'storyboard';
+  const tone=document.querySelector('input[name="stone"]:checked')?.value||'casual';
   const btn=document.getElementById('sbtn'),ld=document.getElementById('sload'),out=document.getElementById('sout');
   const scb=document.getElementById('scbtn'),smkb=document.getElementById('smkbtn');
   if(!btn||!ld||!out)return;
@@ -2421,13 +2792,18 @@ async function genScript(){
   try{
     let sys,prompt;
     if(fmt==='storyboard'){
-      sys='你是台灣短影音分鏡腳本師，為B2B服務業專家製作TikTok口播影片。腳本必須同時包含口說文字和畫面指示。不能有保證效果的宣稱。只用繁體中文。絕對不能使用任何 emoji 或表情符號。';
+      sys=dSU('5L2g5piv5Y+w54Gj55+t5b2x6Z+z5YiG6Y+h6IWz5pys5bir77yM54K6QjJC5pyN5YuZ5qWt5bCI5a626KO95L2cVGlrVG9r5Y+j5pKt5b2x54mH44CC6IWz5pys5b+F6aCI5ZCM5pmC5YyF5ZCr5Y+j6Kqq5paH5a2X5ZKM55Wr6Z2i5oyH56S644CC5LiN6IO95pyJ5L+d6K2J5pWI5p6c55qE5a6j56ix44CC5Y+q55So57mB6auU5Lit5paH44CC57WV5bCN5LiN6IO95L2/55So5Lu75L2VIGVtb2ppIOaIluihqOaDheespuiZn+OAggo=');
       prompt='選題：'+tp+(ex?'\n補充：'+ex:'')+'\n\n請生成完整分鏡腳本，格式：\n\n【開場鉤子】（秒數：0-3秒）\n🎤 口說：（說的話）\n🎬 畫面：（畫面呈現）\n✂️ 剪輯提示：（特效建議）\n\n【段落一】（秒數：4-20秒）\n🎤 口說：（說的話）\n🎬 畫面：（畫面指示）\n✂️ 剪輯提示：（剪輯建議）\n\n【段落二】（秒數：21-40秒）\n🎤 口說：（說的話）\n🎬 畫面：（畫面指示）\n✂️ 剪輯提示：（剪輯建議）\n\n【段落三】（秒數：41-60秒）\n🎤 口說：（說的話）\n🎬 畫面：（畫面指示）\n✂️ 剪輯提示：（剪輯建議）\n\n【行動呼籲】（秒數：61-70秒）\n🎤 口說：（結尾呼籲）\n🎬 畫面：（結尾畫面）\n✂️ 剪輯提示：（結尾特效）\n\n用口語化台灣繁體中文。';
     }else{
-      sys='你是台灣短影音腳本師，為B2B服務業專家寫口語化TikTok腳本。不能有保證效果的宣稱。只用繁體中文。絕對不能使用任何 emoji 或表情符號。';
+      sys=dSU('5L2g5piv5Y+w54Gj55+t5b2x6Z+z6IWz5pys5bir77yM54K6QjJC5pyN5YuZ5qWt5bCI5a625a+r5Y+j6Kqe5YyWVGlrVG9r6IWz5pys44CC5LiN6IO95pyJ5L+d6K2J5pWI5p6c55qE5a6j56ix44CC5Y+q55So57mB6auU5Lit5paH44CC57WV5bCN5LiN6IO95L2/55So5Lu75L2VIGVtb2ppIOaIluihqOaDheespuiZn+OAggo=');
       prompt='選題：'+tp+(ex?'\n補充：'+ex:'')+'\n\n請撰寫60-90秒腳本：\n\n【開場鉤子】\n...\n\n【核心內容】\n重點1：...\n重點2：...\n重點3：...\n\n【行動呼籲】\n...\n\n用口語化台灣繁體中文。';
     }
-    const txt=await callClaude(sys,prompt);
+    if(tone==='professional'){
+      sys+='\n\n'+dSU('5L2g55Sf5oiQ55qE5Y+j5pKt6IWz5pys5b+F6aCI56ym5ZCI5bCI5qWt6aC76YGT5Y+j5pKt55qE6Kqe5oSf77yMCuWFt+mrlOimj+WJh+WmguS4i++8mgoK56+A5aWP77ya5q+P5Y+lMTDliLAyMOWAi+Wtl++8jOmCj+i8r+WujOaVtO+8jArnlKjpgJfomZ/mjqfliLblgZzpoJPvvIzkuI3nlKjoqp7liqnoqZ7jgIIKCuiqnuWKqeipnu+8muWFqOmDqOemgeatou+8jArmrLjjgIHllYrjgIHllabjgIHllpTjgIHogIzlt7LjgIHooLvkuIDlvovkuI3lh7rnj77jgIIKCuWPpeWei++8muemgeatouiHquWVj+iHquetlO+8jOebtOaOpeWumue+qeWSjOmZs+i/sOOAggrlsIjmpa3ooZPoqp7nm7TmjqXkvb/nlKjvvIzlvozpnaLmjqXkuIDlj6Xnmb3oqbHop6Pph4vjgIIK56C05oqY6Jmf5Y+q55So5Zyo5YiX6IiJ5oiW6L2J5oqY44CCCue1kOWwvueUqOe1kOirluWPpe+8jOS4jeeUqOWPjeWVj+WPpeOAggoK55So6Kme77ya5Y+v5L2/55So5pu46Z2i6Kqe77yM5Zug5q2k44CB54S26ICM44CB5q2k5aSW44CCCuaVuOWtl+eyvueiuuaPj+i/sO+8jOS+i+WmguOAjOS6lOWIsOWNgeWIhumQmOOAjeS4jeaYr+OAjOW5vuWIhumQmOOAjeOAggrnpoHmraLlj7DngaPoqp7liqnoqZ7lkozkv5roqp7jgIIK56aB5q2i5L2/55So5Lu75L2VZW1vamnmiJbooajmg4XnrKbomZ/jgIIKCuebrueahOaYr+iuk1RUU+iqnumfs+W8leaTjuiugOWHuuS+huWDj+WwiOalremgu+mBk+WPo+aSre+8jArmnInph43ph4/mhJ/vvIzmnInkv6Hku7vmhJ/jgIIK');
+    }else{
+      sys+='\n\n'+dSU('5L2g55Sf5oiQ55qE5Y+j5pKt6IWz5pys5b+F6aCI56ym5ZCI5Y+w54Gj5Lq66Kqq6Kmx55qE6Kqe5oSf77yMCuWFt+mrlOimj+WJh+WmguS4i++8mgoK56+A5aWP77ya5q+P5Y+l5LiN6LaF6YGOOOWAi+Wtl++8jOS4gOWPpeS4gOihjO+8jOavjzPliLA05Y+l56m65LiA6KGM44CCCgroqp7liqnoqZ7vvJrpgannlbbliqDlhaXmrLjjgIHllYrjgIHllabjgIHllpTjgIHogIzlt7LjgIHooLvjgIHlsLHmmK/vvIwK5bmz5Z2H5q+PM+WIsDXlj6Xlh7rnj77kuIDmrKHjgIIKCuWPpeWei++8muWkmueUqOiHquWVj+iHquetlOe1kOani++8jArkvovlpoLjgIxYWFjmmK/ku4DpurzvvJ/lsLHmmK/igKbigKbjgI0K5aSa55So54HM5o2o6YCg5YGc6aCT5ZKM5oe45b+144CCCue1kOWwvueUqOWPjeWVj+WPpeiuk+ingOecvuWwjeiZn+WFpeW6p+OAggoK55So6Kme77ya56aB5q2i5pu46Z2i6Kqe77yM5Zug5q2k44CB54S26ICM44CB5q2k5aSW5pS55oiQ54S25b6M44CB5L2G5piv44CCCuaVuOWtl+WPo+iqnuWMlu+8jOS4jOWFsemBrO+8jOS+i+WmguOAjOW/q+WNgeW5tOOAjeS4jeaYr+OAjOWwh+i/keWNgeW5tOOAjeOAggrlj6/liqDlhaXlj7DngaPlpbPnlJ/ohZTlhYPntKDvvJoK6YCZ5qij44CB6YCZ5qij5a2Q5L2c54K65Y+l5bC+5pS25bC+77yMCuWTjuWUt+S9nOeCuuaEn+WYhuipnu+8jAroqqrmj5LlnKjli5XoqZ7lvozpnaLkvovlpoLoprrlvpfoqqrjgIHot5/kvaDoqqroqqrjgIIKCuemgeatouS9v+eUqOS7u+S9lWVtb2pp5oiW6KGo5oOF56ym6Jmf44CCCgrnm67nmoTmmK/orpNUVFPoqp7pn7PlvJXmk47oroDlh7rkvoblg4/lj7DngaPnnJ/kurrlnKjpmqjlj6PogYrlpKnvvIwK5LiN5YOP5Zyo5b+156i/44CCCg==');
+    }
+    const txt=await callSecureAI(sys,prompt);
     decrAI();
     scriptTxt=txt;
     if(fmt==='storyboard'){
@@ -2452,6 +2828,13 @@ async function genScript(){
         }
         h+=`<div class="fl mt10"><span class="copy-btn" style="padding:8px 16px" onclick="copyT(scriptTxt)">📋 全部複製</span></div>`;
       }else{h='<div class="out-card"><div class="out-text">'+escapeHtml(txt)+'</div></div>';}
+      try {
+        const ttsVal = extractTTSCopy(scriptTxt, fmt);
+        if (ttsVal) {
+          const encodedTts = encodeURIComponent(ttsVal);
+          h += `<div class="out-card" style="border:1.5px solid var(--gold); background: linear-gradient(135deg, rgba(232,197,90,.05), rgba(232,197,90,.02)); margin-top:20px; border-radius:12px; padding:16px;"><div class="out-head" style="margin-bottom:12px; border-bottom:1px solid rgba(232,197,90,.15); padding-bottom:8px;"><div style="display:flex;align-items:center;gap:8px"><span class="badge b-gold" style="font-weight:700;">\uD83C\uDFA4 \u7D14\u53E3\u8AAA\u6587\u6848 (TTS\u5C08\u7528)</span></div><span class="copy-btn" onclick="copyT(decodeURIComponent('${encodedTts}'))">\uD83D\uDCCB \u8907\u88FD\u53E3\u8AAA</span></div><div class="out-text" style="font-size:13.5px; color:var(--t1); line-height:1.6; white-space:pre-wrap;">${escapeHtml(ttsVal)}</div></div>`;
+        }
+      } catch(e) { console.error(e); }
       out.innerHTML=h;
     }else{
       const map={'開場鉤子':['b-red','開場鉤子'],'核心內容':['b-blue','核心內容'],'行動呼籲':['b-green','行動呼籲']};
@@ -2459,6 +2842,13 @@ async function genScript(){
       let h='';
       if(parts.length>1){for(let i=1;i<parts.length;i+=2){const lbl=parts[i],cnt=(parts[i+1]||'').trim(),info=map[lbl];if(info)h+=`<div class="out-card"><div class="out-head"><span class="badge ${info[0]}">${info[1]}</span><span class="copy-btn" onclick="copyT(this.closest('.out-card').querySelector('.out-text').innerText)">複製</span></div><div class="out-text">${escapeHtml(cnt)}</div></div>`;} h+=`<div class="fl mt10"><span class="copy-btn" style="padding:8px 16px" onclick="copyT(scriptTxt)">📋 全部複製</span></div>`;}
       else{h='<div class="out-card"><div class="out-text">'+escapeHtml(txt)+'</div></div>';}
+      try {
+        const ttsVal = extractTTSCopy(scriptTxt, fmt);
+        if (ttsVal) {
+          const encodedTts = encodeURIComponent(ttsVal);
+          h += `<div class="out-card" style="border:1.5px solid var(--gold); background: linear-gradient(135deg, rgba(232,197,90,.05), rgba(232,197,90,.02)); margin-top:20px; border-radius:12px; padding:16px;"><div class="out-head" style="margin-bottom:12px; border-bottom:1px solid rgba(232,197,90,.15); padding-bottom:8px;"><div style="display:flex;align-items:center;gap:8px"><span class="badge b-gold" style="font-weight:700;">\uD83C\uDFA4 \u7D14\u53E3\u8AAA\u6587\u6848 (TTS\u5C08\u7528)</span></div><span class="copy-btn" onclick="copyT(decodeURIComponent('${encodedTts}'))">\uD83D\uDCCB \u8907\u88FD\u53E3\u8AAA</span></div><div class="out-text" style="font-size:13.5px; color:var(--t1); line-height:1.6; white-space:pre-wrap;">${escapeHtml(ttsVal)}</div></div>`;
+        }
+      } catch(e) { console.error(e); }
       out.innerHTML=h;
     }
     if(scb)scb.style.display='inline-flex';
@@ -2493,7 +2883,7 @@ async function genMarketing(){
   };
   const selectedDesc=types.map(t=>typeNames[t]).join('\n');
   try{
-    const res=await callClaude('你是台灣數位行銷文案師，專為各行各業的TikTok短影音創作各類優質行銷文案。必須百分之百根據使用者提供的影片腳本內容與行業類型進行發想。風格口語、接地氣、有說服力。只用繁體中文。絕對不能使用任何 emoji 或表情符號。特別注意：不論在 TikTok 說明文還是 Hashtag 組合中，Hashtag 數量均嚴格限制最多 5 個（通常為 3 至 5 個）。Hashtag 須遵循黃金比率配置：包含 1~2 個大流量熱門分類標籤（如：#短影音、#行銷、#熱門，或該行業的大分類標籤），搭配 2~3 個與該影片腳本行業主題高度相關的精準領域標籤（例如：若是餐飲業則配餐飲利基、若是美髮業則配美髮利基，必須完全切合腳本實際內容），以達到演算法精準推流的最優解。絕不可套用與腳本行業無關的品牌或標籤。',
+    const res=await callSecureAI(dSU('5L2g5piv5Y+w54Gj5pW45L2N6KGM6Yq35paH5qGI5bir77yM5bCI54K65ZCE6KGM5ZCE5qWt55qEVGlrVG9r55+t5b2x6Z+z5Ym15L2c5ZCE6aGe5YSq6LOq6KGM6Yq35paH5qGI44CC5b+F6aCI55m+5YiG5LmL55m+5qC55pOa5L2/55So6ICF5o+Q5L6b55wY6KGM5qWt6aGe5Z6L6YCy6KGM55m85oOz44CC6aKo5qC85Y+j6Kqe5oiW6Kqq5pyN5Yqb44CC5Y+q55So57mB6auU5Lit5paH44CC57WV5bCN5LiN6IO95L2/55So5Lu75L2VIGVtb2ppIOaIluihqOaDheespuiZn+OAgueJueWIpeazqOaEj++8muS4jeirluWcqCBUaWtUb2sg6Kqq5piO5paH6YKE5pivIEhhc2h0YWcg57WE5ZCI5Lit77yMSGFzaHRhZyDmlbjph4/lnYflmrTmoLzpmZDliLbmnIDlpJogNSDlgIvvvIjpgJrluLjngrogMyDoh7MgNSDlgIvvvInjgIJIYXNodGFnIOmgiOmBteW+qum7g+mHkeavlOeOh+mFjee9ru+8muWMheWQqyAxfjIg5YCL5aSn5rWB6YeP54ax6ZaA5YiG6aGe5qiZ57Gk77yI5aaC77yaI+efreW9semfs+OAgSPooYzpirfjgIEj54ax6ZaA77yM5oiW6Kmy6KGM5qWt55a65a2Q77yM5pCt6YWNIDJ+MyDlgIvoiIfoqbLlvbHniYfohbPmnKzooYzmpa3kuLvpoYzpq5jluqbnm7jpl5znmoTnsr7mupbpoJjln5/mqJnnsaTvvIjkvovlpoLvvJroi6XmmK/ppJDpo7Lmpa3liYfphY3ppJDpo7LliKnln7rjgIHoi6XmmK/nvo7pq67mpa3liYfphY3nvo7pq67liKnln7rvvIzlv4XpoIjlrozlhajliIflkIjohbPmnKzlr6bpmpvlhaflrrnvvInvvIzku6XpgZTliLDmvJTnrpfms5Xnsr7mupbmjqjmtYHnmoTmnIDlhKrop6PjgILntZXkuI3lj6/lpZfnlKjoiIfohbPmnKzooYzmpa3nhKHpl5znmoTlk4HniYzmiJbmqJnnsaTjgIIK'),
       '以下是一支短影音的腳本：\n\n'+txt+'\n\n請根據這支影片內容，生成以下行銷文案：\n\n'+selectedDesc+'\n\n每種類型前加上清楚的標題標示，格式：【類型名稱】\n內容...');
     decrAI();
     
@@ -2558,7 +2948,7 @@ async function chkComp(){
   if(!btn||!ld||!out)return;
   btn.disabled=true;ld.style.display='flex';out.innerHTML='';
   try{
-    const res=await callClaude('你是台灣廣告法規專家，審查TikTok短影音腳本。熟悉TikTok廣告政策2025-2026和台灣公平交易法。只用繁體中文回答。',
+    const res=await callSecureAI(dSU('5L2g5piv5Y+w54Gj5buj5ZGK5rOV6KaP5bCI5a6277yM5a+p5p+lVGlrVG9r55+t5b2x6Z+z6IWz5pys44CC54af5oKJVGlrVG9r5buj5ZGK5pS/562WMjAyNS0yMDI25ZKM5Y+w54Gj5YWs5bmz5Lqk5piT5rOV44CC5Y+q55So57mB6auU5Lit5paH5Zue562U44CCCg=='),
       '請審查：\n\n'+txt+'\n\n整體風險等級：低/中/高\n\n問題清單：\n（條列或寫無明顯問題）\n\n修正後腳本：\n（合規版本）');
     decrAI();
     const rm=res.match(/整體風險等級[：:]\s*(低|中|高)/);
@@ -2689,7 +3079,7 @@ function cloneV() {
     return;
   }
   
-  toast('⚙️ 正在藉由 Cartesia sonic-3.5 引擎克隆您的聲音特徵...');
+  toast('⚙️ 正在藉由最新語音克隆引擎克隆您的聲音特徵...');
   
   // 模擬克隆運算
   setTimeout(() => {
@@ -2702,7 +3092,7 @@ function cloneV() {
       id: 'v-' + Date.now(),
       name: name,
       date: new Date().toISOString().split('T')[0],
-      duration: 'Cartesia 引擎克隆 · ' + recSec + '秒'
+      duration: '語音克隆 · ' + recSec + '秒'
     });
     
     try {
@@ -2889,7 +3279,7 @@ const courseData = [
     desc: '對鏡頭 60 秒＋說話 60 秒，AI 分身建好。有你的眼神和語氣，九成像本人，從此不用一直出現在鏡頭前。',
     lessons: [
       { id: '3-1', title: '形象克隆正面影片拍攝要領', duration: '07:30', vimeoId: '76979871' },
-      { id: '3-2', title: 'HeyGem 平台建置 AI 分身教學', duration: '15:10', vimeoId: '76979871' }
+      { id: '3-2', title: '最新 AI 平台建置 AI 分身教學', duration: '15:10', vimeoId: '76979871' }
     ]
   },
   {
@@ -2950,9 +3340,11 @@ function renderUnitGrid() {
     const count = u.lessons.filter(l => completed.includes(l.id)).length;
     const progress = Math.round((count / total) * 100);
     
-    // 解鎖機制：Unit 1 預設解鎖；後續單元只有當前一個單元完成率 100% 時方解鎖
+    // 解鎖機制：Unit 1 預設解鎖；後續單元只有當前一個單元完成率 100% 時方解鎖；管理員全部預設解鎖
     let isUnlocked = true;
-    if (i > 0) {
+    if (currentUser === 'admin') {
+      isUnlocked = true;
+    } else if (i > 0) {
       const prevU = courseData[i - 1];
       const prevTotal = prevU.lessons.length;
       const prevCount = prevU.lessons.filter(l => completed.includes(l.id)).length;
@@ -3038,13 +3430,107 @@ function loadLesson(lessonId) {
   // 更新文字資訊
   document.getElementById('player-lesson-badge').textContent = `LESSON ${lesson.id}`;
   document.getElementById('player-lesson-title').textContent = lesson.title;
-  document.getElementById('player-lesson-desc').textContent = `${u.title} - 第 ${lesson.id.split('-')[1]} 節課教學。時長約 ${lesson.duration}。吉娃網路行銷有限公司版權所有，本課程已為您啟用多重側錄追蹤機制，請珍惜智慧財產。`;
+  
+  let descHtml = '';
+  if (lesson.textDesc) {
+    descHtml = escapeHtml(lesson.textDesc).replace(/\n/g, '<br>');
+  } else {
+    descHtml = `${u.title} - 第 ${lesson.id.split('-')[1]} 節課教學。吉娃網路行銷有限公司版權所有，本課程已為您啟用多重側錄追蹤機制，請珍惜智慧財產。`;
+  }
+  descHtml += `<br><br><span style="font-size:11px;color:var(--t3)">⏱️ 課程時長：${lesson.duration} | 吉娃網路行銷版權所有</span>`;
+  document.getElementById('player-lesson-desc').innerHTML = descHtml;
   
   // 渲染側邊欄清單
   renderLessonsSidebar();
   
   // 更新「標記為已完成」按鈕狀態
   updateCompleteBtnState();
+  
+  // 更新「繼續看下一節課」按鈕狀態
+  updateNextLessonButton();
+}
+
+// 🎬 尋找下一小節的輔助函數 (支援跨單元)
+function getNextLessonInfo() {
+  const uIndex = courseData.findIndex(x => x.id === activeUnitId);
+  if (uIndex === -1) return null;
+  const u = courseData[uIndex];
+  const lIndex = u.lessons.findIndex(x => x.id === activeLessonId);
+  if (lIndex === -1) return null;
+  
+  // 當前單元內還有下一課
+  if (lIndex + 1 < u.lessons.length) {
+    return {
+      unit: u,
+      lesson: u.lessons[lIndex + 1]
+    };
+  }
+  
+  // 跨到下一單元的第一課
+  if (uIndex + 1 < courseData.length) {
+    return {
+      unit: courseData[uIndex + 1],
+      lesson: courseData[uIndex + 1].lessons[0]
+    };
+  }
+  
+  return null; // 全課程結束
+}
+
+// 🎬 更新「繼續看下一節課」按鈕 UI 顯示
+function updateNextLessonButton() {
+  const nextBtn = document.getElementById('next-lesson-btn');
+  if (!nextBtn) return;
+  const nextInfo = getNextLessonInfo();
+  if (nextInfo) {
+    nextBtn.textContent = `繼續看下一節課: ${nextInfo.lesson.title} →`;
+    nextBtn.style.display = 'inline-flex';
+  } else {
+    nextBtn.style.display = 'none';
+  }
+}
+
+// 🎬 點擊「繼續看下一節課」跳轉邏輯
+function playNextLesson() {
+  const nextInfo = getNextLessonInfo();
+  if (!nextInfo) {
+    toast('🎉 您已看完所有課程！非常棒！');
+    return;
+  }
+  
+  // 檢查是否跨單元
+  if (nextInfo.unit.id !== activeUnitId) {
+    if (currentUser === 'admin') {
+      // 管理員權限解鎖：無縫放行
+      activeUnitId = nextInfo.unit.id;
+      loadLesson(nextInfo.lesson.id);
+      document.getElementById('player-unit-title').textContent = `UNIT 0${activeUnitId}: ${nextInfo.unit.title}`;
+      renderUnitGrid();
+      toast('💡 已為管理員帳號自動免檢索放行下一單元！');
+    } else {
+      // 一般學員：檢查當前單元是否全部完成
+      const currentUnit = courseData.find(x => x.id === activeUnitId);
+      let completed = [];
+      try {
+        completed = JSON.parse(localStorage.getItem(`chiwa_completed_lessons_${currentUser}`) || '[]');
+      } catch(e){}
+      
+      const allCompleted = currentUnit.lessons.every(l => completed.includes(l.id));
+      if (!allCompleted) {
+        alert('⚠️ 本單元尚未完全看完！請先將當前單元的所有小節標記為已完成，才能解鎖並觀看下一單元的課程喔。');
+        return;
+      }
+      
+      // 已全部完成則順暢跨越解鎖
+      activeUnitId = nextInfo.unit.id;
+      loadLesson(nextInfo.lesson.id);
+      document.getElementById('player-unit-title').textContent = `UNIT 0${activeUnitId}: ${nextInfo.unit.title}`;
+      renderUnitGrid();
+    }
+  } else {
+    // 同單元跳轉不需要完課限制
+    loadLesson(nextInfo.lesson.id);
+  }
 }
 
 // 渲染側邊大綱清單
@@ -3268,6 +3754,8 @@ function renderAdminPanel() {
   } catch(e) {
     logsConsole.innerHTML = '<div style="color: var(--red);">無法載入日誌記錄。</div>';
   }
+  
+  updateAdminVSLUI();
 }
 
 function toggleStudentBan(username) {
@@ -3384,6 +3872,8 @@ function onAdminLessonChange() {
   var lessonSelect = document.getElementById('adm-course-lesson-select');
   var editTitle = document.getElementById('adm-lesson-edit-title');
   var input = document.getElementById('adm-vimeo-input');
+  var durInput = document.getElementById('adm-lesson-dur-input');
+  var descInput = document.getElementById('adm-lesson-desc-input');
   var lessonNameInput = document.getElementById('adm-lesson-name-input');
   if (!unitSelect || !lessonSelect || !editTitle || !input) return;
   
@@ -3396,12 +3886,16 @@ function onAdminLessonChange() {
   if (!lesson) {
     editTitle.textContent = '目前編輯：無小節';
     input.value = '';
+    if (durInput) durInput.value = '';
+    if (descInput) descInput.value = '';
     if (lessonNameInput) lessonNameInput.value = '';
     return;
   }
   
   editTitle.textContent = '目前編輯：UNIT ' + String(u.id).padStart(2,'0') + ' - LESSON ' + lesson.id + ' (' + lesson.title + ')';
   input.value = lesson.vimeoId || '';
+  if (durInput) durInput.value = lesson.duration || '00:00';
+  if (descInput) descInput.value = lesson.textDesc || '';
   if (lessonNameInput) lessonNameInput.value = lesson.title;
 }
 
@@ -3410,11 +3904,15 @@ function saveVimeoIdFromAdmin() {
   const unitSelect = document.getElementById('adm-course-unit-select');
   const lessonSelect = document.getElementById('adm-course-lesson-select');
   const input = document.getElementById('adm-vimeo-input');
+  const durInput = document.getElementById('adm-lesson-dur-input');
+  const descInput = document.getElementById('adm-lesson-desc-input');
   if (!unitSelect || !lessonSelect || !input) return;
   
   const unitId = parseInt(unitSelect.value);
   const lessonId = lessonSelect.value;
   const rawValue = input.value.trim();
+  const durValue = durInput ? durInput.value.trim() : '00:00';
+  const descValue = descInput ? descInput.value : '';
   
   if (!rawValue) {
     toast('❌ 請輸入 Vimeo 影片 ID 或連結！');
@@ -3440,27 +3938,30 @@ function saveVimeoIdFromAdmin() {
   
   // 更新記憶體資料
   lesson.vimeoId = vimeoId;
+  lesson.duration = durValue || '00:00';
+  lesson.textDesc = descValue;
   
-  // 儲存至 localStorage
+  // 儲存至 localStorage (統一儲存至 chiwa_course_structure)
+  saveCourseStructure();
+  
+  // 備用相容性儲存
   try {
     const saved = JSON.parse(localStorage.getItem('chiwa_course_vimeo_ids') || '{}');
     saved[lessonId] = vimeoId;
     localStorage.setItem('chiwa_course_vimeo_ids', JSON.stringify(saved));
-  } catch (e) {
-    console.error('Error saving Vimeo ID:', e);
-  }
+  } catch (e) {}
   
   // 寫入安全監控日誌
   try {
     let logs = JSON.parse(localStorage.getItem('chiwa_security_logs') || '[]');
-    logs.unshift(`[${new Date().toLocaleString()}] 🎬 內容異動：管理員更新了 UNIT 0${u.id} LESSON ${lessonId} 的 Vimeo 影片 ID 為 ${vimeoId}。`);
+    logs.unshift(`[${new Date().toLocaleString()}] 🎬 內容異動：管理員更新了 UNIT 0${u.id} LESSON ${lessonId} 的細節設定（影片: ${vimeoId}, 時長: ${durValue}）。`);
     localStorage.setItem('chiwa_security_logs', JSON.stringify(logs.slice(0, 30)));
   } catch (e) {}
   
   // 重新渲染管理後台 (包括安全日誌)
   renderAdminPanel();
   
-  toast(`✅ 已儲存 UNIT 0${u.id} LESSON ${lessonId} 影片設定！`);
+  toast(`✅ 已儲存 UNIT 0${u.id} LESSON ${lessonId} 小節細節設定！`);
 }
 
 // ==============================================
@@ -3472,7 +3973,15 @@ function saveCourseStructure() {
     var structure = courseData.map(function(u) {
       return {
         id: u.id, title: u.title, desc: u.desc || '',
-        lessons: u.lessons.map(function(l) { return { id: l.id, title: l.title, duration: l.duration || '00:00' }; })
+        lessons: u.lessons.map(function(l) { 
+          return { 
+            id: l.id, 
+            title: l.title, 
+            duration: l.duration || '00:00',
+            vimeoId: l.vimeoId || '76979871',
+            textDesc: l.textDesc || ''
+          }; 
+        })
       };
     });
     localStorage.setItem('chiwa_course_structure', JSON.stringify(structure));
@@ -3506,7 +4015,8 @@ function loadSavedCourseStructure() {
             id: sl.id,
             title: sl.title,
             duration: sl.duration || '00:00',
-            vimeoId: defaultVimeoIds[sl.id] || '76979871'
+            vimeoId: sl.vimeoId || defaultVimeoIds[sl.id] || '76979871',
+            textDesc: sl.textDesc || ''
           });
         }
       }
@@ -3925,6 +4435,134 @@ function enterVoiceTrialWorkspace() {
     logs.unshift('[' + new Date().toLocaleString() + '] 🚀 體驗試用：訪客透過「免費試用」一鍵登入 demo_user 體驗帳號。');
     localStorage.setItem('chiwa_security_logs', JSON.stringify(logs.slice(0, 30)));
   } catch(e){}
+}
+
+/* === 首頁 VSL 銷講影片管理與動態渲染邏輯 === */
+function getVSLConfig() {
+  try {
+    var config = JSON.parse(localStorage.getItem('chiwa_vsl_video_config'));
+    if (config && config.vimeoId && config.status) return config;
+  } catch(e) {}
+  return { vimeoId: '76979871', status: 'publish' }; // 預設值
+}
+
+function saveVSLConfigFromAdmin() {
+  var status = document.getElementById('adm-vsl-status').value;
+  var vimeoInput = document.getElementById('adm-vsl-vimeo').value.trim();
+  if (!vimeoInput) { toast('❌ 請輸入 Vimeo 影片 ID！'); return; }
+  
+  // 如果輸入的是完整 Vimeo URL，自動提取 ID
+  var vimeoId = vimeoInput;
+  var match = vimeoInput.match(/vimeo\.com\/(\d+)/);
+  if (match) vimeoId = match[1];
+
+  var config = { vimeoId: vimeoId, status: status };
+  try {
+    localStorage.setItem('chiwa_vsl_video_config', JSON.stringify(config));
+    toast('✅ VSL 設定儲存成功！');
+    logCourseOp('VSL影片異動：狀態改為「' + (status === 'publish' ? '上架' : '下架') + '」，ID改為「' + vimeoId + '」。');
+    renderVSLVideo();
+  } catch(e) { toast('❌ 寫入 LocalStorage 失敗'); }
+}
+
+function renderVSLVideo() {
+  var config = getVSLConfig();
+  var container = document.getElementById('vsl-wrap-container');
+  if (!container) return;
+
+  if (config.status === 'unpublish') {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+  container.innerHTML = `
+    <div class="vsl-box" id="vsl-box-element" onclick="playVSLVideo('${config.vimeoId}')">
+      <div class="vsl-play">▶</div>
+      <div class="vsl-label">點擊播放服務介紹影片</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:4px">了解吉娃 AI 如何幫助你不露臉經營品牌</div>
+    </div>
+  `;
+}
+
+function playVSLVideo(vimeoId) {
+  var box = document.getElementById('vsl-box-element');
+  if (!box) return;
+  // 安全地嵌入 Vimeo 播放器
+  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  box.removeAttribute('onclick');
+}
+
+function updateAdminVSLUI() {
+  var config = getVSLConfig();
+  var statusEl = document.getElementById('adm-vsl-status');
+  var vimeoEl = document.getElementById('adm-vsl-vimeo');
+  if (statusEl) statusEl.value = config.status;
+  if (vimeoEl) vimeoEl.value = config.vimeoId;
+  updateAdminVSLFeatureUI();
+}
+
+/* === 首頁 VSL 下方特色影片管理與動態渲染邏輯 === */
+function getVSLFeatureConfig() {
+  try {
+    var config = JSON.parse(localStorage.getItem('chiwa_vsl_feature_config'));
+    if (config && config.vimeoId && config.status) return config;
+  } catch(e) {}
+  return { vimeoId: '76979871', status: 'publish' };
+}
+
+function saveVSLFeatureConfigFromAdmin() {
+  var status = document.getElementById('adm-vsl-feature-status').value;
+  var vimeoInput = document.getElementById('adm-vsl-feature-vimeo').value.trim();
+  if (!vimeoInput) { toast('❌ 請輸入 Vimeo 特色影片 ID！'); return; }
+  
+  var vimeoId = vimeoInput;
+  var match = vimeoInput.match(/vimeo\.com\/(\d+)/);
+  if (match) vimeoId = match[1];
+
+  var config = { vimeoId: vimeoId, status: status };
+  try {
+    localStorage.setItem('chiwa_vsl_feature_config', JSON.stringify(config));
+    toast('✅ 特色影片設定儲存成功！');
+    logCourseOp('特色影片異動：狀態改為「' + (status === 'publish' ? '上架' : '下架') + '」，ID改為「' + vimeoId + '」。');
+    renderVSLFeatureVideo();
+  } catch(e) { toast('❌ 寫入 LocalStorage 失敗'); }
+}
+
+function renderVSLFeatureVideo() {
+  var config = getVSLFeatureConfig();
+  var container = document.getElementById('vsl-feature-container');
+  var wrap = document.getElementById('vsl-feature-video-wrap');
+  if (!container || !wrap) return;
+
+  if (config.status === 'unpublish') {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+  wrap.innerHTML = `
+    <div class="vsl-box" id="vsl-feature-box-element" onclick="playVSLFeatureVideo('${config.vimeoId}')" style="aspect-ratio:16/9; max-width:760px; margin:0 auto;">
+      <div class="vsl-play">▶</div>
+      <div class="vsl-label">點擊播放特色介紹影片</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:4px">感受 AI 動態口播的強大魅力</div>
+    </div>
+  `;
+}
+
+function playVSLFeatureVideo(vimeoId) {
+  var box = document.getElementById('vsl-feature-box-element');
+  if (!box) return;
+  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  box.removeAttribute('onclick');
+}
+
+function updateAdminVSLFeatureUI() {
+  var config = getVSLFeatureConfig();
+  var statusEl = document.getElementById('adm-vsl-feature-status');
+  var vimeoEl = document.getElementById('adm-vsl-feature-vimeo');
+  if (statusEl) statusEl.value = config.status;
+  if (vimeoEl) vimeoEl.value = config.vimeoId;
 }
 
 /* Enter 送出 */
