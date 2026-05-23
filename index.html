@@ -41,11 +41,11 @@ input,textarea,select,[contenteditable="true"],.tinput,.out-text,.copy-btn,#api-
 a{color:inherit;text-decoration:none}
 
 /* PAGE SYSTEM */
-.page{display:none;min-height:100vh}
-.page.active{display:block}
+.page{display:none !important;min-height:100vh}
+.page.active{display:block !important}
 #page-workspace{display:none;height:100vh;overflow:hidden}
 #page-workspace.active{display:flex}
-#page-login.active{display:flex;min-height:100vh}
+#page-login.active{display:flex !important;align-items:center;justify-content:center;min-height:100vh;background:var(--bg, #0a0a0f)}
 #page-voice-trial.active{display:block}
 
 /* ── API MODAL ── */
@@ -1214,8 +1214,8 @@ async function decrVoice(secs) {
   <nav class="nav">
     <div class="nav-logo">吉娃 AI</div>
     <div class="nav-links">
-      <span class="nav-link" onclick="document.querySelector('#solutions-anchor').scrollIntoView({behavior:'smooth'})">服務方案</span>
-      <span class="nav-link" onclick="document.querySelector('#faq-anchor').scrollIntoView({behavior:'smooth'})">常見問題</span>
+      <span class="nav-link" onclick="var el=document.getElementById('solutions-anchor');if(el)el.scrollIntoView({behavior:'smooth'})">服務方案</span>
+      <span class="nav-link" onclick="var el=document.getElementById('faq-anchor');if(el)el.scrollIntoView({behavior:'smooth'})">常見問題</span>
       <span class="nav-link" onclick="window.open('https://forms.gle/HTbVXWsQBUNUujA57','_blank')">預約諮詢</span>
     </div>
     <div class="nav-btns">
@@ -1480,7 +1480,7 @@ async function decrVoice(secs) {
     
     <!-- Centered Bottom CTA -->
           </div>
-    </div>
+    
 
 
   <div id="faq-anchor" style="position:relative;top:-80px;"></div>
@@ -1782,6 +1782,8 @@ async function decrVoice(secs) {
     </div>
   </div>
 </div>
+
+
 
 <!-- ═══ LOGIN PAGE ═══ -->
 <div class="page" id="page-login">
@@ -2666,6 +2668,9 @@ document.addEventListener('keydown', function(e) {
 
 /* 頁面路由與導覽系統 */
 function goPage(pageId) {
+  console.log('goPage called:', pageId);
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
   if (pageId === 'voice-trial') {
     toast('💡 免費體驗已整合至工作台「語音克隆」面板中！請先登入學員帳號。');
     goPage('login');
@@ -2791,7 +2796,8 @@ function toggleFaq(el) {
   el.classList.toggle('open');
 }
 
-let selChip='', aiUse=285, scriptTxt='', marketingTxt='', isRec=false, recSec=0, recTmr=null;
+let selChip='', scriptTxt='', marketingTxt='', isRec=false, recSec=0, recTmr=null;
+aiUse = 285; // 設定初始值（已在 head 用 var 宣告）
 // \uD83D\uDEE1\uFE0F UTF-8 Base64
 function generateSandboxMock(sys, usr, type, fmt, tone) {
   let ind = '專業服務';
