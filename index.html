@@ -1039,6 +1039,7 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+var aiUse = 0; // 預先宣告，避免 head 腳本區發生 ReferenceError
 const _SB = supabase.createClient('https://nsauscojruqjcprvsfsn.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zYXVzY29qcnVxamNwcnZzZnNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjAzMTksImV4cCI6MjA5NDU5NjMxOX0.gXX7cBcqohoHqvPkZM-FFrnZVDS59g5OBJPBqH73H_w');
 let currentUser = '';
 let currentUserData = null;
@@ -1080,40 +1081,129 @@ async function doLogin() {
     const avEl = document.querySelector('.sb-av');
     if (avEl) avEl.textContent = (data.name || u).substring(0,2).toUpperCase();
 
+    // 跨月自動重置檢查：若已進入新月份則重置次數
+    const now = new Date();
+    const curMonthKey = `${now.getFullYear()}-${now.getMonth()+1}`;
+    const lastReset = data.reset_month || '';
+    let needsReset = lastReset !== curMonthKey;
+    if (needsReset) {
+      try {
+        await _SB.from('students').update({
+          ai_usage: 300,
+          voice_seconds: 3600,
+          reset_month: curMonthKey
+        }).eq('id', u);
+        data.ai_usage = 300;
+        data.voice_seconds = 3600;
+        data.reset_month = curMonthKey;
+        toast('🎉 新月份開始！AI 次數與語音秒數已自動重置！');
+      } catch(e) { console.error('月份重置失敗:', e); }
+    }
+
+    // 若 DB 欄位尚未存在則給預設值
+    if (data.ai_usage === null || data.ai_usage === undefined) data.ai_usage = 300;
+    if (data.voice_seconds === null || data.voice_seconds === undefined) data.voice_seconds = 3600;
+
     // 更新次數顯示
     updateUsageUI(data.ai_usage, data.voice_seconds);
 
-    goPage('workspace');
-    buildWM();
-    renderUnitGrid();
-    renderVoiceList();
-    updateVoiceDropdown();
+    // 顯示手機版用量列
+    const mub = document.getElementById('mobile-usage-bar');
+    if (mub) mub.style.display = 'flex';
+
+    // 切換到工作台，並初始化各面板
+    if (typeof goPage === 'function') goPage('workspace');
+    if (typeof buildWM === 'function') buildWM();
+    if (typeof renderUnitGrid === 'function') renderUnitGrid();
+    if (typeof renderVoiceList === 'function') renderVoiceList();
+    if (typeof updateVoiceDropdown === 'function') updateVoiceDropdown();
     toast('🔓 登入成功！歡迎回來 ' + (data.name || u));
   } catch(e) {
+    console.error('login error:', e);
     if (err) { err.style.display='block'; err.textContent='登入失敗，請稍後再試'; }
   }
 }
 
-// 次數顯示更新
-function updateUsageUI(aiUsage, voiceSec) {
-  const un = document.getElementById('ai-num');
-  const uf = document.getElementById('ai-bar');
-  const vs = document.getElementById('voice-sec');
-  if (un) un.innerHTML = aiUsage + '<span style="font-size:11px;color:var(--t3);font-weight:400">/300</span>';
-  if (uf) uf.style.width = Math.round(aiUsage / 3) + '%';
-  if (vs) vs.textContent = Math.floor(voiceSec/60) + ':' + String(voiceSec%60).padStart(2,'0');
+// 格式化秒數為 MM:SS
+function _fmtSec(secs) {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
 }
 
-// 扣 AI 次數（寫回 Supabase）
+// 次數與語音秒數顯示全站同步更新
+function updateUsageUI(aiUsage, voiceSec) {
+  // --- PC 側邊欄 AI 次數 ---
+  const un = document.getElementById('unum');
+  const uf = document.getElementById('ufill');
+  if (un) un.innerHTML = aiUsage + '<span style="font-size:11px;color:var(--t3);font-weight:400">/300</span>';
+  if (uf) {
+    uf.style.width = Math.round((aiUsage / 300) * 100) + '%';
+    uf.style.background = aiUsage < 30 ? 'var(--red)' : 'var(--gold)';
+  }
+  // --- 相容舊版 ID（如有）---
+  const unOld = document.getElementById('ai-num');
+  const ufOld = document.getElementById('ai-bar');
+  if (unOld) unOld.innerHTML = aiUsage + '<span style="font-size:11px;color:var(--t3);font-weight:400">/300</span>';
+  if (ufOld) ufOld.style.width = Math.round((aiUsage / 300) * 100) + '%';
+
+  // --- 手機版頂部列 AI ---
+  const mun = document.getElementById('m-ai-num');
+  if (mun) mun.textContent = aiUsage;
+
+  // --- PC 側邊欄語音秒數 ---
+  const vnSb = document.getElementById('voice-num-sidebar');
+  const vbSb = document.getElementById('voice-bar-sidebar');
+  const vfmt = _fmtSec(voiceSec);
+  if (vnSb) vnSb.innerHTML = vfmt + '<span style="font-size:10px;color:var(--t3);font-weight:400">/60:00</span>';
+  if (vbSb) vbSb.style.width = Math.round((voiceSec / 3600) * 100) + '%';
+  // 相容舊 ID
+  const vsOld = document.getElementById('voice-sec');
+  if (vsOld) vsOld.textContent = vfmt;
+
+  // --- 語音克隆面板剩餘秒數 ---
+  const vrem = document.getElementById('voice-rem-seconds');
+  if (vrem) vrem.innerHTML = vfmt + '<span style="font-size:11px;color:var(--t3);font-weight:400">/60:00</span>';
+
+  // --- 手機版頂部列語音 ---
+  const mvn = document.getElementById('m-voice-num');
+  if (mvn) mvn.textContent = vfmt;
+
+  // --- 下次重置日期 ---
+  const now = new Date();
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const resetStr = `${nextMonth.getFullYear()}年${nextMonth.getMonth() + 1}月1日`;
+  const rdEl = document.getElementById('reset-date');
+  if (rdEl) rdEl.textContent = resetStr;
+  const mrdEl = document.getElementById('m-reset-days');
+  const daysLeft = Math.ceil((nextMonth - now) / 86400000);
+  if (mrdEl) mrdEl.textContent = `${daysLeft}天後重置`;
+
+  // 全域相容變數（安全寫入，避免 head 腳本區 ReferenceError）
+  if (typeof aiUse !== 'undefined') aiUse = aiUsage;
+}
+
+// 扣 AI 次數（寫回 Supabase，並即時更新畫面）
 async function decrAI() {
-  if (!currentUser || !currentUserData) return;
-  currentUserData.ai_usage = Math.max(0, currentUserData.ai_usage - 1);
-  updateUsageUI(currentUserData.ai_usage, currentUserData.voice_seconds);
+  if (!currentUserData) return;
+  if (currentUserData.is_admin) return; // 管理員不扣點
+  currentUserData.ai_usage = Math.max(0, (currentUserData.ai_usage || 0) - 1);
+  updateUsageUI(currentUserData.ai_usage, currentUserData.voice_seconds || 0);
   try {
     await _SB.from('students').update({ ai_usage: currentUserData.ai_usage }).eq('id', currentUser);
   } catch(e) { console.error('decrAI error:', e); }
-  // 相容舊程式碼用的 aiUse 變數
   aiUse = currentUserData.ai_usage;
+}
+
+// 扣語音秒數（寫回 Supabase，並即時更新畫面）
+async function decrVoice(secs) {
+  if (!currentUserData) return;
+  if (currentUserData.is_admin) return; // 管理員不扣
+  currentUserData.voice_seconds = Math.max(0, (currentUserData.voice_seconds || 0) - secs);
+  updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds);
+  try {
+    await _SB.from('students').update({ voice_seconds: currentUserData.voice_seconds }).eq('id', currentUser);
+  } catch(e) { console.error('decrVoice error:', e); }
 }
 </script>
 </head>
@@ -1124,8 +1214,8 @@ async function decrAI() {
   <nav class="nav">
     <div class="nav-logo">吉娃 AI</div>
     <div class="nav-links">
-      <span class="nav-link" onclick="scrollTo_('#solutions-anchor')">服務方案</span>
-      <span class="nav-link" onclick="scrollTo_('#faq-anchor')">常見問題</span>
+      <span class="nav-link" onclick="document.querySelector('#solutions-anchor').scrollIntoView({behavior:'smooth'})">服務方案</span>
+      <span class="nav-link" onclick="document.querySelector('#faq-anchor').scrollIntoView({behavior:'smooth'})">常見問題</span>
       <span class="nav-link" onclick="window.open('https://forms.gle/HTbVXWsQBUNUujA57','_blank')">預約諮詢</span>
     </div>
     <div class="nav-btns">
@@ -1142,7 +1232,7 @@ async function decrAI() {
     </h1>
 
     <div class="hero-btns">
-      <button class="btn-gold" style="font-size:15px;padding:13px 28px" onclick="scrollTo_('#solutions-section')">查看服務與方案 ↓</button>
+      <button class="btn-gold" style="font-size:15px;padding:13px 28px" onclick="document.querySelector('#solutions-section').scrollIntoView({behavior:'smooth'})">查看服務方案 ↓</button>
     </div>
   </div>
 
@@ -1866,14 +1956,14 @@ async function decrAI() {
 
     <div class="sb-usage">
       <div class="sb-ul" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase">AI 生成次數</div>
-      <div class="sb-un" id="unum">285<span>/300</span></div>
-      <div class="sb-ubar"><div class="sb-ufill" id="ufill" style="width:95%"></div></div>
+      <div class="sb-un" id="unum">—<span>/300</span></div>
+      <div class="sb-ubar"><div class="sb-ufill" id="ufill" style="width:0%"></div></div>
       <div style="height:1px;background:var(--bdr);margin:8px 0"></div>
       <div class="sb-ul" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase">語音剩餘秒數</div>
-      <div style="font-size:15px;font-weight:900;color:var(--blue);font-family:'Space Mono',monospace">58:30<span style="font-size:10px;color:var(--t3);font-weight:400">/60:00</span></div>
-      <div class="sb-ubar"><div style="height:100%;background:var(--blue);border-radius:2px;width:97%;transition:width .3s"></div></div>
+      <div style="font-size:15px;font-weight:900;color:var(--blue);font-family:'Space Mono',monospace" id="voice-num-sidebar">—<span style="font-size:10px;color:var(--t3);font-weight:400">/60:00</span></div>
+      <div class="sb-ubar"><div id="voice-bar-sidebar" style="height:100%;background:var(--blue);border-radius:2px;width:0%;transition:width .3s"></div></div>
       <div style="height:1px;background:var(--bdr);margin:8px 0"></div>
-      <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace">下次重置：<span id="reset-date">2026年6月1日</span></div>
+      <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace">下次重置：<span id="reset-date">—</span></div>
     </div>
     <div class="sb-foot">
       <div class="sb-av">S1</div>
@@ -2600,6 +2690,25 @@ function goPage(pageId) {
 // doLogin 已移至 Supabase 版本（見頁面頂部）
 
 function doLogout() {
+  // 清空全域登入狀態
+  currentUser = '';
+  currentUserData = null;
+  aiUse = 0;
+  // 清空側邊欄顯示
+  const un = document.getElementById('unum');
+  const uf = document.getElementById('ufill');
+  const vn = document.getElementById('voice-num-sidebar');
+  const vb = document.getElementById('voice-bar-sidebar');
+  if (un) un.innerHTML = '—<span>/300</span>';
+  if (uf) uf.style.width = '0%';
+  if (vn) vn.innerHTML = '—<span style="font-size:10px;color:var(--t3);font-weight:400">/60:00</span>';
+  if (vb) vb.style.width = '0%';
+  // 隱藏手機版用量列
+  const mub = document.getElementById('mobile-usage-bar');
+  if (mub) mub.style.display = 'none';
+  // 清空 watermark
+  const wm = document.getElementById('wm');
+  if (wm) { wm.innerHTML = ''; wm.classList.remove('show'); }
   goPage('home');
   toast('👋 您已安全登出');
   document.getElementById('lu').value = '';
@@ -2646,6 +2755,10 @@ function swP(name, el) {
   const panel = document.getElementById('p-' + name);
   if (panel) panel.classList.add('on');
   if (el) el.classList.add('on');
+  // 切換到課程面板時自動重新渲染單元列表
+  if (name === 'course') renderUnitGrid();
+  // 切換到管理後台時自動刷新影片設定 UI
+  if (name === 'admin') { if(typeof updateAdminVSLUI==='function') updateAdminVSLUI(); if(typeof refreshAdminSelects==='function') refreshAdminSelects(); }
 }
 
 /* 手機版導覽切換 */
@@ -2670,19 +2783,8 @@ function selC(el) {
   selChip = el.dataset.t;
 }
 
-/* 用量更新 */
-function decrAI() {
-  if (aiUse > 0) aiUse--;
-  const un = document.getElementById('ai-num');
-  const uf = document.getElementById('ai-bar');
-  const mun = document.getElementById('m-ai-num');
-  if (un) un.innerHTML = aiUse + '<span style="font-size:11px;color:var(--t3);font-weight:400">/300</span>';
-  if (uf) {
-    uf.style.width = Math.round(aiUse / 3) + '%';
-    if (aiUse < 30) uf.style.background = 'var(--red)';
-  }
-  if (mun) mun.textContent = aiUse;
-}
+/* 用量更新（此函式已由 Supabase 版接管，保留為空殼相容） */
+// decrAI 與 decrVoice 的正式版本在頁面頂部 Supabase script 區塊中定義
 
 /* 常見問題摺疊卡片切換 */
 function toggleFaq(el) {
@@ -2957,6 +3059,10 @@ async function genTopics(){
   const ind=document.getElementById('ti').value.trim();
   if(!ind){toast('請先輸入你的行業');return;}
   if(!selChip){toast('請先選擇選題類型');return;}
+  // 額度檢查
+  if (currentUserData && !currentUserData.is_admin && (currentUserData.ai_usage || 0) <= 0) {
+    toast('❌ AI 生成次數已用完！請等待每月1日自動重置。'); return;
+  }
   const btn=document.getElementById('tbtn'),ld=document.getElementById('tload'),out=document.getElementById('tout');
   if(!btn||!ld||!out)return;
   btn.disabled=true;ld.style.display='flex';out.innerHTML='';
@@ -2989,8 +3095,12 @@ function useScript(t){
 async function genScript(){
   const tp=document.getElementById('stopic')?.value.trim();
   if(!tp){toast('請先輸入選題標題');return;}
+  // 額度檢查
+  if (currentUserData && !currentUserData.is_admin && (currentUserData.ai_usage || 0) <= 0) {
+    toast('❌ AI 生成次數已用完！請等待每月1日自動重置。'); return;
+  }
   const ex=document.getElementById('sextra')?.value.trim()||'';
-  const fmt=document.querySelector('input[name="sfmt"]:checked')?.value||'storyboard';
+  const fmt='storyboard';
   const tone=document.querySelector('input[name="stone"]:checked')?.value||'casual';
   const btn=document.getElementById('sbtn'),ld=document.getElementById('sload'),out=document.getElementById('sout');
   const scb=document.getElementById('scbtn'),smkb=document.getElementById('smkbtn');
@@ -3078,6 +3188,10 @@ function sendMarketing(){
 async function genMarketing(){
   const txt=document.getElementById('mkin')?.value.trim();
   if(!txt){toast('請先貼入腳本內容');return;}
+  // 額度檢查
+  if (currentUserData && !currentUserData.is_admin && (currentUserData.ai_usage || 0) <= 0) {
+    toast('❌ AI 生成次數已用完！請等待每月1日自動重置。'); return;
+  }
   const btn=document.getElementById('mkbtn'),ld=document.getElementById('mkload'),out=document.getElementById('mkout');
   if(!btn||!ld||!out)return;
   btn.disabled=true;ld.style.display='flex';out.innerHTML='';
@@ -3152,6 +3266,10 @@ async function genMarketing(){
 async function chkComp(){
   const txt=document.getElementById('cin')?.value.trim();
   if(!txt){toast('請先貼入腳本文字');return;}
+  // 額度檢查
+  if (currentUserData && !currentUserData.is_admin && (currentUserData.ai_usage || 0) <= 0) {
+    toast('❌ AI 生成次數已用完！請等待每月1日自動重置。'); return;
+  }
   const btn=document.getElementById('cbtn'),ld=document.getElementById('cload'),out=document.getElementById('cout');
   if(!btn||!ld||!out)return;
   btn.disabled=true;ld.style.display='flex';out.innerHTML='';
@@ -3372,6 +3490,18 @@ function generateTTSAudio() {
     toast('❌ 請選擇發音人聲音！');
     return;
   }
+
+  // 計算本次語音預計長度（秒）
+  const generatedSecs = Math.max(5, Math.min(60, Math.round(text.length / 6)));
+
+  // 語音秒數額度檢查（管理員跳過）
+  if (currentUserData && !currentUserData.is_admin) {
+    const remSecs = currentUserData.voice_seconds || 0;
+    if (remSecs < generatedSecs) {
+      toast(`❌ 語音剩餘秒數不足！本次需 ${generatedSecs} 秒，目前剩餘 ${_fmtSec(remSecs)}。`);
+      return;
+    }
+  }
   
   btn.disabled = true;
   load.style.display = 'flex';
@@ -3387,11 +3517,12 @@ function generateTTSAudio() {
     load.style.display = 'none';
     btn.disabled = false;
     
-    // 計算剩餘額度
-    const cost = Math.max(1, Math.round(text.length / 5)); // 模擬扣點
-    toast(`🎵 AI 語音合成成功！已消耗體驗額度 ${cost} 秒`);
+    // 精準扣除語音秒數並同步 Supabase
+    decrVoice(generatedSecs);
+    toast(`🎵 AI 語音合成成功！已扣除 ${generatedSecs} 秒語音額度`);
     
     // 渲染播放器介面
+    const timeLabel = _fmtSec(generatedSecs);
     container.innerHTML = `
       <div class="audio-player-box">
         <div class="ap-controls">
@@ -3399,7 +3530,7 @@ function generateTTSAudio() {
           <div class="ap-bar-bg" onclick="seekTtsPlayback(event)">
             <div class="ap-bar-fill" id="ap-play-fill" style="width: 0%"></div>
           </div>
-          <div class="ap-time" id="ap-play-time">00:00 / 00:08</div>
+          <div class="ap-time" id="ap-play-time">00:00 / ${timeLabel}</div>
         </div>
       </div>
       <div style="font-size: 11px; color: var(--t3); margin-top: 6px; text-align: left; padding-left: 8px;">
@@ -3408,7 +3539,7 @@ function generateTTSAudio() {
     `;
     
     ttsSec = 0;
-    ttsTotal = Math.max(5, Math.min(25, Math.round(text.length / 6))); // 動態模擬長度
+    ttsTotal = generatedSecs;
   }, 1200);
 }
 
