@@ -1141,19 +1141,39 @@ async function findAuthorizedStudentByEmail(email) {
     { column: 'email', value: normalized },
     { column: 'id', value: normalized }
   ];
+  const matches = [];
 
   for (const check of checks) {
     try {
       const { data, error } = await _SB
         .from('students')
         .select('*')
-        .eq(check.column, check.value)
-        .maybeSingle();
-      if (data) return data;
+        .eq(check.column, check.value);
+      if (Array.isArray(data)) matches.push(...data);
       if (error && !String(error.message || '').includes('column')) console.warn('student lookup skipped:', error.message);
     } catch(e) {}
   }
-  return null;
+
+  const unique = [];
+  const seen = {};
+  matches.forEach(function(student) {
+    const key = String(student && student.id || '').toLowerCase();
+    if (key && !seen[key]) {
+      seen[key] = true;
+      unique.push(student);
+    }
+  });
+
+  unique.sort(function(a, b) {
+    const aActive = !a.status || a.status === '正常' ? 1 : 0;
+    const bActive = !b.status || b.status === '正常' ? 1 : 0;
+    if (aActive !== bActive) return bActive - aActive;
+    if (!!a.is_admin !== !!b.is_admin) return b.is_admin ? 1 : -1;
+    if (!!a.google_enabled !== !!b.google_enabled) return b.google_enabled ? 1 : -1;
+    return 0;
+  });
+
+  return unique[0] || null;
 }
 
 async function loginWithGoogleEmail(email) {
