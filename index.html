@@ -1130,6 +1130,7 @@ async function finishStudentLogin(data, loginId) {
 
   if (typeof goPage === 'function') goPage('workspace');
   if (typeof buildWM === 'function') buildWM();
+  if (typeof loadCourseStructureFromCloud === 'function') await loadCourseStructureFromCloud();
   if (typeof renderUnitGrid === 'function') renderUnitGrid();
   if (typeof loadCloudVoices === 'function') await loadCloudVoices();
   if (typeof renderVoiceList === 'function') renderVoiceList();
@@ -5036,23 +5037,107 @@ function saveVimeoIdFromAdmin() {
 // 課程管理後台：單元小節 新增/刪除/改名 JS 核心
 // ==============================================
 
+function getSerializableCourseStructure() {
+  return courseData.map(function(u) {
+    return {
+      id: u.id,
+      title: u.title,
+      desc: u.desc || '',
+      lessons: u.lessons.map(function(l) { 
+        return { 
+          id: l.id, 
+          title: l.title, 
+          duration: l.duration || '00:00',
+          vimeoId: l.vimeoId || '76979871',
+          textDesc: l.textDesc || ''
+        }; 
+      })
+    };
+  });
+}
+
+function applyCourseStructure(saved) {
+  if (!Array.isArray(saved) || !saved.length) return false;
+
+  // 備份原始靜態大綱中的預設 vimeoId
+  var defaultVimeoIds = {};
+  for (var i = 0; i < courseData.length; i++) {
+    var u = courseData[i];
+    for (var j = 0; j < u.lessons.length; j++) {
+      var l = u.lessons[j];
+      defaultVimeoIds[l.id] = l.vimeoId || '76979871';
+    }
+  }
+
+  courseData.length = 0;
+  for (var i = 0; i < saved.length; i++) {
+    var su = saved[i];
+    var lessons = [];
+    if (su.lessons) {
+      for (var j = 0; j < su.lessons.length; j++) {
+        var sl = su.lessons[j];
+        lessons.push({
+          id: sl.id,
+          title: sl.title,
+          duration: sl.duration || '00:00',
+          vimeoId: sl.vimeoId || defaultVimeoIds[sl.id] || '76979871',
+          textDesc: sl.textDesc || ''
+        });
+      }
+    }
+    courseData.push({
+      id: su.id,
+      title: su.title,
+      desc: su.desc || '（尚未填寫單元描述）',
+      lessons: lessons
+    });
+  }
+  return true;
+}
+
+async function persistCourseStructureToCloud(structure) {
+  if (!_SB || !_SB.from) return;
+  try {
+    const payload = {
+      key: 'course_structure',
+      value: { units: structure || getSerializableCourseStructure() }
+    };
+    const { error } = await _SB.from('site_settings').upsert(payload, { onConflict: 'key' });
+    if (error) console.warn('cloud course save skipped:', error.message || error);
+  } catch(e) {
+    console.warn('cloud course save failed:', e.message || e);
+  }
+}
+
+async function loadCourseStructureFromCloud() {
+  if (!_SB || !_SB.from) {
+    loadSavedCourseStructure();
+    return false;
+  }
+  try {
+    const { data, error } = await _SB
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'course_structure')
+      .maybeSingle();
+    if (error) throw error;
+    const units = data && data.value && Array.isArray(data.value.units) ? data.value.units : null;
+    if (units && applyCourseStructure(units)) {
+      localStorage.setItem('chiwa_course_structure', JSON.stringify(units));
+      return true;
+    }
+  } catch(e) {
+    console.warn('cloud course load skipped:', e.message || e);
+  }
+  loadSavedCourseStructure();
+  return false;
+}
+
 function saveCourseStructure() {
   try {
-    var structure = courseData.map(function(u) {
-      return {
-        id: u.id, title: u.title, desc: u.desc || '',
-        lessons: u.lessons.map(function(l) { 
-          return { 
-            id: l.id, 
-            title: l.title, 
-            duration: l.duration || '00:00',
-            vimeoId: l.vimeoId || '76979871',
-            textDesc: l.textDesc || ''
-          }; 
-        })
-      };
-    });
+    var structure = getSerializableCourseStructure();
     localStorage.setItem('chiwa_course_structure', JSON.stringify(structure));
+    persistCourseStructureToCloud(structure);
   } catch(e) { console.error('saveCourseStructure error:', e); }
 }
 
@@ -5060,41 +5145,7 @@ function loadSavedCourseStructure() {
   try {
     var saved = JSON.parse(localStorage.getItem('chiwa_course_structure') || 'null');
     if (!saved) return;
-    
-    // 備份原始靜態大綱中的預設 vimeoId
-    var defaultVimeoIds = {};
-    for (var i = 0; i < courseData.length; i++) {
-      var u = courseData[i];
-      for (var j = 0; j < u.lessons.length; j++) {
-        var l = u.lessons[j];
-        defaultVimeoIds[l.id] = l.vimeoId || '76979871';
-      }
-    }
-    
-    // 清空並重新根據儲存的結構建立 courseData
-    courseData.length = 0;
-    for (var i = 0; i < saved.length; i++) {
-      var su = saved[i];
-      var lessons = [];
-      if (su.lessons) {
-        for (var j = 0; j < su.lessons.length; j++) {
-          var sl = su.lessons[j];
-          lessons.push({
-            id: sl.id,
-            title: sl.title,
-            duration: sl.duration || '00:00',
-            vimeoId: sl.vimeoId || defaultVimeoIds[sl.id] || '76979871',
-            textDesc: sl.textDesc || ''
-          });
-        }
-      }
-      courseData.push({
-        id: su.id,
-        title: su.title,
-        desc: su.desc || '（尚未填寫單元描述）',
-        lessons: lessons
-      });
-    }
+    applyCourseStructure(saved);
   } catch(e) {
     console.error('loadSavedCourseStructure error:', e);
   }
