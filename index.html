@@ -2346,10 +2346,12 @@ async function decrVoice(secs) {
       </div>
     </div>
     <div id="vt-new" style="display:none">
-      <div style="text-align:center;font-size:13px;color:var(--t2);margin-bottom:12px">步驟 1：錄製 30-60 秒清晰語音</div>
+      <div style="text-align:center;font-size:13px;color:var(--t2);margin-bottom:12px">步驟 1：錄製或上傳 30-60 秒清晰語音</div>
       <div id="rbtn" class="rec-btn" onclick="togRec()">🎤</div>
       <div class="rec-timer" id="rtimer">00:00</div>
       <div class="rec-hint" id="rhint">點擊開始錄音</div>
+      <input type="file" id="voice-file-input" accept="audio/*" style="display:none" onchange="handleVoiceFileUpload(event)">
+      <button class="btn-outline" style="width:100%;margin-top:10px" onclick="document.getElementById('voice-file-input').click()">📁 上傳聲音檔</button>
       <div class="divider"></div>
       <div class="label mb14">步驟 2：為聲音命名</div>
       <input type="text" id="vname" placeholder="例：Tony 專業版" style="margin-bottom:14px">
@@ -3726,10 +3728,56 @@ async function loadCloudVoices() {
   if (!token) return;
   try {
     const data = await callCartesiaVoiceJson('list', {});
+    if (Array.isArray(data.systemVoices) && data.systemVoices.length) {
+      defaultVoices = data.systemVoices;
+    }
     if (Array.isArray(data.voices)) saveStoredVoices(data.voices);
   } catch(e) {
     console.warn('cloud voices skipped:', e.message || e);
   }
+}
+
+function setVoiceRecordingReady(blob, seconds, label) {
+  recordedVoiceBlob = blob;
+  recSec = Math.max(3, Math.round(seconds || 30));
+  const tmr = document.getElementById('rtimer');
+  const hint = document.getElementById('rhint');
+  const m = String(Math.floor(recSec / 60)).padStart(2, '0');
+  const s = String(recSec % 60).padStart(2, '0');
+  if (tmr) tmr.textContent = m + ':' + s;
+  if (hint) hint.textContent = (label || '聲音檔已就緒') + ' (' + recSec + ' 秒)';
+}
+
+function handleVoiceFileUpload(event) {
+  const input = event && event.target;
+  const file = input && input.files && input.files[0];
+  if (!file) return;
+  const audioExtOk = /\.(mp3|wav|m4a|aac|webm|ogg|flac)$/i.test(file.name || '');
+  if ((!file.type || !file.type.startsWith('audio/')) && !audioExtOk) {
+    toast('❌ 請上傳音訊檔案。');
+    input.value = '';
+    return;
+  }
+  if (file.size < 1000) {
+    toast('❌ 音檔太小，請上傳清楚的 30-60 秒聲音檔。');
+    input.value = '';
+    return;
+  }
+
+  const audio = document.createElement('audio');
+  const url = URL.createObjectURL(file);
+  audio.preload = 'metadata';
+  audio.onloadedmetadata = function() {
+    URL.revokeObjectURL(url);
+    setVoiceRecordingReady(file, Number.isFinite(audio.duration) ? audio.duration : 30, '已選擇音檔：' + file.name);
+    toast('✅ 聲音檔已載入，可以命名並建立語音模型。');
+  };
+  audio.onerror = function() {
+    URL.revokeObjectURL(url);
+    setVoiceRecordingReady(file, 30, '音檔已載入：' + file.name);
+    toast('✅ 聲音檔已載入，可以命名並建立語音模型。');
+  };
+  audio.src = url;
 }
 
 // 錄音模組控制
@@ -3788,7 +3836,7 @@ async function togRec(){
 }
 
 // 預設發音人
-const defaultVoices = [
+let defaultVoices = [
   { id: 'def-female', name: '吉娃 AI 官方溫柔女聲', date: '系統預設', duration: '預置聲音' },
   { id: 'def-male', name: '吉娃 AI 官方專業男聲', date: '系統預設', duration: '預置聲音' }
 ];
