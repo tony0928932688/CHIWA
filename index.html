@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="frame-src https://player.vimeo.com https://vimeo.com; default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>吉娃AI自媒體變現系統</title>
+<title>台灣最懂I人的AI自媒體變現系統 | 吉娃 AI</title>
 <meta name="description" content="吉娃 AI 是台灣專為 I 人設計的 AI 自媒體變現系統。只需錄一次 60 秒影片，AI 分身替你經營短影音，讓你的專業知識觸及精準客群。">
 <meta name="keywords" content="AI短影音,TikTok代操,AI分身,語音克隆,台灣,I人,短影音行銷,吉娃AI">
 <meta name="author" content="吉娃網路行銷 Chiwa Digital Marketing">
@@ -13,16 +13,13 @@
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://chiwaai.com">
-<meta property="og:title" content="吉娃AI自媒體變現系統">
-<meta property="og:description" content="吉娃 AI 是台灣專為 I 人設計的 AI 自媒體變現系統。只需錄一次 60 秒影片，AI 分身替你經營短影音，讓你的專業知識觸及精準客群。">
-<meta property="og:image" content="https://chiwaai.com/assets/chiwa-logo.png">
+<meta property="og:title" content="台灣最懂I人的AI自媒體變現系統 | 吉娃 AI">
+<meta property="og:description" content="只需錄一次 60 秒影片，AI 分身替你經營短影音。每週穩定產出 2 支專業影片。">
+<meta property="og:image" content="https://chiwaai.com/og-image.jpg">
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="吉娃AI自媒體變現系統">
-<meta name="twitter:description" content="吉娃 AI 是台灣專為 I 人設計的 AI 自媒體變現系統。只需錄一次 60 秒影片，AI 分身替你經營短影音，讓你的專業知識觸及精準客群。">
-<meta name="twitter:image" content="https://chiwaai.com/assets/chiwa-logo.png">
-<link rel="icon" type="image/png" href="assets/chiwa-logo.png">
-<link rel="apple-touch-icon" href="assets/chiwa-logo.png">
+<meta name="twitter:title" content="吉娃 AI — AI 自媒體變現系統">
+<meta name="twitter:description" content="只需錄一次 60 秒影片，AI 分身替你說話、接單、變現">
 <!-- CSP 基本安全標頭（meta 版）-->
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
@@ -106,6 +103,10 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 .line-float:hover{transform:scale(1.1);box-shadow:0 6px 24px rgba(6,199,85,.55)}
 .line-float:active{transform:scale(.95)}
 .line-float svg{width:30px;height:30px}
+.consult-float{position:fixed;right:22px;bottom:94px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#ffe88a 0%,#e8c55a 48%,#c8993a 100%);color:#08080c;border:2px solid rgba(255,244,180,.92);box-shadow:0 0 0 5px rgba(232,197,90,.12),0 10px 30px rgba(232,197,90,.42);display:inline-flex;align-items:center;justify-content:center;font-size:13px;line-height:1.02;font-weight:1000;text-align:center;text-decoration:none;z-index:8000;transition:transform .2s,box-shadow .2s;white-space:normal;animation:consultPulse 2.4s ease-in-out infinite}
+.consult-float:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 0 0 6px rgba(232,197,90,.18),0 12px 34px rgba(232,197,90,.55)}
+.consult-float:active{transform:scale(.96)}
+@keyframes consultPulse{0%,100%{box-shadow:0 0 0 5px rgba(232,197,90,.12),0 10px 30px rgba(232,197,90,.42)}50%{box-shadow:0 0 0 9px rgba(232,197,90,.2),0 12px 36px rgba(232,197,90,.58)}}
 .line-tip{position:fixed;right:84px;bottom:41px;background:#fff;color:#0a0a0f;font-size:12px;font-weight:700;padding:5px 12px;border-radius:100px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;box-shadow:0 2px 10px rgba(0,0,0,.25)}
 .line-float:hover+.line-tip{opacity:1}
 
@@ -120,21 +121,41 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 .nav-btns{display:flex;gap:10px}
 .nav-btn-ghost{padding:7px 16px;border-radius:8px;border:1px solid var(--bdr);color:var(--t2);font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .15s;background:transparent}
 .nav-btn-ghost:hover{border-color:var(--gold-d);color:var(--t1)}
+.nav-login-btn{background:#f97316;border-color:#fb923c;color:#fff;font-weight:800;box-shadow:0 6px 18px rgba(249,115,22,.22)}
+.nav-login-btn:hover{background:#fb923c;border-color:#fdba74;color:#fff;box-shadow:0 8px 22px rgba(249,115,22,.32)}
 .nav-btn-gold{padding:7px 16px;border-radius:8px;background:var(--gold);color:#0a0a0f;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Noto Sans TC',sans-serif;transition:opacity .2s}
 .nav-btn-gold:hover{opacity:.85}
 
 .hero{text-align:center;padding:80px 24px 60px;max-width:800px;margin:0 auto}
-.hero-badge{display:inline-block;font-size:11px;letter-spacing:3px;color:var(--gold);background:rgba(232,197,90,.1);border:1px solid var(--gold-d);padding:6px 20px;border-radius:100px;margin-bottom:20px}
+.hero-badge{display:inline-block;font-size:22px;letter-spacing:4px;color:var(--gold);background:rgba(232,197,90,.1);border:1px solid var(--gold-d);padding:12px 40px;border-radius:100px;margin-bottom:24px}
 .hero-title{font-size:clamp(32px,5vw,54px);font-weight:900;line-height:1.2;margin-bottom:18px}
 .hero-title span{color:var(--gold)}
 .hero-sub{font-size:15px;color:var(--t2);max-width:580px;margin:0 auto 32px;line-height:1.9}
 .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 
-.vsl-wrap{margin:0 auto 80px;max-width:760px;padding:0 24px}
-.vsl-box{background:var(--card);border:1px solid var(--bdr);border-radius:16px;aspect-ratio:16/9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;position:relative;overflow:hidden}
+.vsl-wrap{margin:0 auto 80px;width:min(430px,calc(100% - 32px));max-width:430px;padding:0}
+.vsl-box{background:var(--card);border:1px solid var(--bdr);border-radius:16px;aspect-ratio:9/16;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;position:relative;overflow:hidden}
 .vsl-play{width:70px;height:70px;border-radius:50%;background:rgba(232,197,90,.15);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:26px;transition:all .2s}
 .vsl-box:hover .vsl-play{background:rgba(232,197,90,.25);transform:scale(1.05)}
 .vsl-label{color:var(--t2);font-size:13px}
+.vsl-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:760px;margin:0 auto;align-items:start}
+.vsl-feature-grid .vsl-wrap{width:100%;max-width:340px;margin:0 auto;padding:0}
+.vsl-box iframe{display:block}
+@media(max-width:640px){
+  body{padding-bottom:120px}
+  .hero{padding:38px 16px 30px}
+  .hero-title{font-size:clamp(30px,9.5vw,40px);margin-bottom:14px}
+  .hero-sub{font-size:14px;line-height:1.75;margin-bottom:22px}
+  .vsl-wrap{width:min(340px,calc(100% - 32px));max-width:340px;padding:0;margin-bottom:48px}
+  #vsl-wrap-container{width:min(320px,calc(100% - 32px));max-width:320px}
+  .vsl-feature-section{padding:0 16px!important;margin-bottom:64px!important}
+  .vsl-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;max-width:360px!important}
+  .vsl-feature-grid .vsl-wrap{width:100%!important;max-width:174px!important;padding:0!important;margin:0 auto!important}
+  .vsl-box{border-radius:14px;gap:8px}
+  .vsl-play{width:clamp(42px,13vw,54px);height:clamp(42px,13vw,54px);font-size:clamp(17px,5vw,21px)}
+  .vsl-label{font-size:11px;line-height:1.35;padding:0 8px}
+  .hero-badge{font-size:clamp(14px,4.6vw,18px);letter-spacing:2px;padding:9px 18px;max-width:calc(100vw - 40px);line-height:1.35}
+}
 
 .section{padding:64px 24px;max-width:1100px;margin:0 auto}
 .section-tag{font-size:11px;letter-spacing:3px;color:var(--gold);margin-bottom:10px}
@@ -441,6 +462,7 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
   .mub-num{font-weight:700}
   /* LINE 按鈕手機版抬高 */
   .line-float{bottom:90px}
+  .consult-float{right:22px;bottom:154px;width:58px;height:58px;font-size:13px}
   /* 關閉 API key bar 的 hidden 問題 */
   #key-bar{padding:6px 12px}
   /* textarea 防 iOS 縮放 */
@@ -786,6 +808,12 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+.split-solution-left > .column-badge,
+.split-solution-right > .column-badge {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .split-solution-left:hover {
   border-color: rgba(232, 197, 90, 0.25);
   box-shadow: 0 16px 48px rgba(232, 197, 90, 0.05);
@@ -798,14 +826,19 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 
 /* Column header styles */
 .column-badge {
-  display: inline-block;
+  display: flex;
+  width: max-content;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
   font-size: 30px;
   font-weight: 900;
   letter-spacing: 1px;
   padding: 6px 20px;
   border-radius: 100px;
-  margin-bottom: 16px;
+  margin: 0 auto 16px;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .badge-a {
@@ -1043,7 +1076,6 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://player.vimeo.com/api/player.js"></script>
 <script>
 var aiUse = 0; // 預先宣告，避免 head 腳本區發生 ReferenceError
 const _SB = (window.supabase && typeof supabase.createClient === 'function')
@@ -1051,51 +1083,10 @@ const _SB = (window.supabase && typeof supabase.createClient === 'function')
   : null;
 let currentUser = '';
 let currentUserData = null;
-let courseProgressCache = {};
-let supabaseSchemaWarningShown = false;
 
-function normalizeEmail(email) {
-  return String(email || '').trim().toLowerCase();
-}
-
-function getStudentStatus(data) {
-  return data && data.status ? data.status : '正常';
-}
-
-async function loadStudentsFromSupabase() {
-  if (!_SB) return;
-  try {
-    const { data, error } = await _SB
-      .from('students')
-      .select('id,name,is_admin,status,note,reg_date,google_email,google_enabled,created_at')
-      .order('created_at', { ascending: true });
-    if (error || !Array.isArray(data)) return;
-    studentsList = data.map(s => ({
-      username: s.id,
-      status: s.status || '正常',
-      regDate: s.reg_date || (s.created_at ? String(s.created_at).slice(0,10) : ''),
-      note: s.note || '',
-      google_email: s.google_email || '',
-      google_enabled: !!s.google_enabled,
-      is_admin: !!s.is_admin
-    }));
-    localStorage.setItem('chiwa_students_list', JSON.stringify(studentsList));
-  } catch(e) {
-    console.warn('loadStudentsFromSupabase fallback:', e);
-  }
-}
-
-async function finalizeLogin(data, loginId) {
-  currentUser = loginId || data.id;
+async function finishStudentLogin(data, loginId) {
+  currentUser = data.id || loginId;
   currentUserData = data;
-
-  if (getStudentStatus(data) === '已停權') {
-    currentUser = '';
-    currentUserData = null;
-    const err = document.getElementById('lerr');
-    if (err) { err.style.display='block'; err.textContent='此帳號目前已停權，請聯絡管理員'; }
-    return;
-  }
 
   const adminTab = document.getElementById('sb-admin-item');
   if (data.is_admin) {
@@ -1128,24 +1119,100 @@ async function finalizeLogin(data, loginId) {
 
   if (data.ai_usage === null || data.ai_usage === undefined) data.ai_usage = 300;
   if (data.voice_seconds === null || data.voice_seconds === undefined) data.voice_seconds = 3600;
+
   updateUsageUI(data.ai_usage, data.voice_seconds);
 
   const mub = document.getElementById('mobile-usage-bar');
   if (mub) mub.style.display = 'none';
-
-  await loadStudentsFromSupabase();
-  await loadCourseStructureFromSupabase(data.is_admin);
-  if (typeof loadVideoSettingsFromSupabase === 'function') await loadVideoSettingsFromSupabase(data.is_admin);
-  await loadCourseProgressFromSupabase();
 
   if (typeof goPage === 'function') goPage('workspace');
   if (typeof buildWM === 'function') buildWM();
   if (typeof renderUnitGrid === 'function') renderUnitGrid();
   if (typeof renderVoiceList === 'function') renderVoiceList();
   if (typeof updateVoiceDropdown === 'function') updateVoiceDropdown();
-  if (data.is_admin && typeof renderAdminPanel === 'function') renderAdminPanel();
   toast('🔓 登入成功！歡迎回來 ' + (data.name || currentUser));
 }
+
+async function findAuthorizedStudentByEmail(email) {
+  const normalized = String(email || '').trim().toLowerCase();
+  if (!normalized || !_SB) return null;
+  const checks = [
+    { column: 'google_email', value: normalized },
+    { column: 'email', value: normalized },
+    { column: 'id', value: normalized }
+  ];
+
+  for (const check of checks) {
+    try {
+      const { data, error } = await _SB
+        .from('students')
+        .select('*')
+        .eq(check.column, check.value)
+        .maybeSingle();
+      if (data) return data;
+      if (error && !String(error.message || '').includes('column')) console.warn('student lookup skipped:', error.message);
+    } catch(e) {}
+  }
+  return null;
+}
+
+async function loginWithGoogleEmail(email) {
+  const err = document.getElementById('lerr');
+  const student = await findAuthorizedStudentByEmail(email);
+  if (!student) {
+    if (err) {
+      err.style.display = 'block';
+      err.textContent = '此 Google 帳號尚未開通學員權限，請確認後台授權 Email 是否一致';
+    }
+    return;
+  }
+  if (student.status && student.status !== '正常') {
+    if (err) {
+      err.style.display = 'block';
+      err.textContent = '此帳號目前未啟用，請聯絡管理員';
+    }
+    return;
+  }
+  if (err) err.style.display = 'none';
+  await finishStudentLogin(student, email);
+}
+
+async function doGoogleLogin() {
+  const err = document.getElementById('lerr');
+  if (!_SB || !_SB.auth) {
+    if (err) { err.style.display='block'; err.textContent='Google 登入尚未載入，請重新整理後再試'; }
+    return;
+  }
+  try {
+    const redirectTo = window.location.origin + window.location.pathname;
+    const { error } = await _SB.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectTo,
+        queryParams: { prompt: 'select_account' }
+      }
+    });
+    if (error) throw error;
+  } catch(e) {
+    console.error('google login error:', e);
+    if (err) { err.style.display='block'; err.textContent='Google 登入啟動失敗，請稍後再試'; }
+  }
+}
+
+async function restoreGoogleLoginSession() {
+  if (!_SB || !_SB.auth) return;
+  try {
+    const { data } = await _SB.auth.getSession();
+    const email = data && data.session && data.session.user && data.session.user.email;
+    if (email && !currentUser) await loginWithGoogleEmail(email);
+  } catch(e) {
+    console.warn('google session restore skipped');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(restoreGoogleLoginSession, 300);
+});
 
 // Supabase 登入：取代原本的 localStorage 登入
 async function doLogin() {
@@ -1171,66 +1238,63 @@ async function doLogin() {
       return;
     }
 
+    currentUser = u;
+    currentUserData = data;
     if (err) err.style.display = 'none';
-    await finalizeLogin(data, u);
+
+    const adminTab = document.getElementById('sb-admin-item');
+    if (data.is_admin) {
+      if (adminTab) adminTab.style.display = 'flex';
+    } else {
+      if (adminTab) adminTab.style.display = 'none';
+    }
+
+    // 更新側邊欄資訊
+    const unameEl = document.querySelector('.sb-uname');
+    if (unameEl) unameEl.textContent = data.name || u;
+    const avEl = document.querySelector('.sb-av');
+    if (avEl) avEl.textContent = (data.name || u).substring(0,2).toUpperCase();
+
+    // 跨月自動重置檢查：若已進入新月份則重置次數
+    const now = new Date();
+    const curMonthKey = `${now.getFullYear()}-${now.getMonth()+1}`;
+    const lastReset = data.reset_month || '';
+    let needsReset = lastReset !== curMonthKey;
+    if (needsReset) {
+      try {
+        await _SB.from('students').update({
+          ai_usage: 300,
+          voice_seconds: 3600,
+          reset_month: curMonthKey
+        }).eq('id', u);
+        data.ai_usage = 300;
+        data.voice_seconds = 3600;
+        data.reset_month = curMonthKey;
+        toast('🎉 新月份開始！AI 次數與語音秒數已自動重置！');
+      } catch(e) { console.error('月份重置失敗:', e); }
+    }
+
+    // 若 DB 欄位尚未存在則給預設值
+    if (data.ai_usage === null || data.ai_usage === undefined) data.ai_usage = 300;
+    if (data.voice_seconds === null || data.voice_seconds === undefined) data.voice_seconds = 3600;
+
+    // 更新次數顯示
+    updateUsageUI(data.ai_usage, data.voice_seconds);
+
+    // 手機版浮動用量列已停用，僅保留側邊欄與語音面板用量顯示
+    const mub = document.getElementById('mobile-usage-bar');
+    if (mub) mub.style.display = 'none';
+
+    // 切換到工作台，並初始化各面板
+    if (typeof goPage === 'function') goPage('workspace');
+    if (typeof buildWM === 'function') buildWM();
+    if (typeof renderUnitGrid === 'function') renderUnitGrid();
+    if (typeof renderVoiceList === 'function') renderVoiceList();
+    if (typeof updateVoiceDropdown === 'function') updateVoiceDropdown();
+    toast('🔓 登入成功！歡迎回來 ' + (data.name || u));
   } catch(e) {
     console.error('login error:', e);
     if (err) { err.style.display='block'; err.textContent='登入失敗，請稍後再試'; }
-  }
-}
-
-async function loginWithGoogle() {
-  const err = document.getElementById('lerr');
-  if (!_SB || !_SB.auth) {
-    if (err) { err.style.display='block'; err.textContent='Google 登入尚未載入，請重新整理後再試'; }
-    return;
-  }
-  try {
-    const redirectTo = location.origin && location.origin !== 'null'
-      ? location.origin + location.pathname
-      : 'https://chiwaai.com/';
-    const { error } = await _SB.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: redirectTo }
-    });
-    if (error && err) {
-      err.style.display='block';
-      err.textContent='Google 登入啟動失敗：' + error.message;
-    }
-  } catch(e) {
-    if (err) { err.style.display='block'; err.textContent='Google 登入啟動失敗'; }
-  }
-}
-
-async function handleGoogleAuthCallback() {
-  if (!_SB || !_SB.auth) return;
-  try {
-    const { data: sessionData } = await _SB.auth.getSession();
-    const email = normalizeEmail(sessionData && sessionData.session && sessionData.session.user && sessionData.session.user.email);
-    if (!email) return;
-    const { data, error } = await _SB
-      .from('students')
-      .select('*')
-      .eq('google_email', email)
-      .eq('google_enabled', true)
-      .single();
-    if (error || !data) {
-      const err = document.getElementById('lerr');
-      if (err) { err.style.display='block'; err.textContent='此 Google 帳號尚未開通課程權限，請聯絡管理員'; }
-      goPage('login');
-      return;
-    }
-    if (getStudentStatus(data) === '已停權') {
-      const err = document.getElementById('lerr');
-      if (err) { err.style.display='block'; err.textContent='此 Google 帳號已停權，請聯絡管理員'; }
-      goPage('login');
-      return;
-    }
-    const err = document.getElementById('lerr');
-    if (err) err.style.display = 'none';
-    await finalizeLogin(data, data.id);
-  } catch(e) {
-    console.error('Google auth callback error:', e);
   }
 }
 
@@ -1329,7 +1393,7 @@ async function decrVoice(secs) {
       <span class="nav-link" onclick="window.open('https://forms.gle/HTbVXWsQBUNUujA57','_blank')">預約諮詢</span>
     </div>
     <div class="nav-btns">
-      <button class="nav-btn-ghost" onclick="goPage('login')">學員登入</button>
+      <button class="nav-btn-ghost nav-login-btn" onclick="goPage('login')">學員登入</button>
     </div>
   </nav>
 
@@ -1338,11 +1402,10 @@ async function decrVoice(secs) {
     <h1 class="hero-title" style="line-height:1.3">
       <span style="color:var(--gold)">AI 自媒體變現系統</span><br>
       讓 AI 替你說話、接單、變現<br>
-      <span style="font-size:clamp(16px,2.5vw,28px);color:var(--t2);font-weight:500">不用自己想文案，AI幫你想<br>只需錄一次 60 秒影片，AI分身替你經營短影音</span>
+      <span style="font-size:clamp(16px,2.5vw,28px);color:var(--t2);font-weight:500">AI幫你想文案，幫你用你的聲音說話<br>只需錄一次60秒影片，AI分身替你經營短影音</span>
     </h1>
 
     <div class="hero-btns">
-      <button class="btn-gold" style="font-size:15px;padding:13px 28px" onclick="document.querySelector('#solutions-section').scrollIntoView({behavior:'smooth'})">查看服務方案 ↓</button>
     </div>
   </div>
 
@@ -1351,9 +1414,10 @@ async function decrVoice(secs) {
   <!-- 🎥 VSL 下方特色影片展示區 -->
   <div class="vsl-feature-section" id="vsl-feature-container" style="max-width:1100px; margin:0 auto 80px; padding:0 24px; text-align:center;">
     <h2 style="font-size: clamp(20px, 3.5vw, 28px); font-weight: 800; color: var(--gold); margin-bottom: 8px;">AI代替你來口播</h2>
+    <p style="font-size: clamp(13px, 2.2vw, 16px); color: var(--t1); font-weight: 700; margin-bottom: 6px;">就是你本人的聲音和說話方式</p>
     <p style="font-size: clamp(12px, 2vw, 15px); color: var(--t2); margin-bottom: 24px;">讓你傳達商品/服務/知識更輕鬆</p>
     
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+    <div class="vsl-feature-grid">
       <div class="vsl-wrap" id="vsl-feature-video-wrap" style="padding:0; margin:0;"></div>
       <div class="vsl-wrap" id="vsl-feature-video-wrap-2" style="padding:0; margin:0;"></div>
     </div>
@@ -1618,7 +1682,7 @@ async function decrVoice(secs) {
           
           <div class="faq-item" onclick="toggleFaq(this)">
             <div class="faq-q">AI 數位分身跟真人有多像？<span class="faq-arrow">▼</span></div>
-            <div class="faq-a">聲音與外型還原度約 90%，口型與說話節奏與你高度吻合。首次建立需要你錄製一段 60 秒的正面說話影片和 60 秒語音。</div>
+            <div class="faq-a">外型和聲音都是由你本人錄製，所以呈現出來就是你本人的聲音、語氣和說話方式，100% 相似。首次建立需要你錄製一段 60 秒的正面說話影片和 60 秒語音。</div>
           </div>
           
           <div class="faq-item" onclick="toggleFaq(this)">
@@ -1914,14 +1978,14 @@ async function decrVoice(secs) {
           <div class="login-forgot" onclick="showForgot()">忘記密碼？</div>
         </div>
         <button class="login-btn" onclick="doLogin()">登入工作台</button>
-        <div style="display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--t3);font-size:11px">
-          <div style="height:1px;background:var(--bdr);flex:1"></div>
-          <span>或</span>
-          <div style="height:1px;background:var(--bdr);flex:1"></div>
-        </div>
-        <button class="google-btn" onclick="loginWithGoogle()" style="border-radius:10px">
-          <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.2 4 9.5 8.5 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.8-3.4-11.4-8.1l-6.5 5C9.3 39.4 16.1 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
-          <span>使用 Google 登入</span>
+        <button class="google-btn" onclick="doGoogleLogin()" style="margin-top:12px">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06L5.84 9.9C6.71 7.3 9.14 5.38 12 5.38z"/>
+          </svg>
+          <span style="font-weight:700">Google 帳號登入</span>
         </button>
         <div class="login-err" id="lerr">帳號或密碼錯誤，請重試</div>
         <div class="login-links">
@@ -1971,8 +2035,8 @@ async function decrVoice(secs) {
 <div class="page" id="page-voice-trial" style="display:none">
   <div class="vt-wrap">
     <div class="vt-back" onclick="goPage('home')">← 返回吉娃AI首頁</div>
-    <h1 class="vt-title">✨ 吉娃 AI 語音克隆免費體驗</h1>
-    <p class="vt-sub">為保障系統資源不被惡意濫用，請先完成下方 Google 帳號關聯與手機簡訊驗證，即可開啟個人 AI 專屬聲音克隆體驗通道。</p>
+    <h1 class="vt-title">✨ 吉娃 AI 語音克隆學員功能</h1>
+    <p class="vt-sub">此功能僅開放給已付費且完成 Google 帳號授權的學員使用。請回到學員登入頁，以已開通的 Google 帳號登入 Workspace。</p>
     
     <!-- 步驟 1 -->
     <div class="vt-step" id="vt-step-1">
@@ -2009,7 +2073,7 @@ async function decrVoice(secs) {
       </div>
       
       <div id="vt-sms-section" style="display: none; gap: 10px; margin-bottom: 12px;">
-        <input type="text" id="vt-sms-code" placeholder="請輸入 6 位簡訊驗證碼 (預設 888888)" class="tinput" style="background:var(--card2); flex: 1;">
+        <input type="text" id="vt-sms-code" placeholder="正式版不開放測試驗證碼" class="tinput" style="background:var(--card2); flex: 1;">
         <button class="btn-gold" onclick="verifySMSCode()" style="padding: 10px 20px; font-size: 13px; border-radius: 8px;">確認驗證</button>
       </div>
 
@@ -2025,8 +2089,8 @@ async function decrVoice(secs) {
         <div class="vt-step-title">步驟 3：開啟 AI 語音克隆體驗版</div>
       </div>
       <div style="text-align: center; padding: 10px 0;">
-        <p style="font-size: 13px; color: var(--t2); margin-bottom: 16px;">安全驗證程序已全部通過！您已解鎖免費體驗資格，可享 60 分鐘體驗克隆量度。</p>
-        <button class="btn-gold" onclick="enterVoiceTrialWorkspace()" style="padding: 12px 30px; font-size: 14px; width: 100%; font-weight: 700; border-radius: 10px;">🚀 立即開啟極速聲紋克隆體驗</button>
+        <p style="font-size: 13px; color: var(--t2); margin-bottom: 16px;">正式版僅開放付費學員使用，請以已授權 Google 帳號登入。</p>
+        <button class="btn-gold" onclick="enterVoiceTrialWorkspace()" style="padding: 12px 30px; font-size: 14px; width: 100%; font-weight: 700; border-radius: 10px;">🚀 立即開啟吉娃 AI 語音體驗</button>
       </div>
     </div>
   </div>
@@ -2207,8 +2271,8 @@ async function decrVoice(secs) {
       <div class="divider"></div>
       <div class="label mb14">步驟 2：為聲音命名</div>
       <input type="text" id="vname" placeholder="例：Tony 專業版" style="margin-bottom:14px">
-      <button class="btn-gold" style="width:100%" onclick="cloneV()">🎯 開始克隆（正式版語音引擎）</button>
-      <div style="font-size:11px;color:var(--t3);text-align:center;margin-top:8px">* 克隆功能於正式版透過最新語音克隆技術完成</div>
+      <button class="btn-gold" style="width:100%" onclick="cloneV()">🎯 建立專屬語音模型</button>
+      <div style="font-size:11px;color:var(--t3);text-align:center;margin-top:8px">* 語音模型由吉娃 AI 語音系統建立與管理</div>
     </div>
     <div class="divider"></div>
     <div style="font-size:14px;font-weight:700;margin-bottom:12px">文字轉語音</div>
@@ -2222,9 +2286,9 @@ async function decrVoice(secs) {
     
     <textarea id="ttsin" rows="4" placeholder="貼入要朗讀的腳本文字..." maxlength="500"></textarea>
     <div class="fl mt10">
-      <button class="btn-gold" id="tts-btn" onclick="generateTTSAudio()">🎵 生成語音（正式版）</button>
+      <button class="btn-gold" id="tts-btn" onclick="generateTTSAudio()">🎵 生成語音</button>
     </div>
-    <div id="tts-load" style="display:none" class="loading"><div class="spinner"></div>正在藉由最新語音克隆技術生成聲音...</div>
+    <div id="tts-load" style="display:none" class="loading"><div class="spinner"></div>正在透過吉娃 AI 語音系統生成聲音...</div>
     <div id="tts-audio-container"></div>
   </div>
 
@@ -2338,10 +2402,10 @@ async function decrVoice(secs) {
     </div>
   </div>
 
-  <!-- 吉娃授權管理面板 (Admin Dashboard) -->
+  <!-- 吉娃總控制後台 (Admin Dashboard) -->
   <div class="panel" id="p-admin">
-    <div class="sec-title">⚙️ 帳號授權管理</div>
-    <div class="sec-sub">管理學員帳號權限，一鍵阻斷防側錄違規帳號</div>
+    <div class="sec-title">⚙️ 吉娃 AI 總控制後台</div>
+    <div class="sec-sub">開通 Google 學員帳號、調整額度、管理課程影片與首頁內容</div>
     
     <!-- 統計數據指標 -->
     <div class="admin-stat-grid" style="margin-bottom: 24px;">
@@ -2358,43 +2422,51 @@ async function decrVoice(secs) {
         <div class="astat-num red" id="adm-banned-num">0</div>
       </div>
       <div class="astat">
-        <div class="astat-label">防側錄監控狀態</div>
-        <div class="astat-num blue" style="font-size: 16px; font-weight: 700; line-height: 1.8;">🛡️ 高度防護中</div>
+        <div class="astat-label">後台資料來源</div>
+        <div class="astat-num blue" id="adm-source-status" style="font-size: 14px; font-weight: 800; line-height: 1.8;">Supabase</div>
       </div>
     </div>
 
     <!-- 學員管理表單與搜尋 -->
     <div style="background: var(--card); border: 1px solid var(--bdr); border-radius: 14px; padding: 20px; margin-bottom: 24px;">
-      <div style="font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--t1);">➕ 新增 / 授權學員帳號</div>
+      <div style="font-size: 14px; font-weight: 700; margin-bottom: 6px; color: var(--t1);">➕ 開通 / 更新付費學員 Google 帳號</div>
+      <div style="font-size: 12px; color: var(--t2); line-height: 1.7; margin-bottom: 14px;">學員付款後，在這裡輸入他的 Google Email。之後學員用同一個 Google 帳號登入，就會被放行到 Workspace。</div>
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 150px;">
-          <input type="text" id="adm-new-u" placeholder="輸入帳號 (例如: student003)" class="tinput" style="background: var(--card2)">
+        <div style="flex: 1.2; min-width: 220px;">
+          <input type="text" id="adm-new-u" placeholder="學員 Google Email，例如 student@gmail.com" class="tinput" style="background: var(--card2)">
         </div>
-        <div style="flex: 1; min-width: 150px;">
-          <input type="text" id="adm-new-note" placeholder="備註 (例如: AI變現專班)" class="tinput" style="background: var(--card2)">
+        <div style="flex: .8; min-width: 160px;">
+          <input type="text" id="adm-new-name" placeholder="學員姓名 / 暱稱" class="tinput" style="background: var(--card2)">
         </div>
-        <div style="flex: 1.2; min-width: 190px;">
-          <input type="text" id="adm-new-google-email" placeholder="Google Mail (可選，授權登入用)" class="tinput" style="background: var(--card2)">
+        <div style="flex: .8; min-width: 160px;">
+          <input type="text" id="adm-new-note" placeholder="方案備註，例如 自學課程" class="tinput" style="background: var(--card2)">
         </div>
-        <button class="btn-gold" onclick="addNewStudentFromAdmin()" style="border-radius: 10px; padding: 10px 20px;">授權並加入</button>
+        <div style="width: 120px;">
+          <input type="text" id="adm-new-ai" value="300" placeholder="AI 次數" class="tinput" style="background: var(--card2)">
+        </div>
+        <div style="width: 140px;">
+          <input type="text" id="adm-new-voice" value="3600" placeholder="語音秒數" class="tinput" style="background: var(--card2)">
+        </div>
+        <button class="btn-gold" onclick="addNewStudentFromAdmin()" style="border-radius: 10px; padding: 10px 20px;">開通 / 更新</button>
       </div>
     </div>
 
     <!-- 學員清單表格 -->
     <div class="admin-section">
       <div class="admin-sec-head">
-        <div class="admin-sec-title">👥 吉娃 AI 授權學員清單</div>
-        <div style="font-size: 11px; color: var(--t3);">預設密碼均為 123456（方便測試）</div>
+        <div class="admin-sec-title">👥 付費學員授權清單</div>
+        <button class="admin-btn-sm" onclick="renderAdminPanel()">重新整理</button>
       </div>
       <div style="overflow-x: auto;">
         <table class="admin-table">
           <thead>
             <tr>
-              <th>學員帳號</th>
+              <th>Google Email / 帳號</th>
+              <th>姓名</th>
               <th>目前狀態</th>
-              <th>授權日期</th>
-              <th>課程備註</th>
-              <th>Google Mail</th>
+              <th>方案 / 備註</th>
+              <th>AI 次數</th>
+              <th>語音秒數</th>
               <th style="text-align: right;">權限操作</th>
             </tr>
           </thead>
@@ -2562,6 +2634,7 @@ async function decrVoice(secs) {
 
 
 <!-- LINE FLOAT -->
+<a class="consult-float" href="https://forms.gle/HTbVXWsQBUNUujA57" target="_blank" title="預約免費諮詢">預約<br>諮詢</a>
 <a class="line-float" href="https://line.me/R/ti/p/@543xxzvk" target="_blank" title="聯絡我們">
   <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
     <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
@@ -2642,8 +2715,7 @@ function removeEmojis(value) {
 function getDefaultStudentsList() {
   return [
     { username: 'student001', status: '正常', regDate: '2026-05-01', note: '學員測試帳號' },
-    { username: 'admin', status: '正常', regDate: '2026-05-01', note: '管理員帳號' },
-    { username: 'demo_user', status: '正常', regDate: '2026-05-01', note: '語音克隆體驗帳號' }
+    { username: 'admin', status: '正常', regDate: '2026-05-01', note: '管理員帳號' }
   ];
 }
 
@@ -2837,7 +2909,7 @@ function goPage(pageId) {
   window.scrollTo(0, 0);
   document.documentElement.scrollTop = 0;
   if (pageId === 'voice-trial') {
-    toast('💡 免費體驗已整合至工作台「語音克隆」面板中！請先登入學員帳號。');
+    toast('此功能僅開放已授權學員，請先用 Google 帳號登入。');
     goPage('login');
     return;
   }
@@ -2928,7 +3000,7 @@ function swP(name, el) {
   // 切換到課程面板時自動重新渲染單元列表
   if (name === 'course') renderUnitGrid();
   // 切換到管理後台時自動刷新影片設定 UI
-  if (name === 'admin') { if(typeof updateAdminVSLUI==='function') updateAdminVSLUI(); if(typeof refreshAdminSelects==='function') refreshAdminSelects(); }
+  if (name === 'admin') { if(typeof renderAdminPanel==='function') renderAdminPanel(); if(typeof updateAdminVSLUI==='function') updateAdminVSLUI(); if(typeof refreshAdminSelects==='function') refreshAdminSelects(); }
 }
 
 /* 手機版導覽切換 */
@@ -3042,7 +3114,7 @@ function generateSandboxMock(sys, usr, type, fmt, tone) {
       return `【開場鉤子】（秒數：0-3秒）
 🎤 口說：${hook_spoken}
 🎬 畫面：主講人神情專注看著鏡頭，背景是極具質感的溫暖光影背景，手裡拿著筆。
-✂️ 建議：開場前 1 秒畫面微微拉近，搭配最新 AI 語音引擎與質感清脆的轉場音效。
+✂️ 建議：開場前 1 秒畫面微微拉近，搭配吉娃 AI 語音系統與質感清脆的轉場音效。
 
 【段落一】（秒數：4-20秒）
 🎤 口說：${sec1_spoken}
@@ -3246,14 +3318,14 @@ async function callSecureAI(sys, usr, typeOverride, fmtOverride, toneOverride) {
     });
 
     if (!r.ok) {
-      const errorText = await r.text();
-      console.warn('AI Cloudflare connection error:', errorText);
+      await r.text();
+      console.warn('CHIWA AI service connection error');
       throw new Error('CORS_OR_API_ERROR');
     }
 
     const d = await r.json();
     if (d.error) {
-      throw new Error(d.error.message || 'AI 服務暫時無法使用，請稍後再試');
+      throw new Error('AI 服務暫時無法使用，請稍後再試');
     }
 
     if (d.content && d.content[0] && d.content[0].text) {
@@ -3626,7 +3698,7 @@ function cloneV() {
     return;
   }
   
-  toast('⚙️ 正在藉由最新語音克隆引擎克隆您的聲音特徵...');
+  toast('⚙️ 正在透過吉娃 AI 語音系統建立您的聲音特徵...');
   
   // 模擬克隆運算
   setTimeout(() => {
@@ -3874,170 +3946,18 @@ const courseData = [
 
 let activeUnitId = 1;
 let activeLessonId = '1-1';
-let coursePlayer = null;
-let coursePlayerLessonId = '';
-let courseProgressLastSave = 0;
 loadSavedCourseStructure();
 initCourseVimeoIds();
-
-function snapshotCourseStructure() {
-  return courseData.map(function(u) {
-    return {
-      id: u.id,
-      title: u.title,
-      desc: u.desc || '',
-      lessons: (u.lessons || []).map(function(l) {
-        return {
-          id: l.id,
-          title: l.title,
-          duration: l.duration || '00:00',
-          vimeoId: l.vimeoId || '',
-          textDesc: l.textDesc || ''
-        };
-      })
-    };
-  });
-}
-
-function applyCourseStructure(structure) {
-  if (!Array.isArray(structure) || !structure.length) return false;
-  courseData.length = 0;
-  structure.forEach(function(u) {
-    courseData.push({
-      id: parseInt(u.id) || u.id,
-      title: u.title || '未命名單元',
-      desc: u.desc || '（尚未填寫單元描述）',
-      lessons: Array.isArray(u.lessons) ? u.lessons.map(function(l) {
-        return {
-          id: l.id,
-          title: l.title || '未命名小節',
-          duration: l.duration || '00:00',
-          vimeoId: l.vimeoId || '',
-          textDesc: l.textDesc || ''
-        };
-      }) : []
-    });
-  });
-  return true;
-}
-
-function warnSupabaseSchemaOnce() {
-  if (supabaseSchemaWarningShown) return;
-  supabaseSchemaWarningShown = true;
-  toast('⚠️ Supabase 課程同步尚未開放寫入，已先使用本機備援');
-}
-
-async function loadSiteSetting(key) {
-  if (!_SB) return null;
-  try {
-    const { data, error } = await _SB.from('site_settings').select('value').eq('key', key).single();
-    if (error || !data) return null;
-    return data.value;
-  } catch(e) {
-    console.warn('loadSiteSetting fallback:', e);
-    return null;
-  }
-}
-
-async function saveSiteSetting(key, value) {
-  try {
-    localStorage.setItem('chiwa_site_setting_' + key, JSON.stringify(value));
-  } catch(e) {}
-  if (!_SB) return false;
-  try {
-    const { error } = await _SB.from('site_settings').upsert({ key: key, value: value }, { onConflict: 'key' });
-    if (error) {
-      warnSupabaseSchemaOnce();
-      return false;
-    }
-    return true;
-  } catch(e) {
-    console.warn('saveSiteSetting fallback:', e);
-    warnSupabaseSchemaOnce();
-    return false;
-  }
-}
-
-async function loadCourseStructureFromSupabase(canMigrateLocal) {
-  const remote = await loadSiteSetting('course_structure');
-  if (Array.isArray(remote) && applyCourseStructure(remote)) {
-    saveCourseStructure(false);
-    return true;
-  }
-  if (canMigrateLocal) {
-    const local = snapshotCourseStructure();
-    await saveSiteSetting('course_structure', local);
-  }
-  return false;
-}
-
-function getCompletedLessons() {
-  const done = new Set();
-  try {
-    JSON.parse(localStorage.getItem(`chiwa_completed_lessons_${currentUser}`) || '[]').forEach(id => done.add(id));
-  } catch(e) {}
-  Object.keys(courseProgressCache || {}).forEach(id => {
-    if (courseProgressCache[id] && courseProgressCache[id].completed) done.add(id);
-  });
-  return Array.from(done);
-}
-
-async function loadCourseProgressFromSupabase() {
-  courseProgressCache = {};
-  if (!_SB || !currentUser) return;
-  try {
-    const { data, error } = await _SB.from('course_progress').select('*').eq('student_id', currentUser);
-    if (error || !Array.isArray(data)) return;
-    data.forEach(row => {
-      courseProgressCache[row.lesson_id] = {
-        progress_seconds: row.progress_seconds || 0,
-        duration_seconds: row.duration_seconds || 0,
-        completed: !!row.completed
-      };
-    });
-    const completed = data.filter(r => r.completed).map(r => r.lesson_id);
-    localStorage.setItem(`chiwa_completed_lessons_${currentUser}`, JSON.stringify(completed));
-  } catch(e) {
-    console.warn('loadCourseProgress fallback:', e);
-  }
-}
-
-async function saveLessonProgress(lessonId, progressSeconds, durationSeconds, completed) {
-  if (!currentUser || currentUser === 'admin') return;
-  const prev = courseProgressCache[lessonId] || {};
-  const nextProgress = Math.max(prev.progress_seconds || 0, Math.round(progressSeconds || 0));
-  const nextDuration = Math.max(prev.duration_seconds || 0, Math.round(durationSeconds || 0));
-  const nextCompleted = !!(completed || prev.completed);
-  courseProgressCache[lessonId] = {
-    progress_seconds: nextProgress,
-    duration_seconds: nextDuration,
-    completed: nextCompleted
-  };
-  if (nextCompleted) {
-    const completedList = getCompletedLessons();
-    if (!completedList.includes(lessonId)) completedList.push(lessonId);
-    try { localStorage.setItem(`chiwa_completed_lessons_${currentUser}`, JSON.stringify(completedList)); } catch(e) {}
-  }
-  if (!_SB) return;
-  try {
-    await _SB.from('course_progress').upsert({
-      student_id: currentUser,
-      lesson_id: lessonId,
-      progress_seconds: nextProgress,
-      duration_seconds: nextDuration,
-      completed: nextCompleted
-    }, { onConflict: 'student_id,lesson_id' });
-  } catch(e) {
-    console.warn('saveLessonProgress Supabase fallback:', e);
-  }
-}
 
 // 渲染大單元列表（進度與解鎖機制）
 function renderUnitGrid() {
   const grid = document.getElementById('course-units-grid');
   if (!grid) return;
   
-  let completed = getCompletedLessons();
+  let completed = [];
+  try {
+    completed = JSON.parse(localStorage.getItem(`chiwa_completed_lessons_${currentUser}`) || '[]');
+  } catch(e){}
   
   let html = '';
   
@@ -4092,7 +4012,10 @@ function openCoursePlayer(unitId) {
   activeUnitId = unitId;
   
   // 找出此單元第一堂未完成的課，若皆已完成則載入第一課
-  let completed = getCompletedLessons();
+  let completed = [];
+  try {
+    completed = JSON.parse(localStorage.getItem(`chiwa_completed_lessons_${currentUser}`) || '[]');
+  } catch(e){}
   
   const target = u.lessons.find(l => !completed.includes(l.id)) || u.lessons[0];
   
@@ -4102,48 +4025,6 @@ function openCoursePlayer(unitId) {
   document.getElementById('player-unit-title').textContent = u.title;
   
   loadLesson(target.id);
-}
-
-function teardownCoursePlayer() {
-  if (coursePlayer) {
-    try { coursePlayer.unload(); } catch(e) {}
-  }
-  coursePlayer = null;
-  coursePlayerLessonId = '';
-  courseProgressLastSave = 0;
-}
-
-function setupCoursePlayerTracking(iframe, lesson) {
-  if (!iframe || !lesson || !window.Vimeo || !window.Vimeo.Player) return;
-  coursePlayerLessonId = lesson.id;
-  courseProgressLastSave = 0;
-  try {
-    coursePlayer = new Vimeo.Player(iframe);
-    let duration = 0;
-    coursePlayer.getDuration().then(d => { duration = Math.round(d || 0); }).catch(()=>{});
-    coursePlayer.on('timeupdate', function(data) {
-      if (coursePlayerLessonId !== lesson.id) return;
-      const seconds = Math.round(data.seconds || 0);
-      const total = Math.round(data.duration || duration || 0);
-      if (total > 0) duration = total;
-      const pct = total > 0 ? seconds / total : 0;
-      if (pct >= 0.95) {
-        completeActiveLesson(true);
-        saveLessonProgress(lesson.id, seconds, total, true);
-        return;
-      }
-      if (seconds - courseProgressLastSave >= 10) {
-        courseProgressLastSave = seconds;
-        saveLessonProgress(lesson.id, seconds, total, false);
-      }
-    });
-    coursePlayer.on('ended', function() {
-      completeActiveLesson(true);
-      saveLessonProgress(lesson.id, duration || 0, duration || 0, true);
-    });
-  } catch(e) {
-    console.warn('Vimeo progress tracking unavailable:', e);
-  }
 }
 
 // 載入具體小節
@@ -4157,9 +4038,7 @@ function loadLesson(lessonId) {
   // 渲染 Vimeo 播放器，防盜側錄數位浮水印將直接渲染在 wrapper 內
   const iframe = document.getElementById('course-iframe');
   if (iframe) {
-    teardownCoursePlayer();
     iframe.src = `https://player.vimeo.com/video/${lesson.vimeoId}?autoplay=1&byline=0&portrait=0&title=0`;
-    setupCoursePlayerTracking(iframe, lesson);
   }
   
   // 繪製影片浮水印
@@ -4258,7 +4137,10 @@ function playNextLesson() {
     } else {
       // 一般學員：檢查當前單元是否全部完成
       const currentUnit = courseData.find(x => x.id === activeUnitId);
-      let completed = getCompletedLessons();
+      let completed = [];
+      try {
+        completed = JSON.parse(localStorage.getItem(`chiwa_completed_lessons_${currentUser}`) || '[]');
+      } catch(e){}
       
       const allCompleted = currentUnit.lessons.every(l => completed.includes(l.id));
       if (!allCompleted) {
@@ -4284,7 +4166,10 @@ function renderLessonsSidebar() {
   if (!sidebar) return;
   
   const u = courseData.find(x => x.id === activeUnitId);
-  let completed = getCompletedLessons();
+  let completed = [];
+  try {
+    completed = JSON.parse(localStorage.getItem(`chiwa_completed_lessons_${currentUser}`) || '[]');
+  } catch(e){}
   
   sidebar.innerHTML = u.lessons.map(l => {
     const isCompleted = completed.includes(l.id);
@@ -4307,7 +4192,10 @@ function updateCompleteBtnState() {
   const btn = document.getElementById('lesson-complete-btn');
   if (!btn) return;
   
-  let completed = getCompletedLessons();
+  let completed = [];
+  try {
+    completed = JSON.parse(localStorage.getItem(`chiwa_completed_lessons_${currentUser}`) || '[]');
+  } catch(e){}
   
   if (completed.includes(activeLessonId)) {
     btn.textContent = '✓ 已完成本課';
@@ -4315,28 +4203,28 @@ function updateCompleteBtnState() {
     btn.style.color = '#fff';
     btn.disabled = true;
   } else {
-    btn.textContent = currentUser === 'admin' ? '管理員標記完成' : '觀看 95% 自動完成';
+    btn.textContent = '標記為已完成';
     btn.style.background = 'var(--gold)';
     btn.style.color = '#0a0a0f';
-    btn.disabled = currentUser !== 'admin';
+    btn.disabled = false;
   }
 }
 
 // 標記小節為已完成並觸及解鎖機制
-function completeActiveLesson(autoCompleted) {
-  let completed = getCompletedLessons();
-  const alreadyCompleted = completed.includes(activeLessonId);
-  if (alreadyCompleted && autoCompleted) return;
+function completeActiveLesson() {
+  let completed = [];
+  try {
+    completed = JSON.parse(localStorage.getItem(`chiwa_completed_lessons_${currentUser}`) || '[]');
+  } catch(e){}
   
-  if (!alreadyCompleted) {
+  if (!completed.includes(activeLessonId)) {
     completed.push(activeLessonId);
     try {
       localStorage.setItem(`chiwa_completed_lessons_${currentUser}`, JSON.stringify(completed));
     } catch(e){}
-    saveLessonProgress(activeLessonId, 0, 0, true);
   }
   
-  toast(autoCompleted ? '🎉 已觀看達 95%，本節自動完成！' : '🎉 本節課程已被標記為已完成！');
+  toast('🎉 恭喜！本節課程已被標記為已完成！');
   
   // 更新播放介面
   renderLessonsSidebar();
@@ -4358,7 +4246,6 @@ function completeActiveLesson(autoCompleted) {
 
 // 關閉播放器，停止 Vimeo iframe，並刷新清單
 function closeCoursePlayer() {
-  teardownCoursePlayer();
   const iframe = document.getElementById('course-iframe');
   if (iframe) iframe.src = '';
   
@@ -4493,19 +4380,13 @@ function renderAdminPanel() {
     const statusText = isBanned ? '🔴 已停權' : '🟢 正常';
     const btnText = isBanned ? '🟢 啟用' : '🚫 停權';
     const btnClass = isBanned ? 'admin-btn-sm' : 'admin-btn-sm danger';
-    const googleEmail = s.google_email || '';
-    const googleOn = !!s.google_enabled && googleEmail;
-    const googleText = googleOn ? '關閉Google' : '啟用Google';
     return `
       <tr>
         <td style="font-weight: 700;">${escapeHtml(s.username)}</td>
         <td><span class="ustatus ${badgeClass}">${statusText}</span></td>
         <td>${escapeHtml(s.regDate)}</td>
         <td><span style="color: var(--t2);">${escapeHtml(s.note || '—')}</span></td>
-        <td><span style="color:${googleOn ? 'var(--green)' : 'var(--t3)'}">${escapeHtml(googleEmail || '未設定')}</span></td>
         <td style="text-align: right;">
-          <button class="admin-btn-sm" onclick="editStudentGoogle('${s.username.replace(/'/g, "\\'")}')" style="margin-right:6px">Google</button>
-          <button class="admin-btn-sm" onclick="toggleStudentGoogle('${s.username.replace(/'/g, "\\'")}')" style="margin-right:6px">${googleText}</button>
           <button class="${btnClass}" onclick="toggleStudentBan('${s.username.replace(/'/g, "\\'")}')">${btnText}</button>
         </td>
       </tr>
@@ -4540,9 +4421,6 @@ function toggleStudentBan(username) {
   try {
     localStorage.setItem('chiwa_students_list', JSON.stringify(studentsList));
   } catch(e) {}
-  try {
-    if (_SB) _SB.from('students').update({ status: newStatus }).eq('id', username);
-  } catch(e) { console.warn('toggleStudentBan Supabase sync failed:', e); }
   
   try {
     let logs = JSON.parse(localStorage.getItem('chiwa_security_logs') || '[]');
@@ -4555,48 +4433,13 @@ function toggleStudentBan(username) {
   toast(`🛡️ 已成功將學員 ${username} 設為 ${newStatus}`);
 }
 
-function editStudentGoogle(username) {
-  const student = studentsList.find(s => s.username === username);
-  if (!student) return;
-  const current = student.google_email || '';
-  const next = prompt('請輸入此學員可用於 Google 登入的 Gmail / Google Mail：', current);
-  if (next === null) return;
-  const email = normalizeEmail(next);
-  student.google_email = email;
-  student.google_enabled = !!email;
-  try { localStorage.setItem('chiwa_students_list', JSON.stringify(studentsList)); } catch(e) {}
-  try {
-    if (_SB) _SB.from('students').update({ google_email: email || null, google_enabled: !!email }).eq('id', username);
-  } catch(e) { console.warn('editStudentGoogle Supabase sync failed:', e); }
-  renderAdminPanel();
-  toast(email ? '✅ Google 登入信箱已更新並啟用' : '✅ 已清除 Google 登入信箱');
-}
-
-function toggleStudentGoogle(username) {
-  const student = studentsList.find(s => s.username === username);
-  if (!student) return;
-  if (!student.google_email) {
-    editStudentGoogle(username);
-    return;
-  }
-  student.google_enabled = !student.google_enabled;
-  try { localStorage.setItem('chiwa_students_list', JSON.stringify(studentsList)); } catch(e) {}
-  try {
-    if (_SB) _SB.from('students').update({ google_enabled: !!student.google_enabled }).eq('id', username);
-  } catch(e) { console.warn('toggleStudentGoogle Supabase sync failed:', e); }
-  renderAdminPanel();
-  toast(student.google_enabled ? '✅ 已啟用 Google 登入' : '✅ 已關閉 Google 登入');
-}
-
 function addNewStudentFromAdmin() {
   const usernameInput = document.getElementById('adm-new-u');
   const noteInput = document.getElementById('adm-new-note');
-  const googleInput = document.getElementById('adm-new-google-email');
   if (!usernameInput || !noteInput) return;
   
   const username = usernameInput.value.trim();
   const note = noteInput.value.trim();
-  const googleEmail = normalizeEmail(googleInput ? googleInput.value : '');
   
   if (!username) {
     toast('❌ 請輸入學員帳號');
@@ -4612,33 +4455,13 @@ function addNewStudentFromAdmin() {
     username: username,
     status: '正常',
     regDate: new Date().toISOString().split('T')[0],
-    note: note || 'AI自媒體變現基礎班',
-    google_email: googleEmail,
-    google_enabled: !!googleEmail
+    note: note || 'AI自媒體變現基礎班'
   };
   
   studentsList.push(newStudent);
   try {
     localStorage.setItem('chiwa_students_list', JSON.stringify(studentsList));
   } catch(e) {}
-  try {
-    if (_SB) {
-      _SB.from('students').upsert({
-        id: username,
-        password: '123456',
-        name: username,
-        ai_usage: 300,
-        voice_seconds: 3600,
-        reset_month: '',
-        is_admin: false,
-        status: '正常',
-        note: newStudent.note,
-        reg_date: newStudent.regDate,
-        google_email: googleEmail || null,
-        google_enabled: !!googleEmail
-      }, { onConflict: 'id' });
-    }
-  } catch(e) { console.warn('addNewStudent Supabase sync failed:', e); }
   
   try {
     let logs = JSON.parse(localStorage.getItem('chiwa_security_logs') || '[]');
@@ -4648,11 +4471,233 @@ function addNewStudentFromAdmin() {
   
   usernameInput.value = '';
   noteInput.value = '';
-  if (googleInput) googleInput.value = '';
   
   renderAdminPanel();
   toast(`✅ 學員 ${username} 授權加入成功！`);
 }
+
+function adminLog(message) {
+  try {
+    let logs = JSON.parse(localStorage.getItem('chiwa_security_logs') || '[]');
+    logs.unshift(`[${new Date().toLocaleString()}] ${message}`);
+    localStorage.setItem('chiwa_security_logs', JSON.stringify(logs.slice(0, 50)));
+  } catch(e) {}
+}
+
+function adminStudentId(s) {
+  return String((s && (s.id || s.email || s.google_email || s.username)) || '').trim();
+}
+
+function adminStudentEmail(s) {
+  return String((s && (s.google_email || s.email || s.id || s.username)) || '').trim();
+}
+
+function adminDomKey(id) {
+  return btoa(unescape(encodeURIComponent(String(id || '')))).replace(/[^a-zA-Z0-9]/g, '');
+}
+
+async function loadAdminStudentsFromSupabase() {
+  if (!_SB) throw new Error('資料庫尚未載入');
+  let res = await _SB.from('students').select('*').order('created_at', { ascending: false });
+  if (res.error) res = await _SB.from('students').select('*');
+  if (res.error) throw res.error;
+  return Array.isArray(res.data) ? res.data : [];
+}
+
+renderAdminPanel = async function() {
+  const tbody = document.getElementById('adm-student-tbody');
+  const totalNum = document.getElementById('adm-total-num');
+  const activeNum = document.getElementById('adm-active-num');
+  const bannedNum = document.getElementById('adm-banned-num');
+  const sourceStatus = document.getElementById('adm-source-status');
+  const logsConsole = document.getElementById('security-logs');
+  if (!tbody || !totalNum || !activeNum || !bannedNum) return;
+
+  const unitSelect = document.getElementById('adm-course-unit-select');
+  if (unitSelect && unitSelect.children.length === 0) initAdminCourseSelects();
+
+  tbody.innerHTML = '<tr><td colspan="7" style="color:var(--t2);padding:18px">正在讀取學員授權資料...</td></tr>';
+  let rows = [];
+  let sourceText = 'Supabase';
+  try {
+    rows = await loadAdminStudentsFromSupabase();
+    studentsList = rows.map(s => ({
+      username: adminStudentId(s),
+      status: s.status || '正常',
+      regDate: s.created_at ? String(s.created_at).slice(0, 10) : '',
+      note: s.note || s.plan || ''
+    }));
+  } catch(e) {
+    sourceText = '本機備援';
+    rows = studentsList.map(s => ({
+      id: s.username,
+      email: s.username,
+      name: s.name || '',
+      status: s.status || '正常',
+      note: s.note || '',
+      ai_usage: s.ai_usage,
+      voice_seconds: s.voice_seconds
+    }));
+    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--red);padding:18px">讀取 Supabase 失敗：${escapeHtml(e.message || '權限或連線異常')}。目前顯示本機備援資料，正式上線前需修正資料庫權限。</td></tr>`;
+  }
+
+  totalNum.textContent = rows.length;
+  activeNum.textContent = rows.filter(s => (s.status || '正常') === '正常').length;
+  bannedNum.textContent = rows.filter(s => (s.status || '') === '已停權').length;
+  if (sourceStatus) sourceStatus.textContent = sourceText;
+
+  if (rows.length > 0) {
+    tbody.innerHTML = rows.map(s => {
+      const id = adminStudentId(s);
+      const email = adminStudentEmail(s);
+      const key = adminDomKey(id);
+      const isBanned = s.status === '已停權';
+      const badgeClass = isBanned ? 'us-expired' : 'us-active';
+      const statusText = isBanned ? '🔴 已停權' : '🟢 正常';
+      const btnText = isBanned ? '🟢 啟用' : '🚫 停權';
+      const btnClass = isBanned ? 'admin-btn-sm' : 'admin-btn-sm danger';
+      return `
+        <tr>
+          <td style="font-weight:700">${escapeHtml(email || id)}</td>
+          <td>${escapeHtml(s.name || '—')}</td>
+          <td><span class="ustatus ${badgeClass}">${statusText}</span></td>
+          <td><input id="adm-note-${key}" class="tinput" value="${escapeHtml(s.note || s.plan || '')}" style="background:var(--card2);min-width:130px"></td>
+          <td><input id="adm-ai-${key}" class="tinput" value="${escapeHtml(String(s.ai_usage ?? 300))}" style="background:var(--card2);width:86px"></td>
+          <td><input id="adm-voice-${key}" class="tinput" value="${escapeHtml(String(s.voice_seconds ?? 3600))}" style="background:var(--card2);width:96px"></td>
+          <td style="text-align:right;white-space:nowrap">
+            <button class="admin-btn-sm" onclick="saveStudentQuotaFromAdmin('${encodeURIComponent(id)}')">儲存</button>
+            <button class="${btnClass}" onclick="toggleStudentBan('${encodeURIComponent(id)}')">${btnText}</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  try {
+    const logs = JSON.parse(localStorage.getItem('chiwa_security_logs') || '[]');
+    if (logsConsole && logs.length > 0) {
+      logsConsole.innerHTML = logs.map(log => `<div>${escapeHtml(log)}</div>`).join('');
+    } else if (logsConsole) {
+      logsConsole.innerHTML = '<div style="color: var(--t3);">暫無安全日誌記錄。</div>';
+    }
+  } catch(e) {
+    if (logsConsole) logsConsole.innerHTML = '<div style="color: var(--red);">無法載入日誌記錄。</div>';
+  }
+
+  updateAdminVSLUI();
+};
+
+toggleStudentBan = async function(encodedId) {
+  const id = decodeURIComponent(encodedId);
+  const localStudent = studentsList.find(s => s.username === id);
+  const oldStatus = localStudent ? localStudent.status : '正常';
+  const newStatus = oldStatus === '正常' ? '已停權' : '正常';
+  if (!_SB) {
+    toast('❌ 資料庫尚未載入，無法正式異動權限');
+    return;
+  }
+
+  const { error } = await _SB.from('students').update({ status: newStatus }).eq('id', id);
+  if (error) {
+    toast('❌ 權限異動失敗，請檢查 Supabase 後台權限設定');
+    adminLog(`⚠️ 權限異動失敗：${id}，${error.message || 'unknown error'}`);
+    return;
+  }
+
+  adminLog(`${newStatus === '已停權' ? '🚫' : '🟢'} 授權異動：${id} 已改為 [${newStatus}]。`);
+  await renderAdminPanel();
+  toast(`🛡️ 已成功將 ${id} 設為 ${newStatus}`);
+};
+
+async function saveStudentQuotaFromAdmin(encodedId) {
+  const id = decodeURIComponent(encodedId);
+  const key = adminDomKey(id);
+  const ai = parseInt(document.getElementById('adm-ai-' + key)?.value || '300', 10);
+  const voice = parseInt(document.getElementById('adm-voice-' + key)?.value || '3600', 10);
+  const note = document.getElementById('adm-note-' + key)?.value.trim() || '';
+  if (!_SB) {
+    toast('❌ 資料庫尚未載入，無法儲存');
+    return;
+  }
+
+  const payload = {
+    ai_usage: Number.isFinite(ai) ? ai : 300,
+    voice_seconds: Number.isFinite(voice) ? voice : 3600
+  };
+  if (note) payload.note = note;
+
+  let { error } = await _SB.from('students').update(payload).eq('id', id);
+  if (error && note) {
+    delete payload.note;
+    ({ error } = await _SB.from('students').update(payload).eq('id', id));
+  }
+  if (error) {
+    toast('❌ 儲存失敗，請檢查 students 欄位或 Supabase 權限');
+    adminLog(`⚠️ 儲存額度失敗：${id}，${error.message || 'unknown error'}`);
+    return;
+  }
+
+  adminLog(`💾 額度更新：${id}，AI ${payload.ai_usage} 次，語音 ${payload.voice_seconds} 秒。`);
+  await renderAdminPanel();
+  toast('✅ 學員額度已更新');
+}
+
+addNewStudentFromAdmin = async function() {
+  const emailInput = document.getElementById('adm-new-u');
+  const nameInput = document.getElementById('adm-new-name');
+  const noteInput = document.getElementById('adm-new-note');
+  const aiInput = document.getElementById('adm-new-ai');
+  const voiceInput = document.getElementById('adm-new-voice');
+  if (!emailInput || !noteInput) return;
+
+  const email = emailInput.value.trim().toLowerCase();
+  const name = nameInput ? nameInput.value.trim() : '';
+  const note = noteInput.value.trim() || 'AI自媒體變現自學課程';
+  const ai = parseInt(aiInput?.value || '300', 10);
+  const voice = parseInt(voiceInput?.value || '3600', 10);
+
+  if (!email || !email.includes('@')) {
+    toast('❌ 請輸入正確的學員 Google Email');
+    return;
+  }
+  if (!_SB) {
+    toast('❌ 資料庫尚未載入，無法開通正式學員');
+    return;
+  }
+
+  const basePayload = {
+    id: email,
+    password: 'GOOGLE_LOGIN_ONLY',
+    name: name || email.split('@')[0],
+    status: '正常',
+    is_admin: false,
+    ai_usage: Number.isFinite(ai) ? ai : 300,
+    voice_seconds: Number.isFinite(voice) ? voice : 3600
+  };
+  const fullPayload = Object.assign({}, basePayload, {
+    email: email,
+    google_email: email,
+    note: note,
+    plan: note
+  });
+
+  let { error } = await _SB.from('students').upsert(fullPayload, { onConflict: 'id' });
+  if (error) {
+    ({ error } = await _SB.from('students').upsert(basePayload, { onConflict: 'id' }));
+  }
+  if (error) {
+    toast('❌ 開通失敗，請檢查 Supabase students 欄位與新增權限');
+    adminLog(`⚠️ 開通失敗：${email}，${error.message || 'unknown error'}`);
+    return;
+  }
+
+  adminLog(`➕ 學員開通：${email}，AI ${basePayload.ai_usage} 次，語音 ${basePayload.voice_seconds} 秒。`);
+  emailInput.value = '';
+  if (nameInput) nameInput.value = '';
+  noteInput.value = '';
+  await renderAdminPanel();
+  toast(`✅ 已開通 ${email} 的 Google 登入權限`);
+};
 
 // 備用靜態進度宣告，已融合至動態進度中
 let courseProgress = {};
@@ -4791,11 +4836,23 @@ function saveVimeoIdFromAdmin() {
 // 課程管理後台：單元小節 新增/刪除/改名 JS 核心
 // ==============================================
 
-function saveCourseStructure(syncRemote = true) {
+function saveCourseStructure() {
   try {
-    var structure = snapshotCourseStructure();
+    var structure = courseData.map(function(u) {
+      return {
+        id: u.id, title: u.title, desc: u.desc || '',
+        lessons: u.lessons.map(function(l) { 
+          return { 
+            id: l.id, 
+            title: l.title, 
+            duration: l.duration || '00:00',
+            vimeoId: l.vimeoId || '76979871',
+            textDesc: l.textDesc || ''
+          }; 
+        })
+      };
+    });
     localStorage.setItem('chiwa_course_structure', JSON.stringify(structure));
-    if (syncRemote) saveSiteSetting('course_structure', structure);
   } catch(e) { console.error('saveCourseStructure error:', e); }
 }
 
@@ -5086,166 +5143,19 @@ function resetVoiceTrialSteps() {
 }
 
 function simulateGoogleLogin() {
-  toast('🔄 正在關聯 Google 帳號...');
-  setTimeout(function() {
-    const email = 'chiwa.trial.user@gmail.com';
-    const emailDisplay = document.getElementById('google-email-display');
-    if (emailDisplay) emailDisplay.textContent = email;
-    
-    const googleLoginSec = document.getElementById('google-login-section');
-    const googleSuccessSec = document.getElementById('google-success-section');
-    if (googleLoginSec) googleLoginSec.style.display = 'none';
-    if (googleSuccessSec) googleSuccessSec.style.display = 'block';
-    
-    // Unlock Step 2
-    const step2 = document.getElementById('vt-step-2');
-    if (step2) {
-      step2.style.opacity = '1';
-      step2.style.pointerEvents = 'auto';
-    }
-    toast('✅ Google 帳號關聯成功！');
-  }, 1000);
+  toast('正式版不開放免費體驗，請使用已開通的學員 Google 帳號登入。');
 }
 
 function sendSMSCode() {
-  const phoneInput = document.getElementById('vt-phone');
-  const sendBtn = document.getElementById('vt-send-sms-btn');
-  if (!phoneInput || !sendBtn) return;
-  const phone = phoneInput.value.trim();
-  if (!phone) {
-    toast('❌ 請輸入手機號碼！');
-    return;
-  }
-  if (!/^09\d{8}$/.test(phone)) {
-    toast('❌ 手機號碼格式不正確，須為 10 位數字且以 09 開頭！');
-    return;
-  }
-  
-  toast('💬 簡訊驗證碼已發送至 ' + phone.substring(0,3) + '***' + phone.substring(7) + '，請注意查收！(測試用請輸入 888888)');
-  
-  // 禁用手機輸入欄位與發送按鈕，並啟動倒數
-  phoneInput.disabled = true;
-  sendBtn.disabled = true;
-  
-  // 顯示驗證碼輸入框
-  const smsSec = document.getElementById('vt-sms-section');
-  if (smsSec) smsSec.style.display = 'flex';
-  
-  smsCountdown = 60;
-  sendBtn.textContent = `重新發送 (${smsCountdown}s)`;
-  
-  if (smsTimer) clearInterval(smsTimer);
-  smsTimer = setInterval(function() {
-    smsCountdown--;
-    if (smsCountdown <= 0) {
-      clearInterval(smsTimer);
-      smsTimer = null;
-      sendBtn.disabled = false;
-      sendBtn.textContent = '發送驗證碼';
-      phoneInput.disabled = false;
-    } else {
-      sendBtn.textContent = `重新發送 (${smsCountdown}s)`;
-    }
-  }, 1000);
+  toast('正式版不開放簡訊測試體驗，請使用已開通的學員 Google 帳號登入。');
 }
 
 function verifySMSCode() {
-  const smsCodeInput = document.getElementById('vt-sms-code');
-  if (!smsCodeInput) return;
-  const code = smsCodeInput.value.trim();
-  if (!code) {
-    toast('❌ 請輸入驗證碼！');
-    return;
-  }
-  if (code !== '888888') {
-    toast('❌ 驗證碼錯誤！預設測試碼為 888888');
-    return;
-  }
-  
-  toast('🔄 正在驗證手機號碼...');
-  setTimeout(function() {
-    // 驗證成功，清除倒數計時器
-    if (smsTimer) {
-      clearInterval(smsTimer);
-      smsTimer = null;
-    }
-    
-    const phoneInput = document.getElementById('vt-phone');
-    const rawPhone = phoneInput ? phoneInput.value.trim() : '0912345678';
-    const maskedPhone = rawPhone.substring(0,4) + '***' + rawPhone.substring(7);
-    
-    const phoneDisplay = document.getElementById('phone-display');
-    if (phoneDisplay) phoneDisplay.textContent = maskedPhone;
-    
-    // 隱藏輸入與發送區
-    const phoneInputGroup = document.getElementById('phone-input-group');
-    if (phoneInputGroup) phoneInputGroup.style.display = 'none';
-    const smsSec = document.getElementById('vt-sms-section');
-    if (smsSec) smsSec.style.display = 'none';
-    
-    const phoneSuccessSec = document.getElementById('phone-success-section');
-    if (phoneSuccessSec) phoneSuccessSec.style.display = 'block';
-    
-    // Unlock Step 3
-    const step3 = document.getElementById('vt-step-3');
-    if (step3) {
-      step3.style.opacity = '1';
-      step3.style.pointerEvents = 'auto';
-    }
-    toast('✅ 手機簡訊驗證成功！');
-  }, 1000);
+  toast('正式版不開放測試驗證碼，請使用已開通的學員 Google 帳號登入。');
 }
 
 function enterVoiceTrialWorkspace() {
-  currentUser = 'demo_user';
-  
-  // 確保 demo_user 存在於學員名單中且狀態為正常
-  let demo = studentsList.find(function(s) { return s.username === 'demo_user'; });
-  if (!demo) {
-    demo = { username: 'demo_user', status: '正常', regDate: new Date().toISOString().split('T')[0], note: '企業內訓專案學員' };
-    studentsList.push(demo);
-    try { localStorage.setItem('chiwa_students_list', JSON.stringify(studentsList)); } catch(e){}
-  } else if (demo.status === '已停權') {
-    toast('🚫 體驗帳號目前已被停權，請聯絡管理員啟用！');
-    return;
-  }
-  
-  // 更新學員工作台側邊欄與頭像資訊
-  const adminItem = document.getElementById('sb-admin-item');
-  if (adminItem) adminItem.style.display = 'none';
-  
-  const unameEl = document.querySelector('.sb-uname');
-  if (unameEl) unameEl.textContent = 'demo_user (體驗版)';
-  const avEl = document.querySelector('.sb-av');
-  if (avEl) avEl.textContent = 'DE';
-  
-  // 重新渲染學員特定資料
-  buildWM();
-  renderUnitGrid();
-  renderVoiceList();
-  updateVoiceDropdown();
-  
-  // 跳轉至工作台，並切換面板到語音克隆
-  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-  const wsPage = document.getElementById('page-workspace');
-  if (wsPage) wsPage.classList.add('active');
-  
-  const sbItems = document.querySelectorAll('.sb-item');
-  // 語音克隆在第 5 個（選題, 腳本, 行銷, 合規, 語音, 課程, 智慧財產權）
-  if (sbItems.length >= 5) {
-    swP('voice', sbItems[4]);
-  } else {
-    swP('voice');
-  }
-  
-  toast('✨ 體驗通道已開啟！已為您自動登入體驗帳號 demo_user，直接開啟語音克隆面板。');
-  
-  // 模擬寫入安全日誌
-  try {
-    let logs = JSON.parse(localStorage.getItem('chiwa_security_logs') || '[]');
-    logs.unshift('[' + new Date().toLocaleString() + '] 🚀 體驗試用：訪客透過「免費試用」一鍵登入 demo_user 體驗帳號。');
-    localStorage.setItem('chiwa_security_logs', JSON.stringify(logs.slice(0, 30)));
-  } catch(e){}
+  toast('正式版不開放體驗帳號，請使用已開通的學員 Google 帳號登入。');
 }
 
 /* === 首頁 VSL 銷講影片管理與動態渲染邏輯 === */
@@ -5275,7 +5185,6 @@ function saveVSLConfigFromAdmin() {
   var config = { vimeoId: vimeoId, status: status };
   try {
     localStorage.setItem('chiwa_vsl_video_config', JSON.stringify(config));
-    saveSiteSetting('vsl_video_config', config);
     toast('✅ VSL 設定儲存成功！');
     logCourseOp('VSL影片異動：狀態改為「' + (status === 'publish' ? '上架' : '下架') + '」，ID改為「' + vimeoId + '」。');
     renderVSLVideo();
@@ -5296,7 +5205,7 @@ function renderVSLVideo() {
   container.innerHTML = `
     <div class="vsl-box" id="vsl-box-element" onclick="playVSLVideo('${config.vimeoId}')">
       <div class="vsl-play">▶</div>
-      <div class="vsl-label">點擊播放服務介紹影片</div>
+      <div class="vsl-label">點擊了解AI自媒體變現系統</div>
       
     </div>
   `;
@@ -5353,7 +5262,6 @@ function saveVSLFeatureConfigFromAdmin() {
   var config = { leftVimeoId: leftVimeoId, rightVimeoId: rightVimeoId, status: status };
   try {
     localStorage.setItem('chiwa_vsl_feature_config', JSON.stringify(config));
-    saveSiteSetting('vsl_feature_config', config);
     toast('✅ 特色影片設定儲存成功！');
     logCourseOp('特色影片異動：狀態改為「' + (status === 'publish' ? '上架' : '下架') + '」，左側ID「' + leftVimeoId + '」，右側ID「' + rightVimeoId + '」。');
     renderVSLFeatureVideo();
@@ -5373,7 +5281,7 @@ function renderVSLFeatureVideo() {
 
   container.style.display = 'block';
   wrap.innerHTML = `
-    <div class="vsl-box" id="vsl-feature-box-element" onclick="playVSLFeatureVideo('${config.leftVimeoId}')" style="aspect-ratio:16/9; margin:0 auto;">
+      <div class="vsl-box" id="vsl-feature-box-element" onclick="playVSLFeatureVideo('${config.leftVimeoId}')" style="aspect-ratio:9/16; margin:0 auto;">
       <div class="vsl-play">▶</div>
       <div class="vsl-label">點擊播放特色介紹影片</div>
     </div>
@@ -5382,7 +5290,7 @@ function renderVSLFeatureVideo() {
   var wrap2 = document.getElementById('vsl-feature-video-wrap-2');
   if (wrap2) {
     wrap2.innerHTML = `
-      <div class="vsl-box" id="vsl-feature-box-element-2" onclick="playVSLFeatureVideo2('${config.rightVimeoId}')" style="aspect-ratio:16/9; margin:0 auto;">
+        <div class="vsl-box" id="vsl-feature-box-element-2" onclick="playVSLFeatureVideo2('${config.rightVimeoId}')" style="aspect-ratio:9/16; margin:0 auto;">
         <div class="vsl-play">▶</div>
         <div class="vsl-label">點擊播放特色介紹影片</div>
       </div>
@@ -5414,25 +5322,6 @@ function updateAdminVSLFeatureUI() {
   if (rightEl) rightEl.value = config.rightVimeoId;
 }
 
-async function loadVideoSettingsFromSupabase(canMigrateLocal) {
-  const vsl = await loadSiteSetting('vsl_video_config');
-  if (vsl && vsl.vimeoId && vsl.status) {
-    try { localStorage.setItem('chiwa_vsl_video_config', JSON.stringify(vsl)); } catch(e) {}
-  } else if (canMigrateLocal) {
-    await saveSiteSetting('vsl_video_config', getVSLConfig());
-  }
-
-  const feature = await loadSiteSetting('vsl_feature_config');
-  if (feature && feature.status) {
-    try { localStorage.setItem('chiwa_vsl_feature_config', JSON.stringify(feature)); } catch(e) {}
-  } else if (canMigrateLocal) {
-    await saveSiteSetting('vsl_feature_config', getVSLFeatureConfig());
-  }
-  renderVSLVideo();
-  renderVSLFeatureVideo();
-  updateAdminVSLUI();
-}
-
 /* Enter 送出 */
 const ki=document.getElementById('key-input');
 if(ki)ki.addEventListener('keydown',e=>{if(e.key==='Enter')saveKey();});
@@ -5442,7 +5331,6 @@ if(ki)ki.addEventListener('keydown',e=>{if(e.key==='Enter')saveKey();});
 document.addEventListener('DOMContentLoaded', function() {
   renderVSLVideo();
   renderVSLFeatureVideo();
-  handleGoogleAuthCallback();
 });
 </script>
 </body>
