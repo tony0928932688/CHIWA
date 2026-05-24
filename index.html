@@ -1083,6 +1083,7 @@ var aiUse = 0; // 預先宣告，避免 head 腳本區發生 ReferenceError
 const _SB = (window.supabase && typeof supabase.createClient === 'function')
   ? supabase.createClient('https://nsauscojruqjcprvsfsn.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zYXVzY29qcnVxamNwcnZzZnNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjAzMTksImV4cCI6MjA5NDU5NjMxOX0.gXX7cBcqohoHqvPkZM-FFrnZVDS59g5OBJPBqH73H_w')
   : null;
+const CARTESIA_VOICE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/cartesia-voice';
 let currentUser = '';
 let currentUserData = null;
 
@@ -1130,6 +1131,7 @@ async function finishStudentLogin(data, loginId) {
   if (typeof goPage === 'function') goPage('workspace');
   if (typeof buildWM === 'function') buildWM();
   if (typeof renderUnitGrid === 'function') renderUnitGrid();
+  if (typeof loadCloudVoices === 'function') await loadCloudVoices();
   if (typeof renderVoiceList === 'function') renderVoiceList();
   if (typeof updateVoiceDropdown === 'function') updateVoiceDropdown();
   toast('🔓 登入成功！歡迎回來 ' + (data.name || currentUser));
@@ -2363,7 +2365,8 @@ async function decrVoice(secs) {
       </div>
       <div style="font-size:11px;color:var(--t3)">本月重置</div>
     </div>
-    
+    <div class="label mb14">選擇發音人</div>
+    <select id="tts-voice-select" class="tinput" style="height:42px;margin-bottom:12px"></select>
     <textarea id="ttsin" rows="4" placeholder="貼入要朗讀的腳本文字..." maxlength="500"></textarea>
     <div class="fl mt10">
       <button class="btn-gold" id="tts-btn" onclick="generateTTSAudio()">🎵 生成語音</button>
@@ -3114,6 +3117,7 @@ function toggleFaq(el) {
 }
 
 let selChip='', scriptTxt='', marketingTxt='', isRec=false, recSec=0, recTmr=null;
+let voiceMediaRecorder = null, voiceRecChunks = [], voiceRecStream = null, recordedVoiceBlob = null;
 aiUse = 285; // 設定初始值（已在 head 用 var 宣告）
 // \uD83D\uDEE1\uFE0F UTF-8 Base64
 function generateSandboxMock(sys, usr, type, fmt, tone) {
@@ -3679,26 +3683,104 @@ function swVTbyName(id){
   if(vnew)vnew.style.display=id==='vt-new'?'block':'none';
 }
 
+async function getVoiceSessionToken() {
+  if (!_SB || !_SB.auth || typeof _SB.auth.getSession !== 'function') return '';
+  const { data } = await _SB.auth.getSession();
+  return data && data.session && data.session.access_token ? data.session.access_token : '';
+}
+
+async function callCartesiaVoiceJson(action, payload) {
+  const token = await getVoiceSessionToken();
+  if (!token) throw new Error('請使用 Google 登入後再使用語音克隆功能。');
+  const res = await fetch(CARTESIA_VOICE_FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ action, ...(payload || {}) })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || data.error || '語音服務暫時無法使用');
+  return data;
+}
+
+function getStoredVoices() {
+  try {
+    const voices = JSON.parse(localStorage.getItem(`chiwa_voices_${currentUser}`) || '[]');
+    return Array.isArray(voices) ? voices : [];
+  } catch(e) {
+    return [];
+  }
+}
+
+function saveStoredVoices(voices) {
+  try {
+    localStorage.setItem(`chiwa_voices_${currentUser}`, JSON.stringify(voices || []));
+  } catch(e) {}
+}
+
+async function loadCloudVoices() {
+  if (!currentUser) return;
+  const token = await getVoiceSessionToken();
+  if (!token) return;
+  try {
+    const data = await callCartesiaVoiceJson('list', {});
+    if (Array.isArray(data.voices)) saveStoredVoices(data.voices);
+  } catch(e) {
+    console.warn('cloud voices skipped:', e.message || e);
+  }
+}
+
 // 錄音模組控制
-function togRec(){
+async function togRec(){
   const btn=document.getElementById('rbtn'),tmr=document.getElementById('rtimer'),hint=document.getElementById('rhint');
   if(!btn)return;
   if(!isRec){
-    isRec=true;
-    recSec=0;
-    btn.classList.add('rng');
-    btn.textContent='⏹';
-    if(hint)hint.textContent='錄音中...點擊停止';
-    recTmr=setInterval(()=>{
-      recSec++;
-      const m=String(Math.floor(recSec/60)).padStart(2,'0'),s=String(recSec%60).padStart(2,'0');
-      if(tmr)tmr.textContent=m+':'+s;
-      if(recSec>=120)togRec();
-    },1000);
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast('❌ 目前瀏覽器不支援錄音，請改用 Chrome 或 Safari 開啟。');
+      return;
+    }
+    if (!window.MediaRecorder) {
+      toast('❌ 目前瀏覽器不支援錄音格式，請改用 Chrome 或 Safari 開啟。');
+      return;
+    }
+    try {
+      recordedVoiceBlob = null;
+      voiceRecChunks = [];
+      voiceRecStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : (MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '');
+      voiceMediaRecorder = new MediaRecorder(voiceRecStream, mimeType ? { mimeType } : undefined);
+      voiceMediaRecorder.ondataavailable = function(e) {
+        if (e.data && e.data.size > 0) voiceRecChunks.push(e.data);
+      };
+      voiceMediaRecorder.onstop = function() {
+        recordedVoiceBlob = new Blob(voiceRecChunks, { type: voiceMediaRecorder.mimeType || 'audio/webm' });
+        if (voiceRecStream) voiceRecStream.getTracks().forEach(track => track.stop());
+        voiceRecStream = null;
+      };
+      voiceMediaRecorder.start();
+      isRec=true;
+      recSec=0;
+      btn.classList.add('rng');
+      btn.textContent='⏹';
+      if(hint)hint.textContent='錄音中...點擊停止';
+      recTmr=setInterval(()=>{
+        recSec++;
+        const m=String(Math.floor(recSec/60)).padStart(2,'0'),s=String(recSec%60).padStart(2,'0');
+        if(tmr)tmr.textContent=m+':'+s;
+        if(recSec>=120)togRec();
+      },1000);
+    } catch(e) {
+      toast('❌ 無法啟用麥克風，請允許瀏覽器使用麥克風後再試一次。');
+    }
   }
   else{
     isRec=false;
     clearInterval(recTmr);
+    if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') voiceMediaRecorder.stop();
     btn.classList.remove('rng');
     btn.textContent='🎤';
     if(hint)hint.textContent='錄音完成 ('+recSec+' 秒) - 格式已就緒';
@@ -3716,10 +3798,7 @@ function renderVoiceList() {
   const container = document.getElementById('my-voices-container');
   if (!container) return;
   
-  let cloned = [];
-  try {
-    cloned = JSON.parse(localStorage.getItem(`chiwa_voices_${currentUser}`) || '[]');
-  } catch(e){}
+  let cloned = getStoredVoices();
   
   if (cloned.length === 0) {
     container.innerHTML = `
@@ -3747,18 +3826,18 @@ function renderVoiceList() {
 }
 
 // 刪除聲音
-function deleteVoice(id) {
+async function deleteVoice(id) {
   if (confirm('確定要永久刪除此克隆聲音嗎？這將無法復原。')) {
-    let cloned = [];
-    try {
-      cloned = JSON.parse(localStorage.getItem(`chiwa_voices_${currentUser}`) || '[]');
-    } catch(e){}
+    let cloned = getStoredVoices();
     
     cloned = cloned.filter(v => v.id !== id);
     
+    saveStoredVoices(cloned);
     try {
-      localStorage.setItem(`chiwa_voices_${currentUser}`, JSON.stringify(cloned));
-    } catch(e){}
+      await callCartesiaVoiceJson('delete', { voice_id: id });
+    } catch(e) {
+      console.warn('cloud voice delete skipped:', e.message || e);
+    }
     
     toast('🗑️ 克隆聲音已成功刪除');
     renderVoiceList();
@@ -3767,7 +3846,7 @@ function deleteVoice(id) {
 }
 
 // 克隆新聲音
-function cloneV() {
+async function cloneV() {
   const name = document.getElementById('vname').value.trim();
   if (!name) {
     toast('❌ 請輸入聲音名稱！');
@@ -3777,32 +3856,43 @@ function cloneV() {
     toast('❌ 錄音時間過短，請至少錄製 3 秒以獲得聲音特徵！');
     return;
   }
+  if (!recordedVoiceBlob || recordedVoiceBlob.size < 1000) {
+    toast('❌ 找不到錄音檔，請重新錄音後再建立模型。');
+    return;
+  }
   
-  toast('⚙️ 正在透過吉娃 AI 語音系統建立您的聲音特徵...');
-  
-  // 模擬克隆運算
-  setTimeout(() => {
-    let cloned = [];
-    try {
-      cloned = JSON.parse(localStorage.getItem(`chiwa_voices_${currentUser}`) || '[]');
-    } catch(e){}
-    
-    cloned.push({
-      id: 'v-' + Date.now(),
-      name: name,
-      date: new Date().toISOString().split('T')[0],
-      duration: '語音克隆 · ' + recSec + '秒'
+  const token = await getVoiceSessionToken();
+  if (!token) {
+    toast('❌ 請使用 Google 登入後再使用語音克隆。');
+    return;
+  }
+
+  toast('⚙️ 正在建立您的 Cartesia 聲音模型...');
+
+  try {
+    const form = new FormData();
+    const ext = (recordedVoiceBlob.type || '').includes('mp4') ? 'm4a' : 'webm';
+    form.append('name', name);
+    form.append('recording_seconds', String(recSec));
+    form.append('audio', recordedVoiceBlob, `chiwa-voice-${Date.now()}.${ext}`);
+
+    const res = await fetch(CARTESIA_VOICE_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+      body: form
     });
-    
-    try {
-      localStorage.setItem(`chiwa_voices_${currentUser}`, JSON.stringify(cloned));
-    } catch(e){}
-    
-    toast(`🎯 恭喜！聲音「${name}」克隆並存檔成功！`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || data.error || '語音克隆失敗');
+
+    const cloned = getStoredVoices();
+    cloned.unshift(data.voice);
+    saveStoredVoices(cloned);
+    toast(`🎯 聲音「${name}」克隆並存檔成功！`);
     
     // 重設輸入框與計時
     document.getElementById('vname').value = '';
     recSec = 0;
+    recordedVoiceBlob = null;
     document.getElementById('rtimer').textContent = '00:00';
     document.getElementById('rhint').textContent = '點擊開始錄音';
     
@@ -3810,7 +3900,9 @@ function cloneV() {
     swVTbyName('vt-my');
     renderVoiceList();
     updateVoiceDropdown();
-  }, 1500);
+  } catch(e) {
+    toast('❌ ' + (e.message || '語音克隆失敗，請稍後再試。'));
+  }
 }
 
 // 更新文字轉語音選擇欄位
@@ -3818,10 +3910,7 @@ function updateVoiceDropdown() {
   const select = document.getElementById('tts-voice-select');
   if (!select) return;
   
-  let cloned = [];
-  try {
-    cloned = JSON.parse(localStorage.getItem(`chiwa_voices_${currentUser}`) || '[]');
-  } catch(e){}
+  let cloned = getStoredVoices();
   
   select.innerHTML = '';
   
@@ -3842,17 +3931,14 @@ function updateVoiceDropdown() {
   });
 }
 
-// 模擬生成 TTS 語音
-let ttsPlaying = false;
-let ttsSec = 0;
-let ttsTotal = 8; // 模擬 8 秒
-let ttsTmr = null;
+let lastGeneratedAudioUrl = '';
 
-function generateTTSAudio() {
+async function generateTTSAudio() {
   const text = document.getElementById('ttsin').value.trim();
   const container = document.getElementById('tts-audio-container');
   const load = document.getElementById('tts-load');
   const btn = document.getElementById('tts-btn');
+  const select = document.getElementById('tts-voice-select');
   
   if (!text) {
     toast('❌ 請先輸入要生成的腳本文案！');
@@ -3860,13 +3946,13 @@ function generateTTSAudio() {
   }
 
   // 計算本次語音預計長度（秒）
-  const generatedSecs = Math.max(5, Math.min(60, Math.round(text.length / 6)));
+  const estimatedSecs = Math.max(1, Math.min(120, Math.ceil(text.length / 5)));
 
   // 語音秒數額度檢查（管理員跳過）
   if (currentUserData && !currentUserData.is_admin) {
     const remSecs = currentUserData.voice_seconds || 0;
-    if (remSecs < generatedSecs) {
-      toast(`❌ 語音剩餘秒數不足！本次需 ${generatedSecs} 秒，目前剩餘 ${_fmtSec(remSecs)}。`);
+    if (remSecs < estimatedSecs) {
+      toast(`❌ 語音剩餘秒數不足！本次預估需 ${estimatedSecs} 秒，目前剩餘 ${_fmtSec(remSecs)}。`);
       return;
     }
   }
@@ -3875,86 +3961,72 @@ function generateTTSAudio() {
   load.style.display = 'flex';
   container.innerHTML = '';
   
-  // 終止當前正在播放的計時
-  if (ttsTmr) {
-    clearInterval(ttsTmr);
-    ttsPlaying = false;
+  if (lastGeneratedAudioUrl) {
+    URL.revokeObjectURL(lastGeneratedAudioUrl);
+    lastGeneratedAudioUrl = '';
   }
-  
-  setTimeout(() => {
+
+  try {
+    const token = await getVoiceSessionToken();
+    if (!token) throw new Error('請使用 Google 登入後再生成語音。');
+
+    const res = await fetch(CARTESIA_VOICE_FUNCTION_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        action: 'tts',
+        voice_id: select ? select.value : 'def-female',
+        text
+      })
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.detail || data.error || '語音生成失敗');
+    }
+
+    const audioBlob = await res.blob();
+    lastGeneratedAudioUrl = URL.createObjectURL(audioBlob);
+    const fallbackSecs = parseInt(res.headers.get('X-Estimated-Seconds') || String(estimatedSecs), 10) || estimatedSecs;
+
     load.style.display = 'none';
     btn.disabled = false;
-    
-    // 精準扣除語音秒數並同步 Supabase
-    decrVoice(generatedSecs);
-    toast(`🎵 AI 語音合成成功！已扣除 ${generatedSecs} 秒語音額度`);
-    
-    // 渲染播放器介面
-    const timeLabel = _fmtSec(generatedSecs);
+
     container.innerHTML = `
       <div class="audio-player-box">
-        <div class="ap-controls">
-          <button class="ap-play-btn" id="ap-play-trigger" onclick="toggleTtsPlayback()">▶</button>
-          <div class="ap-bar-bg" onclick="seekTtsPlayback(event)">
-            <div class="ap-bar-fill" id="ap-play-fill" style="width: 0%"></div>
-          </div>
-          <div class="ap-time" id="ap-play-time">00:00 / ${timeLabel}</div>
-        </div>
+        <audio id="tts-audio-player" controls src="${lastGeneratedAudioUrl}" style="width:100%"></audio>
       </div>
       <div style="font-size: 11px; color: var(--t3); margin-top: 6px; text-align: left; padding-left: 8px;">
-        🔊 發音人聲音正在完美朗讀：「${escapeHtml(text.slice(0, 18))}...」
+        🔊 已生成真實語音：「${escapeHtml(text.slice(0, 18))}${text.length > 18 ? '...' : ''}」
       </div>
     `;
-    
-    ttsSec = 0;
-    ttsTotal = generatedSecs;
-  }, 1200);
-}
 
-function toggleTtsPlayback() {
-  const trigger = document.getElementById('ap-play-trigger');
-  const fill = document.getElementById('ap-play-fill');
-  const time = document.getElementById('ap-play-time');
-  
-  if (!trigger) return;
-  
-  if (!ttsPlaying) {
-    ttsPlaying = true;
-    trigger.textContent = '⏸';
-    ttsTmr = setInterval(() => {
-      ttsSec++;
-      if (ttsSec > ttsTotal) {
-        clearInterval(ttsTmr);
-        ttsPlaying = false;
-        ttsSec = 0;
-        trigger.textContent = '▶';
-        if (fill) fill.style.width = '0%';
-        if (time) time.textContent = `00:00 / 00:${String(ttsTotal).padStart(2,'0')}`;
-      } else {
-        const pct = (ttsSec / ttsTotal) * 100;
-        if (fill) fill.style.width = pct + '%';
-        if (time) time.textContent = `00:${String(ttsSec).padStart(2,'0')} / 00:${String(ttsTotal).padStart(2,'0')}`;
-      }
-    }, 1000);
-  } else {
-    ttsPlaying = false;
-    trigger.textContent = '▶';
-    clearInterval(ttsTmr);
+    const audio = document.getElementById('tts-audio-player');
+    let deducted = false;
+    const deductOnce = function(seconds) {
+      if (deducted) return;
+      deducted = true;
+      const used = Math.max(1, Math.ceil(seconds || fallbackSecs));
+      decrVoice(used);
+      toast(`🎵 AI 語音合成成功！已扣除 ${used} 秒語音額度`);
+    };
+    if (audio) {
+      audio.addEventListener('loadedmetadata', function() {
+        deductOnce(Number.isFinite(audio.duration) ? audio.duration : fallbackSecs);
+      }, { once: true });
+      setTimeout(function() { deductOnce(fallbackSecs); }, 2500);
+    } else {
+      deductOnce(fallbackSecs);
+    }
+  } catch(e) {
+    load.style.display = 'none';
+    btn.disabled = false;
+    container.innerHTML = '';
+    toast('❌ ' + (e.message || '語音生成失敗，請稍後再試。'));
   }
-}
-
-function seekTtsPlayback(e) {
-  const bar = e.currentTarget;
-  const rect = bar.getBoundingClientRect();
-  const clickX = e.clientX - rect.left;
-  const pct = Math.max(0, Math.min(100, (clickX / rect.width) * 100));
-  
-  const fill = document.getElementById('ap-play-fill');
-  const time = document.getElementById('ap-play-time');
-  
-  ttsSec = Math.round((pct / 100) * ttsTotal);
-  if (fill) fill.style.width = pct + '%';
-  if (time) time.textContent = `00:${String(ttsSec).padStart(2,'0')} / 00:${String(ttsTotal).padStart(2,'0')}`;
 }
 
 
