@@ -1199,8 +1199,66 @@ async function loginWithGoogleEmail(email) {
   await finishStudentLogin(student, email);
 }
 
+function getBlockedOAuthUserAgentName() {
+  const ua = navigator.userAgent || '';
+  const checks = [
+    { re: /Line\//i, name: 'LINE 內建瀏覽器' },
+    { re: /FBAN|FBAV|FBIOS|FB_IAB|FB4A|MessengerForiOS/i, name: 'Facebook / Messenger 內建瀏覽器' },
+    { re: /Instagram/i, name: 'Instagram 內建瀏覽器' },
+    { re: /TikTok|BytedanceWebview|Musical_ly/i, name: 'TikTok 內建瀏覽器' },
+    { re: /MicroMessenger/i, name: '微信內建瀏覽器' },
+    { re: /KAKAOTALK/i, name: 'KakaoTalk 內建瀏覽器' },
+    { re: /wv\)|; wv;|Version\/[\d.]+ Chrome\/[\d.]+ Mobile Safari/i, name: 'App 內建瀏覽器' }
+  ];
+  const hit = checks.find(item => item.re.test(ua));
+  return hit ? hit.name : '';
+}
+
+function showSafeBrowserNotice(appName) {
+  const siteUrl = 'https://chiwaai.com/';
+  const old = document.getElementById('safe-browser-notice');
+  if (old) old.remove();
+
+  const wrap = document.createElement('div');
+  wrap.id = 'safe-browser-notice';
+  wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(5,5,10,.82);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:22px;';
+  wrap.innerHTML = `
+    <div style="width:min(440px,100%);background:#111118;border:1px solid rgba(232,197,90,.35);border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.45);padding:24px;color:#eeeef2;font-family:'Noto Sans TC',sans-serif;">
+      <div style="font-size:20px;font-weight:900;color:#e8c55a;margin-bottom:8px;">請用 Safari / Chrome 開啟再登入</div>
+      <div style="font-size:14px;line-height:1.8;color:#b8b8d6;margin-bottom:16px;">
+        你目前使用的是「${appName || 'App 內建瀏覽器'}」。Google 會封鎖 App 內建瀏覽器的登入，因此會出現 403: disallowed_useragent。
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;font-size:13px;line-height:1.8;color:#d9d9e8;margin-bottom:18px;">
+        iPhone：點右下角分享或右上角「...」，選「在 Safari 開啟」。<br>
+        Android：點右上角「...」，選「在 Chrome 開啟」。<br>
+        開啟後再按 Google 帳號登入即可。
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button type="button" id="safe-browser-copy" style="flex:1;min-width:150px;border:0;border-radius:10px;background:#e8c55a;color:#17120a;font-weight:900;padding:12px 14px;cursor:pointer;">複製網站連結</button>
+        <button type="button" id="safe-browser-close" style="flex:1;min-width:110px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:rgba(255,255,255,.06);color:#eeeef2;font-weight:800;padding:12px 14px;cursor:pointer;">我知道了</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+
+  document.getElementById('safe-browser-close').onclick = () => wrap.remove();
+  document.getElementById('safe-browser-copy').onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(siteUrl);
+      toast('已複製網站連結，請貼到 Safari / Chrome 開啟');
+    } catch(e) {
+      window.prompt('請複製這個網址，貼到 Safari / Chrome 開啟：', siteUrl);
+    }
+  };
+}
+
 async function doGoogleLogin() {
   const err = document.getElementById('lerr');
+  const blockedBrowser = getBlockedOAuthUserAgentName();
+  if (blockedBrowser) {
+    showSafeBrowserNotice(blockedBrowser);
+    return;
+  }
   if (!_SB || !_SB.auth) {
     if (err) { err.style.display='block'; err.textContent='Google 登入尚未載入，請重新整理後再試'; }
     return;
