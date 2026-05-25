@@ -5,3 +5,6 @@
 *.ps1
 *.py
 *.js
+cloudflare/avatar-r2-worker/node_modules/
+cloudflare/avatar-r2-worker/package.json
+cloudflare/avatar-r2-worker/package-lock.json
