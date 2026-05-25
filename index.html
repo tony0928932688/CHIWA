@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://nsauscojruqjcprvsfsn.supabase.co https://nsauscojruqjcprvsfsn.storage.supabase.co wss://nsauscojruqjcprvsfsn.supabase.co https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev; frame-src https://player.vimeo.com https://vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://forms.gle https://p.ecpay.com.tw; upgrade-insecure-requests;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://nsauscojruqjcprvsfsn.supabase.co https://nsauscojruqjcprvsfsn.storage.supabase.co wss://nsauscojruqjcprvsfsn.supabase.co https://chiwa-avatar-r2.tony0928932688.workers.dev https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev; frame-src https://player.vimeo.com https://vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://forms.gle https://p.ecpay.com.tw; upgrade-insecure-requests;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>吉娃AI自媒體變現系統</title>
 <meta name="description" content="AI 自媒體變現系統，讓 AI 替你說話、接單、變現。AI幫你想文案，幫你用你的聲音說話，只需錄一次60秒影片，AI分身替你經營短影音。">
@@ -1091,6 +1091,7 @@ const _SB = (window.supabase && typeof supabase.createClient === 'function')
 const CARTESIA_VOICE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/cartesia-voice';
 const CHIWA_SECURE_API_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-secure-api';
 const RUNNINGHUB_AVATAR_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/runninghub-avatar';
+const CHIWA_AVATAR_R2_WORKER_URL = 'https://chiwa-avatar-r2.tony0928932688.workers.dev';
 let currentUser = '';
 let currentUserData = null;
 
@@ -4208,6 +4209,9 @@ function avatarRenderBox(message, tone) {
 
 function avatarErrorText(error, fallback) {
   const raw = String(error && error.message || error || fallback || '形象克隆提交失敗，請稍後再試。');
+  if (/failed to fetch|network|not_found/i.test(raw)) return 'R2 大檔上傳服務尚未連線成功，請確認 Cloudflare Worker 已部署完成。';
+  if (/file_exceeds_system_limit/i.test(raw)) return '影片超過目前系統設定上限，請聯絡管理員提高 R2 上傳上限。';
+  if (/part_too_large/i.test(raw)) return '單一分片超過 Cloudflare 限制，系統會改用更小分片後重試。';
   if (/413|payload too large|request entity too large/i.test(raw)) return '目前 Supabase 免費方案的全域上傳上限是 50MB，這不是影片本身有問題。若要支援 100MB～500MB 形象影片，請升級 Supabase Pro 後把 Storage Global file size limit 調高到至少 2GB。';
   if (/mime|type/i.test(raw)) return '檔案格式被儲存空間拒絕，請改用 MP4 影片與 WAV/MP3 音檔後再試。';
   if (/size|too large|payload/i.test(raw)) return '儲存空間拒絕這次上傳。請確認 Supabase Storage 的 Global file size limit 已高於影片大小；若仍在 Free Plan，50MB 以上會被平台硬性擋下。';
@@ -4285,6 +4289,107 @@ async function uploadAvatarInputToStorage(file, kind, onProgress) {
   if (signedError || !data || !data.signedUrl) throw new Error((signedError && signedError.message) || '無法建立素材安全連結');
 
   return { path, signedUrl: data.signedUrl };
+}
+
+async function avatarR2Json(path, options) {
+  const res = await fetch(CHIWA_AVATAR_R2_WORKER_URL + path, options);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.detail || `r2_http_${res.status}`);
+  return data;
+}
+
+async function avatarR2Part(path, options) {
+  const res = await fetch(CHIWA_AVATAR_R2_WORKER_URL + path, options);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.detail || `r2_http_${res.status}`);
+  return data;
+}
+
+async function avatarSleep(ms) {
+  return new Promise(function(resolve) { setTimeout(resolve, ms); });
+}
+
+async function uploadAvatarInputToR2(file, kind, onProgress) {
+  const token = await getVoiceSessionToken();
+  if (!token) throw new Error('請重新登入後再上傳形象素材。');
+  const create = await avatarR2Json('/avatar/multipart/create', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      kind,
+      fileName: file.name || (kind === 'video' ? 'avatar-video.mp4' : 'avatar-audio.wav'),
+      contentType: avatarFileMime(file, kind),
+      size: file.size
+    })
+  });
+
+  const partSize = Math.max(5 * 1024 * 1024, Math.min(Number(create.partSize || 10 * 1024 * 1024), 20 * 1024 * 1024));
+  const totalParts = Math.ceil(file.size / partSize);
+  const parts = [];
+  let uploadedBytes = 0;
+
+  try {
+    for (let index = 0; index < totalParts; index++) {
+      const start = index * partSize;
+      const end = Math.min(file.size, start + partSize);
+      const chunk = file.slice(start, end);
+      let lastError = null;
+      for (let attempt = 0; attempt < 4; attempt++) {
+        try {
+          const part = await avatarR2Part(
+            `/avatar/multipart/part?key=${encodeURIComponent(create.key)}&uploadId=${encodeURIComponent(create.uploadId)}&partNumber=${index + 1}`,
+            {
+              method: 'PUT',
+              headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/octet-stream',
+                'x-chiwa-upload': 'avatar-r2-part'
+              },
+              body: chunk
+            }
+          );
+          parts.push({ partNumber: Number(part.partNumber), etag: part.etag });
+          uploadedBytes += chunk.size;
+          if (typeof onProgress === 'function') {
+            onProgress(Math.min(100, (uploadedBytes / file.size) * 100), uploadedBytes, file.size);
+          }
+          lastError = null;
+          break;
+        } catch (err) {
+          lastError = err;
+          await avatarSleep(800 * (attempt + 1));
+        }
+      }
+      if (lastError) throw lastError;
+    }
+
+    const complete = await avatarR2Json('/avatar/multipart/complete', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        key: create.key,
+        uploadId: create.uploadId,
+        parts
+      })
+    });
+    return { path: complete.key, signedUrl: complete.signedUrl };
+  } catch (err) {
+    await fetch(CHIWA_AVATAR_R2_WORKER_URL + '/avatar/multipart/abort', {
+      method: 'DELETE',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ key: create.key, uploadId: create.uploadId })
+    }).catch(function(){});
+    throw err;
+  }
 }
 
 function renderAvatarTaskResult(data) {
@@ -4391,14 +4496,14 @@ async function generateAvatarClone() {
     if (result) result.innerHTML = '';
 
     avatarTaskStartedAt = 0;
-    avatarRenderBox('正在上傳形象影片並建立安全連結... 0%', 'info');
-    const videoUpload = await uploadAvatarInputToStorage(avatarVideoFile, 'video', function(pct, uploaded, total) {
+    avatarRenderBox('正在上傳形象影片到 R2 大檔儲存... 0%', 'info');
+    const videoUpload = await uploadAvatarInputToR2(avatarVideoFile, 'video', function(pct, uploaded, total) {
       const uploadedMb = (uploaded / 1024 / 1024).toFixed(1);
       const totalMb = (total / 1024 / 1024).toFixed(1);
       avatarRenderBox(`正在上傳形象影片... ${pct.toFixed(1)}%（${uploadedMb}MB / ${totalMb}MB）`, 'info');
     });
-    avatarRenderBox('形象影片已上傳，正在上傳人聲音檔... 0%', 'info');
-    const audioUpload = await uploadAvatarInputToStorage(avatarAudioFile, 'audio', function(pct) {
+    avatarRenderBox('形象影片已上傳，正在上傳人聲音檔到 R2... 0%', 'info');
+    const audioUpload = await uploadAvatarInputToR2(avatarAudioFile, 'audio', function(pct) {
       avatarRenderBox(`正在上傳人聲音檔... ${pct.toFixed(1)}%`, 'info');
     });
     avatarRenderBox('素材已上傳，正在提交 RunningHub 任務...', 'info');
