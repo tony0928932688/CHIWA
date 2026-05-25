@@ -1,0 +1,158 @@
+-- CHIWA production security hardening applied on 2026-05-25.
+-- Project: nsauscojruqjcprvsfsn
+-- Purpose: protect student data behind Supabase Auth + Edge Functions.
+
+create schema if not exists private;
+
+create or replace function private.current_auth_email()
+returns text
+language sql
+security definer
+set search_path = public, auth, pg_temp
+as $$
+  select lower(coalesce(auth.email(), ''));
+$$;
+
+create or replace function private.is_admin_email()
+returns boolean
+language sql
+security definer
+set search_path = public, auth, pg_temp
+as $$
+  select exists (
+    select 1
+    from public.students s
+    where private.current_auth_email() <> ''
+      and (
+        private.current_auth_email() = lower(coalesce(s.google_email, ''))
+        or private.current_auth_email() = lower(coalesce(s.email, ''))
+        or private.current_auth_email() = lower(coalesce(s.id, ''))
+      )
+      and coalesce(s.google_enabled, true) = true
+      and coalesce(s.is_admin, false) = true
+      and coalesce(s.status, '正常') = '正常'
+  );
+$$;
+
+create or replace function private.current_student_id()
+returns text
+language sql
+security definer
+set search_path = public, auth, pg_temp
+as $$
+  select s.id
+  from public.students s
+  where private.current_auth_email() <> ''
+    and (
+      private.current_auth_email() = lower(coalesce(s.google_email, ''))
+      or private.current_auth_email() = lower(coalesce(s.email, ''))
+      or private.current_auth_email() = lower(coalesce(s.id, ''))
+    )
+    and coalesce(s.google_enabled, true) = true
+    and coalesce(s.status, '正常') = '正常'
+  order by coalesce(s.is_admin, false) desc
+  limit 1;
+$$;
+
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+alter table public.students enable row level security;
+drop policy if exists allow_all on public.students;
+drop policy if exists students_select_self_or_admin on public.students;
+drop policy if exists students_admin_insert on public.students;
+drop policy if exists students_admin_update on public.students;
+drop policy if exists students_admin_delete on public.students;
+
+create policy students_select_self_or_admin on public.students
+  for select to authenticated
+  using (
+    private.is_admin_email()
+    or (
+      private.current_auth_email() <> ''
+      and (
+        private.current_auth_email() = lower(coalesce(google_email, ''))
+        or private.current_auth_email() = lower(coalesce(email, ''))
+        or private.current_auth_email() = lower(coalesce(id, ''))
+      )
+      and coalesce(google_enabled, true) = true
+      and coalesce(status, '正常') = '正常'
+    )
+  );
+
+create policy students_admin_insert on public.students
+  for insert to authenticated
+  with check (private.is_admin_email());
+
+create policy students_admin_update on public.students
+  for update to authenticated
+  using (private.is_admin_email())
+  with check (private.is_admin_email());
+
+create policy students_admin_delete on public.students
+  for delete to authenticated
+  using (private.is_admin_email());
+
+drop policy if exists site_settings_admin_write on public.site_settings;
+create policy site_settings_admin_write on public.site_settings
+  for all to authenticated
+  using (private.is_admin_email())
+  with check (private.is_admin_email());
+
+drop policy if exists course_progress_owner_read on public.course_progress;
+drop policy if exists course_progress_owner_write on public.course_progress;
+
+create policy course_progress_owner_read on public.course_progress
+  for select to authenticated
+  using (
+    private.is_admin_email()
+    or student_id = private.current_student_id()
+  );
+
+create policy course_progress_owner_write on public.course_progress
+  for all to authenticated
+  using (
+    private.is_admin_email()
+    or student_id = private.current_student_id()
+  )
+  with check (
+    private.is_admin_email()
+    or student_id = private.current_student_id()
+  );
+
+drop policy if exists system_voice_presets_service_only on public.system_voice_presets;
+drop policy if exists voice_generations_service_only on public.voice_generations;
+drop policy if exists voice_models_service_only on public.voice_models;
+
+create policy system_voice_presets_service_only on public.system_voice_presets
+  for all to authenticated
+  using (false)
+  with check (false);
+
+create policy voice_generations_service_only on public.voice_generations
+  for all to authenticated
+  using (false)
+  with check (false);
+
+create policy voice_models_service_only on public.voice_models
+  for all to authenticated
+  using (false)
+  with check (false);
+
+revoke all on table public.system_voice_presets from anon, authenticated;
+revoke all on table public.voice_generations from anon, authenticated;
+revoke all on table public.voice_models from anon, authenticated;
+
+update public.students
+set password = 'GOOGLE_LOGIN_ONLY'
+where password is distinct from 'GOOGLE_LOGIN_ONLY';
+
+alter table public.students alter column password set default 'GOOGLE_LOGIN_ONLY';

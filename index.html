@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="frame-src https://player.vimeo.com https://vimeo.com; default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://nsauscojruqjcprvsfsn.supabase.co wss://nsauscojruqjcprvsfsn.supabase.co https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev; frame-src https://player.vimeo.com https://vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://forms.gle https://p.ecpay.com.tw; upgrade-insecure-requests;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>吉娃AI自媒體變現系統</title>
 <meta name="description" content="AI 自媒體變現系統，讓 AI 替你說話、接單、變現。AI幫你想文案，幫你用你的聲音說話，只需錄一次60秒影片，AI分身替你經營短影音。">
@@ -1084,8 +1084,25 @@ const _SB = (window.supabase && typeof supabase.createClient === 'function')
   ? supabase.createClient('https://nsauscojruqjcprvsfsn.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zYXVzY29qcnVxamNwcnZzZnNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjAzMTksImV4cCI6MjA5NDU5NjMxOX0.gXX7cBcqohoHqvPkZM-FFrnZVDS59g5OBJPBqH73H_w')
   : null;
 const CARTESIA_VOICE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/cartesia-voice';
+const CHIWA_SECURE_API_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-secure-api';
 let currentUser = '';
 let currentUserData = null;
+
+async function callChiwaSecure(action, payload) {
+  const token = await getVoiceSessionToken();
+  if (!token) throw new Error('請使用 Google 帳號登入後再操作。');
+  const res = await fetch(CHIWA_SECURE_API_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(Object.assign({ action: action }, payload || {}))
+  });
+  const data = await res.json().catch(function() { return {}; });
+  if (!res.ok) throw new Error(data.error || '安全服務暫時無法使用，請稍後再試。');
+  return data;
+}
 
 async function finishStudentLogin(data, loginId) {
   currentUser = data.id || loginId;
@@ -1102,23 +1119,6 @@ async function finishStudentLogin(data, loginId) {
   if (unameEl) unameEl.textContent = data.name || currentUser;
   const avEl = document.querySelector('.sb-av');
   if (avEl) avEl.textContent = (data.name || currentUser).substring(0,2).toUpperCase();
-
-  const now = new Date();
-  const curMonthKey = `${now.getFullYear()}-${now.getMonth()+1}`;
-  const lastReset = data.reset_month || '';
-  if (lastReset !== curMonthKey) {
-    try {
-      await _SB.from('students').update({
-        ai_usage: 300,
-        voice_seconds: 3600,
-        reset_month: curMonthKey
-      }).eq('id', currentUser);
-      data.ai_usage = 300;
-      data.voice_seconds = 3600;
-      data.reset_month = curMonthKey;
-      toast('🎉 新月份開始！AI 次數與語音秒數已自動重置！');
-    } catch(e) { console.error('月份重置失敗:', e); }
-  }
 
   if (data.ai_usage === null || data.ai_usage === undefined) data.ai_usage = 300;
   if (data.voice_seconds === null || data.voice_seconds === undefined) data.voice_seconds = 3600;
@@ -1183,23 +1183,20 @@ async function findAuthorizedStudentByEmail(email) {
 
 async function loginWithGoogleEmail(email) {
   const err = document.getElementById('lerr');
-  const student = await findAuthorizedStudentByEmail(email);
-  if (!student) {
+  try {
+    const secure = await callChiwaSecure('profile', {});
+    const student = secure && secure.student;
+    if (!student) throw new Error('此 Google 帳號尚未開通學員權限。');
+    if (err) err.style.display = 'none';
+    await finishStudentLogin(student, email);
+    if (secure.reset) toast('新月份開始，AI 次數與語音秒數已自動重置。');
+  } catch(e) {
+    console.error('Google login profile error:', e);
     if (err) {
       err.style.display = 'block';
-      err.textContent = '此 Google 帳號尚未開通學員權限，請確認後台授權 Email 是否一致';
+      err.textContent = e && e.message ? e.message : 'Google 登入驗證失敗，請稍後再試。';
     }
-    return;
   }
-  if (student.status && student.status !== '正常') {
-    if (err) {
-      err.style.display = 'block';
-      err.textContent = '此帳號目前未啟用，請聯絡管理員';
-    }
-    return;
-  }
-  if (err) err.style.display = 'none';
-  await finishStudentLogin(student, email);
 }
 
 function getBlockedOAuthUserAgentName() {
@@ -1299,86 +1296,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Supabase 登入：取代原本的 localStorage 登入
 async function doLogin() {
-  const u = document.getElementById('lu').value.trim();
-  const p = document.getElementById('lp').value.trim();
   const err = document.getElementById('lerr');
-  if (!u || !p) { if(err) err.style.display='block'; return; }
-  if (!_SB) {
-    if (err) { err.style.display='block'; err.textContent='資料庫連線尚未載入，請重新整理後再試'; }
-    return;
+  if (err) {
+    err.style.display = 'block';
+    err.textContent = '為了保護學員資料，請使用 Google 帳號登入。';
   }
-
-  try {
-    const { data, error } = await _SB
-      .from('students')
-      .select('*')
-      .eq('id', u)
-      .eq('password', p)
-      .single();
-
-    if (error || !data) {
-      if (err) { err.style.display='block'; err.textContent='帳號或密碼錯誤'; }
-      return;
-    }
-
-    currentUser = u;
-    currentUserData = data;
-    if (err) err.style.display = 'none';
-
-    const adminTab = document.getElementById('sb-admin-item');
-    if (data.is_admin) {
-      if (adminTab) adminTab.style.display = 'flex';
-    } else {
-      if (adminTab) adminTab.style.display = 'none';
-    }
-
-    // 更新側邊欄資訊
-    const unameEl = document.querySelector('.sb-uname');
-    if (unameEl) unameEl.textContent = data.name || u;
-    const avEl = document.querySelector('.sb-av');
-    if (avEl) avEl.textContent = (data.name || u).substring(0,2).toUpperCase();
-
-    // 跨月自動重置檢查：若已進入新月份則重置次數
-    const now = new Date();
-    const curMonthKey = `${now.getFullYear()}-${now.getMonth()+1}`;
-    const lastReset = data.reset_month || '';
-    let needsReset = lastReset !== curMonthKey;
-    if (needsReset) {
-      try {
-        await _SB.from('students').update({
-          ai_usage: 300,
-          voice_seconds: 3600,
-          reset_month: curMonthKey
-        }).eq('id', u);
-        data.ai_usage = 300;
-        data.voice_seconds = 3600;
-        data.reset_month = curMonthKey;
-        toast('🎉 新月份開始！AI 次數與語音秒數已自動重置！');
-      } catch(e) { console.error('月份重置失敗:', e); }
-    }
-
-    // 若 DB 欄位尚未存在則給預設值
-    if (data.ai_usage === null || data.ai_usage === undefined) data.ai_usage = 300;
-    if (data.voice_seconds === null || data.voice_seconds === undefined) data.voice_seconds = 3600;
-
-    // 更新次數顯示
-    updateUsageUI(data.ai_usage, data.voice_seconds);
-
-    // 手機版浮動用量列已停用，僅保留側邊欄與語音面板用量顯示
-    const mub = document.getElementById('mobile-usage-bar');
-    if (mub) mub.style.display = 'none';
-
-    // 切換到工作台，並初始化各面板
-    if (typeof goPage === 'function') goPage('workspace');
-    if (typeof buildWM === 'function') buildWM();
-    if (typeof renderUnitGrid === 'function') renderUnitGrid();
-    if (typeof renderVoiceList === 'function') renderVoiceList();
-    if (typeof updateVoiceDropdown === 'function') updateVoiceDropdown();
-    toast('🔓 登入成功！歡迎回來 ' + (data.name || u));
-  } catch(e) {
-    console.error('login error:', e);
-    if (err) { err.style.display='block'; err.textContent='登入失敗，請稍後再試'; }
-  }
+  toast('請使用 Google 帳號登入。');
 }
 
 // 格式化秒數為 MM:SS
@@ -1447,7 +1370,11 @@ async function decrAI() {
   currentUserData.ai_usage = Math.max(0, (currentUserData.ai_usage || 0) - 1);
   updateUsageUI(currentUserData.ai_usage, currentUserData.voice_seconds || 0);
   try {
-    if (_SB) await _SB.from('students').update({ ai_usage: currentUserData.ai_usage }).eq('id', currentUser);
+    const secure = await callChiwaSecure('usage', { type: 'ai', amount: 1 });
+    if (secure && secure.student) {
+      currentUserData = Object.assign(currentUserData, secure.student);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0);
+    }
   } catch(e) { console.error('decrAI error:', e); }
   aiUse = currentUserData.ai_usage;
 }
@@ -1459,7 +1386,11 @@ async function decrVoice(secs) {
   currentUserData.voice_seconds = Math.max(0, (currentUserData.voice_seconds || 0) - secs);
   updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds);
   try {
-    if (_SB) await _SB.from('students').update({ voice_seconds: currentUserData.voice_seconds }).eq('id', currentUser);
+    const secure = await callChiwaSecure('usage', { type: 'voice', amount: secs });
+    if (secure && secure.student) {
+      currentUserData = Object.assign(currentUserData, secure.student);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0);
+    }
   } catch(e) { console.error('decrVoice error:', e); }
 }
 </script>
@@ -2053,14 +1984,14 @@ async function decrVoice(secs) {
       <!-- 登入面板 -->
       <div class="login-panel" id="login-panel">
         <div class="login-logo">吉娃 AI</div>
-        <div class="login-sub">學員工作台登入</div>
-        <div class="login-field"><label>帳號</label><input type="text" id="lu" placeholder="請輸入帳號" class="tinput" style="background:var(--card2)"></div>
-        <div class="login-field">
+        <div class="login-sub">請使用已授權的 Google 帳號登入</div>
+        <div class="login-field" style="display:none"><label>帳號</label><input type="text" id="lu" placeholder="請輸入帳號" class="tinput" style="background:var(--card2)"></div>
+        <div class="login-field" style="display:none">
           <label>密碼</label>
           <input type="password" id="lp" placeholder="請輸入密碼" class="tinput" style="background:var(--card2)">
           <div class="login-forgot" onclick="showForgot()">忘記密碼？</div>
         </div>
-        <button class="login-btn" onclick="doLogin()">登入工作台</button>
+        <button class="login-btn" onclick="doLogin()" style="display:none">登入工作台</button>
         <button class="google-btn" onclick="doGoogleLogin()" style="margin-top:12px">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -2070,7 +2001,7 @@ async function decrVoice(secs) {
           </svg>
           <span style="font-weight:700">Google 帳號登入</span>
         </button>
-        <div class="login-err" id="lerr">帳號或密碼錯誤，請重試</div>
+        <div class="login-err" id="lerr">請使用 Google 帳號登入</div>
         <div class="login-links">
           <span class="login-link" onclick="goPage('home')">← 回首頁</span>
         </div>
