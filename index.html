@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://nsauscojruqjcprvsfsn.supabase.co wss://nsauscojruqjcprvsfsn.supabase.co https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev; frame-src https://player.vimeo.com https://vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://forms.gle https://p.ecpay.com.tw; upgrade-insecure-requests;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://nsauscojruqjcprvsfsn.supabase.co https://nsauscojruqjcprvsfsn.storage.supabase.co wss://nsauscojruqjcprvsfsn.supabase.co https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev; frame-src https://player.vimeo.com https://vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://forms.gle https://p.ecpay.com.tw; upgrade-insecure-requests;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>吉娃AI自媒體變現系統</title>
 <meta name="description" content="AI 自媒體變現系統，讓 AI 替你說話、接單、變現。AI幫你想文案，幫你用你的聲音說話，只需錄一次60秒影片，AI分身替你經營短影音。">
@@ -1078,10 +1078,15 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
 <script>
 var aiUse = 0; // 預先宣告，避免 head 腳本區發生 ReferenceError
+const SUPABASE_PROJECT_ID = 'nsauscojruqjcprvsfsn';
+const SUPABASE_URL = 'https://nsauscojruqjcprvsfsn.supabase.co';
+const SUPABASE_STORAGE_URL = 'https://nsauscojruqjcprvsfsn.storage.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zYXVzY29qcnVxamNwcnZzZnNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjAzMTksImV4cCI6MjA5NDU5NjMxOX0.gXX7cBcqohoHqvPkZM-FFrnZVDS59g5OBJPBqH73H_w';
 const _SB = (window.supabase && typeof supabase.createClient === 'function')
-  ? supabase.createClient('https://nsauscojruqjcprvsfsn.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zYXVzY29qcnVxamNwcnZzZnNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjAzMTksImV4cCI6MjA5NDU5NjMxOX0.gXX7cBcqohoHqvPkZM-FFrnZVDS59g5OBJPBqH73H_w')
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
 const CARTESIA_VOICE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/cartesia-voice';
 const CHIWA_SECURE_API_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-secure-api';
@@ -4209,7 +4214,47 @@ function avatarErrorText(error, fallback) {
   return raw;
 }
 
-async function uploadAvatarInputToStorage(file, kind) {
+function uploadAvatarInputWithTus(file, path, session, kind, onProgress) {
+  if (!window.tus || !window.tus.Upload) {
+    throw new Error('大檔上傳元件尚未載入，請重新整理後再試。');
+  }
+  return new Promise(function(resolve, reject) {
+    const upload = new tus.Upload(file, {
+      endpoint: SUPABASE_STORAGE_URL + '/storage/v1/upload/resumable',
+      retryDelays: [0, 3000, 5000, 10000, 20000],
+      headers: {
+        authorization: 'Bearer ' + session.access_token,
+        apikey: SUPABASE_ANON_KEY,
+        'x-upsert': 'false'
+      },
+      uploadDataDuringCreation: true,
+      removeFingerprintOnSuccess: true,
+      metadata: {
+        bucketName: 'avatar-inputs',
+        objectName: path,
+        contentType: avatarFileMime(file, kind),
+        cacheControl: '86400'
+      },
+      chunkSize: 6 * 1024 * 1024,
+      onError: function(error) {
+        reject(error);
+      },
+      onProgress: function(bytesUploaded, bytesTotal) {
+        const pct = bytesTotal ? Math.max(0, Math.min(100, (bytesUploaded / bytesTotal) * 100)) : 0;
+        if (typeof onProgress === 'function') onProgress(pct, bytesUploaded, bytesTotal);
+      },
+      onSuccess: function() {
+        resolve({ path: path });
+      }
+    });
+    upload.findPreviousUploads().then(function(previousUploads) {
+      if (previousUploads.length) upload.resumeFromPreviousUpload(previousUploads[0]);
+      upload.start();
+    }).catch(reject);
+  });
+}
+
+async function uploadAvatarInputToStorage(file, kind, onProgress) {
   if (!_SB || !_SB.storage) throw new Error('Supabase Storage 尚未載入。');
   const sessionRes = await _SB.auth.getSession();
   const session = sessionRes && sessionRes.data && sessionRes.data.session;
@@ -4218,14 +4263,20 @@ async function uploadAvatarInputToStorage(file, kind) {
 
   const fallbackExt = kind === 'video' ? 'mp4' : 'wav';
   const path = `${userId}/${Date.now()}-${kind}.${avatarFileExt(file, fallbackExt)}`;
-  const { error: uploadError } = await _SB.storage
-    .from('avatar-inputs')
-    .upload(path, file, {
-      cacheControl: '86400',
-      contentType: avatarFileMime(file, kind),
-      upsert: false
-    });
-  if (uploadError) throw new Error(uploadError.message || '素材上傳失敗');
+  const shouldUseTus = file.size > 6 * 1024 * 1024;
+  if (shouldUseTus) {
+    await uploadAvatarInputWithTus(file, path, session, kind, onProgress);
+  } else {
+    const { error: uploadError } = await _SB.storage
+      .from('avatar-inputs')
+      .upload(path, file, {
+        cacheControl: '86400',
+        contentType: avatarFileMime(file, kind),
+        upsert: false
+      });
+    if (uploadError) throw new Error(uploadError.message || '素材上傳失敗');
+    if (typeof onProgress === 'function') onProgress(100, file.size, file.size);
+  }
 
   const { data, error: signedError } = await _SB.storage
     .from('avatar-inputs')
@@ -4339,10 +4390,16 @@ async function generateAvatarClone() {
     if (result) result.innerHTML = '';
 
     avatarTaskStartedAt = 0;
-    avatarRenderBox('正在上傳形象影片並建立安全連結...', 'info');
-    const videoUpload = await uploadAvatarInputToStorage(avatarVideoFile, 'video');
-    avatarRenderBox('形象影片已上傳，正在上傳人聲音檔...', 'info');
-    const audioUpload = await uploadAvatarInputToStorage(avatarAudioFile, 'audio');
+    avatarRenderBox('正在上傳形象影片並建立安全連結... 0%', 'info');
+    const videoUpload = await uploadAvatarInputToStorage(avatarVideoFile, 'video', function(pct, uploaded, total) {
+      const uploadedMb = (uploaded / 1024 / 1024).toFixed(1);
+      const totalMb = (total / 1024 / 1024).toFixed(1);
+      avatarRenderBox(`正在上傳形象影片... ${pct.toFixed(1)}%（${uploadedMb}MB / ${totalMb}MB）`, 'info');
+    });
+    avatarRenderBox('形象影片已上傳，正在上傳人聲音檔... 0%', 'info');
+    const audioUpload = await uploadAvatarInputToStorage(avatarAudioFile, 'audio', function(pct) {
+      avatarRenderBox(`正在上傳人聲音檔... ${pct.toFixed(1)}%`, 'info');
+    });
     avatarRenderBox('素材已上傳，正在提交 RunningHub 任務...', 'info');
 
     const res = await fetch(RUNNINGHUB_AVATAR_FUNCTION_URL, {
