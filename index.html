@@ -4208,8 +4208,9 @@ function avatarRenderBox(message, tone) {
 
 function avatarErrorText(error, fallback) {
   const raw = String(error && error.message || error || fallback || '形象克隆提交失敗，請稍後再試。');
+  if (/413|payload too large|request entity too large/i.test(raw)) return '目前 Supabase 免費方案的全域上傳上限是 50MB，這不是影片本身有問題。若要支援 100MB～500MB 形象影片，請升級 Supabase Pro 後把 Storage Global file size limit 調高到至少 2GB。';
   if (/mime|type/i.test(raw)) return '檔案格式被儲存空間拒絕，請改用 MP4 影片與 WAV/MP3 音檔後再試。';
-  if (/size|too large|payload/i.test(raw)) return '檔案太大，上傳失敗。請先把形象影片壓縮或裁切到 2 分鐘內再試。';
+  if (/size|too large|payload/i.test(raw)) return '儲存空間拒絕這次上傳。請確認 Supabase Storage 的 Global file size limit 已高於影片大小；若仍在 Free Plan，50MB 以上會被平台硬性擋下。';
   if (/row-level security|policy|permission|unauthorized|jwt/i.test(raw)) return '登入授權已失效，請重新整理網頁並用 Google 登入後再試。';
   return raw;
 }
