@@ -1,0 +1,386 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const PROVIDER_APP_ID = "1928389791241650178";
+const PROVIDER_HOST = ["www.", "running", "hub.ai"].join("");
+const PROVIDER_SECRET_NAME = ["RUNNING", "HUB_API_KEY"].join("");
+const PROVIDER_RUN_URL = `https://${PROVIDER_HOST}/openapi/v2/run/ai-app/${PROVIDER_APP_ID}`;
+const PROVIDER_QUERY_URL = `https://${PROVIDER_HOST}/openapi/v2/query`;
+const AVATAR_WORKER_URL = "https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev";
+const MAX_AVATAR_SECONDS = 120;
+const DEFAULT_AVATAR_SECONDS = 1800;
+const OUTPUT_RETENTION_DAYS = 7;
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+const supabaseAdmin = createClient(
+  Deno.env.get("SUPABASE_URL") || "",
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "",
+  { auth: { persistSession: false } },
+);
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function normalizeEmail(value: unknown) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function neutralError(message = "avatar_service_failed", status = 500) {
+  return jsonResponse({ error: message }, status);
+}
+
+function publicStudent(row: any) {
+  return {
+    id: row.id,
+    email: row.email,
+    google_email: row.google_email,
+    google_enabled: row.google_enabled,
+    name: row.name,
+    ai_usage: row.ai_usage,
+    voice_seconds: row.voice_seconds,
+    avatar_seconds: row.avatar_seconds,
+    quota_started_at: row.quota_started_at,
+    quota_reset_at: row.quota_reset_at,
+    status: row.status,
+    is_admin: !!row.is_admin,
+    created_at: row.created_at,
+  };
+}
+
+async function getAuthorizedStudent(req: Request) {
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!token) throw Object.assign(new Error("missing_session"), { status: 401 });
+
+  const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+  if (userError) throw Object.assign(new Error("invalid_session"), { status: 401 });
+
+  const email = normalizeEmail(userData.user?.email);
+  if (!email) throw Object.assign(new Error("missing_user_email"), { status: 401 });
+
+  const checks = [
+    { column: "google_email", value: email },
+    { column: "email", value: email },
+    { column: "id", value: email },
+  ];
+
+  for (const check of checks) {
+    const { data, error } = await supabaseAdmin
+      .from("students")
+      .select("*")
+      .eq(check.column, check.value)
+      .limit(1);
+    if (error) continue;
+    if (Array.isArray(data) && data[0]) {
+      if (data[0].status && data[0].status !== "正常") throw Object.assign(new Error("student_inactive"), { status: 403 });
+      return data[0];
+    }
+  }
+
+  throw Object.assign(new Error("student_not_found"), { status: 404 });
+}
+
+async function readJsonOrText(res: Response) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { message: text || `${res.status} ${res.statusText}` };
+  }
+}
+
+function providerHeaders(apiKey: string) {
+  return {
+    "Authorization": `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+}
+
+function internalWorkerHeaders(apiKey: string) {
+  return {
+    "Authorization": `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+}
+
+function assertUrl(value: unknown, field: string) {
+  const raw = String(value || "").trim();
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw Object.assign(new Error(`${field}_invalid_url`), { status: 400 });
+  }
+  if (!/^https?:$/.test(url.protocol)) throw Object.assign(new Error(`${field}_invalid_protocol`), { status: 400 });
+  return raw;
+}
+
+function normalizeSeconds(value: unknown) {
+  return Math.max(1, Number.parseInt(String(value || "0"), 10) || 0);
+}
+
+function assertDuration(seconds: number) {
+  if (seconds > MAX_AVATAR_SECONDS) {
+    throw Object.assign(new Error("avatar_duration_too_long"), { status: 400 });
+  }
+}
+
+function assertQuota(student: any, seconds: number) {
+  const remaining = Number(student.avatar_seconds ?? DEFAULT_AVATAR_SECONDS);
+  if (!student.is_admin && remaining < seconds) {
+    throw Object.assign(new Error("avatar_quota_not_enough"), {
+      status: 402,
+      extra: { remaining, requestedSeconds: seconds },
+    });
+  }
+}
+
+async function startProviderTask(apiKey: string, videoValue: string, audioValue: string) {
+  const runRes = await fetch(PROVIDER_RUN_URL, {
+    method: "POST",
+    headers: providerHeaders(apiKey),
+    body: JSON.stringify({
+      nodeInfoList: [
+        {
+          nodeId: "1",
+          fieldName: "file",
+          fieldValue: videoValue,
+          description: "Upload video (face fully facing the camera)",
+        },
+        {
+          nodeId: "4",
+          fieldName: "audio",
+          fieldValue: audioValue,
+          description: "Upload voice (pure human voice)",
+        },
+      ],
+      instanceType: "default",
+      usePersonalQueue: "false",
+    }),
+  });
+  const runData = await readJsonOrText(runRes);
+  if (!runRes.ok || !runData?.taskId) {
+    console.error("avatar_submit_failed", JSON.stringify(runData));
+    return { error: neutralError("avatar_submit_failed", runRes.status || 500) };
+  }
+  return { data: runData };
+}
+
+async function insertTask(student: any, runData: any, requestedSeconds: number, videoFile: string, audioFile: string) {
+  const { error } = await supabaseAdmin.from("avatar_generation_tasks").insert({
+    student_id: student.id,
+    task_id: runData.taskId,
+    status: runData.status || "RUNNING",
+    requested_seconds: requestedSeconds,
+    charged: false,
+    video_file: videoFile,
+    audio_file: audioFile,
+    raw_response: runData,
+  });
+  if (error) throw new Error(error.message);
+}
+
+async function handleSubmitUrls(req: Request, body: any) {
+  const apiKey = Deno.env.get(PROVIDER_SECRET_NAME) || "";
+  if (!apiKey) return neutralError("avatar_service_not_configured", 500);
+
+  const student = await getAuthorizedStudent(req);
+  const requestedSeconds = normalizeSeconds(body.duration_seconds);
+  assertDuration(requestedSeconds);
+  assertQuota(student, requestedSeconds);
+
+  const videoUrl = assertUrl(body.video_url, "video_url");
+  const audioUrl = assertUrl(body.audio_url, "audio_url");
+
+  const started = await startProviderTask(apiKey, videoUrl, audioUrl);
+  if (started.error) return started.error;
+
+  await insertTask(
+    student,
+    started.data,
+    requestedSeconds,
+    String(body.video_path || videoUrl),
+    String(body.audio_path || audioUrl),
+  );
+
+  return jsonResponse({
+    taskId: started.data.taskId,
+    status: started.data.status || "RUNNING",
+    student: publicStudent(student),
+    requestedSeconds,
+  });
+}
+
+async function chargeAvatarSeconds(student: any, task: any) {
+  if (task.charged || student.is_admin) return student;
+  const nextSeconds = Math.max(0, Number(student.avatar_seconds ?? DEFAULT_AVATAR_SECONDS) - Number(task.requested_seconds || 0));
+  const { data, error } = await supabaseAdmin
+    .from("students")
+    .update({ avatar_seconds: nextSeconds })
+    .eq("id", student.id)
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+
+  await supabaseAdmin
+    .from("avatar_generation_tasks")
+    .update({ charged: true })
+    .eq("task_id", task.task_id)
+    .eq("student_id", student.id);
+
+  return data;
+}
+
+async function importAvatarOutput(apiKey: string, student: any, taskId: string, result: any) {
+  const sourceUrl = assertUrl(result?.url, "result_url");
+  const outputType = String(result?.outputType || "mp4").replace(/[^a-z0-9]/gi, "").toLowerCase() || "mp4";
+  const fileName = `chiwa-avatar-${new Date().toISOString().slice(0, 10)}.${outputType}`;
+  const res = await fetch(`${AVATAR_WORKER_URL}/avatar/output/import`, {
+    method: "POST",
+    headers: internalWorkerHeaders(apiKey),
+    body: JSON.stringify({
+      sourceUrl,
+      studentId: student.id,
+      taskId,
+      outputType,
+      fileName,
+      retentionDays: OUTPUT_RETENTION_DAYS,
+    }),
+  });
+  const data = await readJsonOrText(res);
+  if (!res.ok || !data?.key) {
+    console.error("avatar_output_import_failed", JSON.stringify(data));
+    throw new Error("avatar_output_import_failed");
+  }
+  return data;
+}
+
+async function signAvatarOutput(apiKey: string, task: any) {
+  if (!task.result_file) return null;
+  const ext = String(task.output_type || "mp4").replace(/[^a-z0-9]/gi, "").toLowerCase() || "mp4";
+  const fileName = `chiwa-avatar-${new Date().toISOString().slice(0, 10)}.${ext}`;
+  const res = await fetch(`${AVATAR_WORKER_URL}/avatar/output/sign`, {
+    method: "POST",
+    headers: internalWorkerHeaders(apiKey),
+    body: JSON.stringify({ key: task.result_file, taskId: task.task_id, fileName }),
+  });
+  const data = await readJsonOrText(res);
+  if (!res.ok || !data?.downloadUrl) {
+    console.error("avatar_output_sign_failed", JSON.stringify(data));
+    return null;
+  }
+  return data;
+}
+
+async function handleQuery(req: Request, body: any) {
+  const apiKey = Deno.env.get(PROVIDER_SECRET_NAME) || "";
+  if (!apiKey) return neutralError("avatar_service_not_configured", 500);
+
+  let student = await getAuthorizedStudent(req);
+  const taskId = String(body.taskId || body.task_id || "").trim();
+  if (!taskId) return neutralError("missing_task_id", 400);
+
+  const { data: task, error: taskError } = await supabaseAdmin
+    .from("avatar_generation_tasks")
+    .select("*")
+    .eq("task_id", taskId)
+    .eq("student_id", student.id)
+    .maybeSingle();
+  if (taskError) throw new Error(taskError.message);
+  if (!task) return neutralError("task_not_found", 404);
+
+  const queryRes = await fetch(PROVIDER_QUERY_URL, {
+    method: "POST",
+    headers: providerHeaders(apiKey),
+    body: JSON.stringify({ taskId }),
+  });
+  const queryData = await readJsonOrText(queryRes);
+  if (!queryRes.ok) {
+    console.error("avatar_query_failed", JSON.stringify(queryData));
+    return neutralError("avatar_query_failed", queryRes.status || 500);
+  }
+
+  const firstResult = Array.isArray(queryData?.results) ? queryData.results[0] : null;
+  const patch: Record<string, unknown> = {
+    status: queryData?.status || task.status,
+    raw_response: queryData || {},
+    error_code: queryData?.errorCode || "",
+    error_message: queryData?.errorMessage || "",
+    usage: queryData?.usage || {},
+  };
+
+  let outputLinks: any = null;
+  if (task.result_file && task.result_expires_at && Date.parse(task.result_expires_at) > Date.now()) {
+    outputLinks = await signAvatarOutput(apiKey, task);
+  }
+
+  if (queryData?.status === "SUCCESS" && firstResult?.url && !outputLinks) {
+    try {
+      const imported = await importAvatarOutput(apiKey, student, taskId, firstResult);
+      patch.result_url = firstResult.url;
+      patch.result_file = imported.key;
+      patch.result_expires_at = imported.expiresAt;
+      patch.output_type = firstResult.outputType || "mp4";
+      outputLinks = imported;
+    } catch (error) {
+      patch.status = "RUNNING";
+      patch.error_message = error instanceof Error ? error.message : "avatar_output_import_failed";
+    }
+  } else if (firstResult?.url) {
+    patch.result_url = firstResult.url;
+    patch.output_type = firstResult.outputType || "";
+  }
+
+  const { data: updatedTask, error: updateError } = await supabaseAdmin
+    .from("avatar_generation_tasks")
+    .update(patch)
+    .eq("task_id", taskId)
+    .eq("student_id", student.id)
+    .select("*")
+    .single();
+  if (updateError) throw new Error(updateError.message);
+
+  if (updatedTask.status === "SUCCESS" && outputLinks && !updatedTask.charged) {
+    student = await chargeAvatarSeconds(student, updatedTask);
+  }
+
+  return jsonResponse({
+    taskId,
+    status: outputLinks && updatedTask.status === "SUCCESS" ? "SUCCESS" : updatedTask.status,
+    errorCode: updatedTask.status === "FAILED" ? "avatar_generation_failed" : "",
+    errorMessage: updatedTask.status === "FAILED" ? "形象克隆生成失敗，請稍後再試。" : "",
+    previewUrl: outputLinks?.previewUrl || "",
+    downloadUrl: outputLinks?.downloadUrl || "",
+    outputExpiresAt: outputLinks?.expiresAt || updatedTask.result_expires_at || "",
+    requestedSeconds: updatedTask.requested_seconds,
+    charged: updatedTask.charged || (updatedTask.status === "SUCCESS" && !!outputLinks),
+    student: publicStudent(student),
+  });
+}
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method !== "POST") return neutralError("method_not_allowed", 405);
+
+  try {
+    const body = await req.json().catch(() => ({}));
+    const action = String(body.action || "").trim();
+    if (action === "submit_urls") return await handleSubmitUrls(req, body);
+    if (action === "query") return await handleQuery(req, body);
+    return neutralError("unknown_action", 400);
+  } catch (error) {
+    console.error(error);
+    const message = error instanceof Error ? error.message : "unexpected_error";
+    const status = (error as any)?.status || ([ "missing_session", "invalid_session" ].includes(message) ? 401 : 500);
+    return jsonResponse({ error: message, ...((error as any)?.extra || {}) }, status);
+  }
+});

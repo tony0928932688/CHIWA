@@ -1090,7 +1090,7 @@ const _SB = (window.supabase && typeof supabase.createClient === 'function')
   : null;
 const CARTESIA_VOICE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/cartesia-voice';
 const CHIWA_SECURE_API_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-secure-api';
-const RUNNINGHUB_AVATAR_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/runninghub-avatar';
+const CHIWA_AVATAR_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-avatar';
 const CHIWA_AVATAR_R2_WORKER_URL = 'https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev';
 let currentUser = '';
 let currentUserData = null;
@@ -2361,7 +2361,7 @@ async function decrAvatar(secs) {
     <!-- 形象克隆 -->
     <div class="panel" id="p-avatar">
     <div class="sec-title">🧑‍💼 形象克隆</div>
-    <div class="sec-sub">上傳正面形象影片與乾淨人聲，透過 RunningHub 生成 AI 口播形象影片</div>
+    <div class="sec-sub">上傳正面形象影片與乾淨人聲，生成 AI 口播形象影片</div>
     <div style="background:var(--purple-bg);border:1px solid rgba(167,139,250,.25);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
       <div>
         <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace;text-transform:uppercase">形象剩餘秒數</div>
@@ -2386,7 +2386,7 @@ async function decrAvatar(secs) {
       </div>
     </div>
     <button class="btn-gold" id="avatar-generate-btn" onclick="generateAvatarClone()">🧑‍💼 生成形象克隆影片</button>
-    <div id="avatar-load" style="display:none" class="loading"><div class="spinner"></div>RunningHub 正在生成形象影片，請保持此頁開啟...</div>
+    <div id="avatar-load" style="display:none" class="loading"><div class="spinner"></div>形象克隆服務正在生成影片，請保持此頁開啟...</div>
     <div id="avatar-result" style="margin-top:16px"></div>
   </div>
 
@@ -4158,10 +4158,10 @@ function handleAvatarFileUpload(event, type) {
   audio.src = url;
 }
 
-async function callRunningHubAvatarJson(action, payload) {
+async function callChiwaAvatarJson(action, payload) {
   const token = await getVoiceSessionToken();
   if (!token) throw new Error('請使用 Google 登入後再使用形象克隆功能。');
-  const res = await fetch(RUNNINGHUB_AVATAR_FUNCTION_URL, {
+  const res = await fetch(CHIWA_AVATAR_FUNCTION_URL, {
     method: 'POST',
     headers: {
       'Authorization': 'Bearer ' + token,
@@ -4209,12 +4209,12 @@ function avatarRenderBox(message, tone) {
 
 function avatarErrorText(error, fallback) {
   const raw = String(error && error.message || error || fallback || '形象克隆提交失敗，請稍後再試。');
-  if (/failed to fetch|network|not_found/i.test(raw)) return 'R2 大檔上傳服務尚未連線成功，請確認 Cloudflare Worker 已部署完成。';
-  if (/file_exceeds_system_limit/i.test(raw)) return '影片超過目前系統設定上限，請聯絡管理員提高 R2 上傳上限。';
-  if (/part_too_large/i.test(raw)) return '單一分片超過 Cloudflare 限制，系統會改用更小分片後重試。';
-  if (/413|payload too large|request entity too large/i.test(raw)) return '目前 Supabase 免費方案的全域上傳上限是 50MB，這不是影片本身有問題。若要支援 100MB～500MB 形象影片，請升級 Supabase Pro 後把 Storage Global file size limit 調高到至少 2GB。';
+  if (/failed to fetch|network|not_found/i.test(raw)) return '大檔上傳服務暫時無法連線，請稍後再試或聯絡管理員。';
+  if (/file_exceeds_system_limit/i.test(raw)) return '影片超過目前系統設定上限，請聯絡管理員提高上傳上限。';
+  if (/part_too_large/i.test(raw)) return '單一上傳分片超過系統限制，請重新送出後系統會自動調整。';
+  if (/413|payload too large|request entity too large/i.test(raw)) return '目前大檔上傳服務暫時無法接收這個檔案，請稍後再試或聯絡管理員。';
   if (/mime|type/i.test(raw)) return '檔案格式被儲存空間拒絕，請改用 MP4 影片與 WAV/MP3 音檔後再試。';
-  if (/size|too large|payload/i.test(raw)) return '儲存空間拒絕這次上傳。請確認 Supabase Storage 的 Global file size limit 已高於影片大小；若仍在 Free Plan，50MB 以上會被平台硬性擋下。';
+  if (/size|too large|payload/i.test(raw)) return '儲存空間拒絕這次上傳，請確認檔案大小符合目前系統上限。';
   if (/row-level security|policy|permission|unauthorized|jwt/i.test(raw)) return '登入授權已失效，請重新整理網頁並用 Google 登入後再試。';
   return raw;
 }
@@ -4400,15 +4400,17 @@ function renderAvatarTaskResult(data) {
     return;
   }
   const status = data.status || 'RUNNING';
-  if (status === 'SUCCESS' && data.resultUrl) {
+  if (status === 'SUCCESS' && (data.previewUrl || data.downloadUrl)) {
+    const previewUrl = data.previewUrl || data.downloadUrl;
+    const downloadUrl = data.downloadUrl || data.previewUrl;
     result.innerHTML = `
       <div class="audio-player-box">
         <div style="font-size:14px;font-weight:800;margin-bottom:10px;color:var(--green)">✅ 形象克隆影片已生成</div>
-        <video src="${escapeHtml(data.resultUrl)}" controls style="width:100%;border-radius:10px;background:#000"></video>
+        <video src="${escapeHtml(previewUrl)}" controls style="width:100%;border-radius:10px;background:#000"></video>
         <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
-          <a class="btn-outline" href="${escapeHtml(data.resultUrl)}" target="_blank" style="display:inline-flex;align-items:center;justify-content:center">開啟影片連結</a>
+          <a class="btn-outline" href="${escapeHtml(downloadUrl)}" download style="display:inline-flex;align-items:center;justify-content:center">下載影片</a>
         </div>
-        <div style="font-size:11px;color:var(--t3);margin-top:8px">RunningHub 生成連結通常只保留 24 小時，請盡快下載保存。</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:8px">影片下載連結會保留 7 天，請盡快下載保存。</div>
       </div>
     `;
     return;
@@ -4420,10 +4422,9 @@ function renderAvatarTaskResult(data) {
   const elapsed = avatarTaskStartedAt ? Math.floor((Date.now() - avatarTaskStartedAt) / 1000) : 0;
   result.innerHTML = `
     <div class="audio-player-box">
-      <div style="font-weight:800;margin-bottom:6px">RunningHub 任務已送出</div>
-      <div>任務 ID：${escapeHtml(data.taskId || '')}</div>
+      <div style="font-weight:800;margin-bottom:6px">形象克隆服務正在生成</div>
       <div>目前狀態：${escapeHtml(status)}，已等待 ${_fmtSec(elapsed)}</div>
-      <div style="font-size:11px;color:var(--t3);margin-top:8px">系統每 8 秒會自動查詢一次；如果 RunningHub 排隊較久，這裡會持續更新。</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:8px">系統每 8 秒會自動查詢一次；生成完成後會自動顯示預覽與下載按鈕。</div>
     </div>
   `;
 }
@@ -4431,7 +4432,7 @@ function renderAvatarTaskResult(data) {
 async function pollAvatarTask(taskId) {
   if (!taskId) return;
   try {
-    const data = await callRunningHubAvatarJson('query', { taskId });
+    const data = await callChiwaAvatarJson('query', { taskId });
     if (data.student) {
       currentUserData = Object.assign(currentUserData || {}, data.student);
       updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
@@ -4496,19 +4497,19 @@ async function generateAvatarClone() {
     if (result) result.innerHTML = '';
 
     avatarTaskStartedAt = 0;
-    avatarRenderBox('正在上傳形象影片到 R2 大檔儲存... 0%', 'info');
+    avatarRenderBox('正在上傳形象影片... 0%', 'info');
     const videoUpload = await uploadAvatarInputToR2(avatarVideoFile, 'video', function(pct, uploaded, total) {
       const uploadedMb = (uploaded / 1024 / 1024).toFixed(1);
       const totalMb = (total / 1024 / 1024).toFixed(1);
       avatarRenderBox(`正在上傳形象影片... ${pct.toFixed(1)}%（${uploadedMb}MB / ${totalMb}MB）`, 'info');
     });
-    avatarRenderBox('形象影片已上傳，正在上傳人聲音檔到 R2... 0%', 'info');
+    avatarRenderBox('形象影片已上傳，正在上傳人聲音檔... 0%', 'info');
     const audioUpload = await uploadAvatarInputToR2(avatarAudioFile, 'audio', function(pct) {
       avatarRenderBox(`正在上傳人聲音檔... ${pct.toFixed(1)}%`, 'info');
     });
-    avatarRenderBox('素材已上傳，正在提交 RunningHub 任務...', 'info');
+    avatarRenderBox('素材已上傳，正在提交形象克隆生成任務...', 'info');
 
-    const res = await fetch(RUNNINGHUB_AVATAR_FUNCTION_URL, {
+    const res = await fetch(CHIWA_AVATAR_FUNCTION_URL, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + token,

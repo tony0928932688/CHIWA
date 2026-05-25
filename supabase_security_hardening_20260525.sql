@@ -157,7 +157,7 @@ where password is distinct from 'GOOGLE_LOGIN_ONLY';
 
 alter table public.students alter column password set default 'GOOGLE_LOGIN_ONLY';
 
--- AI quota expansion for RunningHub image/avatar clone.
+-- AI quota expansion for avatar clone.
 alter table public.students
   add column if not exists avatar_seconds integer default 1800,
   add column if not exists quota_started_at timestamptz default now(),
@@ -178,6 +178,8 @@ create table if not exists public.avatar_generation_tasks (
   video_file text,
   audio_file text,
   result_url text,
+  result_file text,
+  result_expires_at timestamptz,
   output_type text,
   error_code text,
   error_message text,
@@ -202,7 +204,11 @@ create policy avatar_generation_tasks_service_only on public.avatar_generation_t
 
 revoke all on table public.avatar_generation_tasks from anon, authenticated;
 
--- Private storage bucket for temporary RunningHub avatar clone inputs.
+create index if not exists idx_avatar_generation_tasks_result_expires_at
+  on public.avatar_generation_tasks (result_expires_at)
+  where result_file is not null;
+
+-- Private storage bucket for temporary avatar clone inputs.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
   'avatar-inputs',

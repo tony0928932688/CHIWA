@@ -2,6 +2,7 @@ const DEFAULT_MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024;
 const DEFAULT_PART_SIZE = 10 * 1024 * 1024;
 const MAX_PART_BYTES = 90 * 1024 * 1024;
 const CLEANUP_AGE_MS = 2 * 24 * 60 * 60 * 1000;
+const OUTPUT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
 function corsHeaders(req, env) {
   const origin = req.headers.get("Origin") || "";
@@ -37,6 +38,14 @@ function cleanFileName(name) {
 function fileExt(name, fallback) {
   const match = cleanFileName(name).match(/\.([a-z0-9]+)$/i);
   return (match ? match[1].toLowerCase() : fallback).replace(/[^a-z0-9]/g, "") || fallback;
+}
+
+function safePathSegment(value, fallback) {
+  return String(value || fallback || "item")
+    .trim()
+    .replace(/[^a-zA-Z0-9_.-]/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 96) || fallback || "item";
 }
 
 function inferContentType(name, kind, provided) {
@@ -102,12 +111,58 @@ async function signedObjectUrl(env, key) {
   return `${base}/avatar/object/${encodeURIComponent(key)}?exp=${exp}&sig=${sig}`;
 }
 
+async function signedOutputUrl(env, key, disposition, fileName) {
+  const ttl = Math.max(60, Number(env.DOWNLOAD_TTL_SECONDS || 86400));
+  const exp = Math.floor(Date.now() / 1000) + ttl;
+  const safeName = cleanFileName(fileName || "chiwa-avatar-video.mp4");
+  const mode = disposition === "attachment" ? "attachment" : "inline";
+  const secret = env.URL_SIGNING_SECRET;
+  if (!secret) throw Object.assign(new Error("url_signing_secret_missing"), { status: 500 });
+  const sig = await hmacHex(secret, `${key}:${exp}:${mode}:${safeName}`);
+  const base = String(env.PUBLIC_BASE_URL || "").replace(/\/+$/, "");
+  return `${base}/avatar/output/${encodeURIComponent(key)}?exp=${exp}&mode=${mode}&name=${encodeURIComponent(safeName)}&sig=${sig}`;
+}
+
 async function verifyObjectSignature(env, key, exp, sig) {
   const now = Math.floor(Date.now() / 1000);
   const expires = Number(exp || 0);
   if (!expires || expires < now) return false;
   const expected = await hmacHex(env.URL_SIGNING_SECRET || "", `${key}:${expires}`);
   return expected === String(sig || "");
+}
+
+async function verifyOutputSignature(env, key, exp, sig, disposition, fileName) {
+  const now = Math.floor(Date.now() / 1000);
+  const expires = Number(exp || 0);
+  const mode = disposition === "attachment" ? "attachment" : "inline";
+  const safeName = cleanFileName(fileName || "chiwa-avatar-video.mp4");
+  if (!expires || expires < now) return false;
+  const expected = await hmacHex(env.URL_SIGNING_SECRET || "", `${key}:${expires}:${mode}:${safeName}`);
+  return expected === String(sig || "");
+}
+
+async function timingSafeEqual(a, b) {
+  const left = new TextEncoder().encode(String(a || ""));
+  const right = new TextEncoder().encode(String(b || ""));
+  if (left.length !== right.length) return false;
+  const leftHash = await crypto.subtle.digest("SHA-256", left);
+  const rightHash = await crypto.subtle.digest("SHA-256", right);
+  const l = new Uint8Array(leftHash);
+  const r = new Uint8Array(rightHash);
+  let diff = 0;
+  for (let i = 0; i < l.length; i++) diff |= l[i] ^ r[i];
+  return diff === 0;
+}
+
+async function verifyInternalRequest(req, env) {
+  const configured = String(env.AVATAR_WORKER_INTERNAL_SECRET || "").trim();
+  if (!configured) throw Object.assign(new Error("internal_secret_missing"), { status: 500 });
+  const auth = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  const header = String(req.headers.get("X-Chiwa-Internal-Secret") || "").trim();
+  const supplied = auth || header;
+  if (!supplied || !(await timingSafeEqual(supplied, configured))) {
+    throw Object.assign(new Error("unauthorized_internal_request"), { status: 401 });
+  }
 }
 
 async function handleCreate(req, env) {
@@ -234,14 +289,15 @@ function objectHeaders(req, env, object, range) {
   return headers;
 }
 
-async function handleObject(req, env, url) {
-  const prefix = "/avatar/object/";
-  const key = decodeURIComponent(url.pathname.slice(prefix.length));
-  const ok = await verifyObjectSignature(env, key, url.searchParams.get("exp"), url.searchParams.get("sig"));
-  if (!ok) return new Response("Forbidden", { status: 403, headers: corsHeaders(req, env) });
-
+async function streamObject(req, env, key, disposition, fileName) {
+  if (!key) return new Response("Not Found", { status: 404, headers: corsHeaders(req, env) });
   const metadata = await env.AVATAR_INPUTS.head(key);
   if (!metadata) return new Response("Not Found", { status: 404, headers: corsHeaders(req, env) });
+
+  const expiresAt = metadata.customMetadata && metadata.customMetadata.expiresAt;
+  if (expiresAt && Date.parse(expiresAt) <= Date.now()) {
+    return new Response("Gone", { status: 410, headers: corsHeaders(req, env) });
+  }
 
   const range = parseRangeHeader(req.headers.get("Range"), metadata.size);
   if (range && range.error) {
@@ -253,11 +309,92 @@ async function handleObject(req, env, url) {
 
   const status = range ? 206 : 200;
   const headers = objectHeaders(req, env, metadata, range);
+  if (disposition) {
+    const safeName = cleanFileName(fileName || "chiwa-avatar-video.mp4");
+    headers.set("content-disposition", `${disposition}; filename="${safeName}"; filename*=UTF-8''${encodeURIComponent(safeName)}`);
+  }
   if (req.method === "HEAD") return new Response(null, { status, headers });
 
   const object = await env.AVATAR_INPUTS.get(key, range ? { range: { offset: range.offset, length: range.length } } : undefined);
   if (!object || !object.body) return new Response("Not Found", { status: 404, headers: corsHeaders(req, env) });
   return new Response(object.body, { status, headers });
+}
+
+async function handleObject(req, env, url) {
+  const prefix = "/avatar/object/";
+  const key = decodeURIComponent(url.pathname.slice(prefix.length));
+  const ok = await verifyObjectSignature(env, key, url.searchParams.get("exp"), url.searchParams.get("sig"));
+  if (!ok) return new Response("Forbidden", { status: 403, headers: corsHeaders(req, env) });
+  return streamObject(req, env, key, null, "");
+}
+
+async function handleOutput(req, env, url) {
+  const prefix = "/avatar/output/";
+  const key = decodeURIComponent(url.pathname.slice(prefix.length));
+  const mode = url.searchParams.get("mode") === "attachment" ? "attachment" : "inline";
+  const fileName = cleanFileName(url.searchParams.get("name") || "chiwa-avatar-video.mp4");
+  const ok = await verifyOutputSignature(env, key, url.searchParams.get("exp"), url.searchParams.get("sig"), mode, fileName);
+  if (!ok || !key.startsWith("avatar-outputs/")) return new Response("Forbidden", { status: 403, headers: corsHeaders(req, env) });
+  return streamObject(req, env, key, mode, fileName);
+}
+
+async function handleOutputSign(req, env) {
+  await verifyInternalRequest(req, env);
+  const body = await req.json().catch(() => ({}));
+  const key = String(body.key || "");
+  if (!key.startsWith("avatar-outputs/")) throw Object.assign(new Error("invalid_output_key"), { status: 400 });
+  const object = await env.AVATAR_INPUTS.head(key);
+  if (!object) throw Object.assign(new Error("output_not_found"), { status: 404 });
+  const fileName = cleanFileName(body.fileName || `${safePathSegment(body.taskId, "avatar")}.mp4`);
+  return json(req, env, {
+    key,
+    expiresAt: object.customMetadata && object.customMetadata.expiresAt || null,
+    previewUrl: await signedOutputUrl(env, key, "inline", fileName),
+    downloadUrl: await signedOutputUrl(env, key, "attachment", fileName)
+  });
+}
+
+async function handleOutputImport(req, env) {
+  await verifyInternalRequest(req, env);
+  const body = await req.json().catch(() => ({}));
+  const sourceUrl = String(body.sourceUrl || "").trim();
+  const studentId = safePathSegment(body.studentId, "student");
+  const taskId = safePathSegment(body.taskId, crypto.randomUUID());
+  const ext = fileExt(body.fileName || body.outputType || "mp4", "mp4");
+  let parsed;
+  try {
+    parsed = new URL(sourceUrl);
+  } catch {
+    throw Object.assign(new Error("invalid_source_url"), { status: 400 });
+  }
+  if (parsed.protocol !== "https:") throw Object.assign(new Error("invalid_source_protocol"), { status: 400 });
+
+  const source = await fetch(sourceUrl, { headers: { "User-Agent": "ChiwaAvatarOutputImporter/1.0" } });
+  if (!source.ok || !source.body) {
+    throw Object.assign(new Error("source_fetch_failed"), { status: source.status || 502 });
+  }
+
+  const key = `avatar-outputs/${studentId}/${taskId}.${ext}`;
+  const expiresAt = new Date(Date.now() + OUTPUT_RETENTION_MS).toISOString();
+  const contentType = source.headers.get("Content-Type") || (ext === "mp4" ? "video/mp4" : "application/octet-stream");
+  const object = await env.AVATAR_INPUTS.put(key, source.body, {
+    httpMetadata: { contentType },
+    customMetadata: {
+      studentId,
+      taskId,
+      kind: "avatar-output",
+      sourceHost: parsed.hostname,
+      expiresAt
+    }
+  });
+  const fileName = cleanFileName(body.fileName || `chiwa-avatar-${new Date().toISOString().slice(0, 10)}.${ext}`);
+  return json(req, env, {
+    key,
+    size: object && object.size,
+    expiresAt,
+    previewUrl: await signedOutputUrl(env, key, "inline", fileName),
+    downloadUrl: await signedOutputUrl(env, key, "attachment", fileName)
+  });
 }
 
 async function cleanupOldInputs(env) {
@@ -277,6 +414,26 @@ async function cleanupOldInputs(env) {
   } while (cursor);
 }
 
+async function cleanupOldOutputs(env) {
+  let cursor;
+  do {
+    const listed = await env.AVATAR_INPUTS.list({
+      prefix: "avatar-outputs/",
+      cursor,
+      limit: 1000
+    });
+    const expired = listed.objects
+      .filter((object) => {
+        const expiresAt = object.customMetadata && object.customMetadata.expiresAt;
+        if (expiresAt) return Date.parse(expiresAt) <= Date.now();
+        return object.uploaded && object.uploaded.getTime() < Date.now() - OUTPUT_RETENTION_MS;
+      })
+      .map((object) => object.key);
+    if (expired.length) await env.AVATAR_INPUTS.delete(expired);
+    cursor = listed.truncated ? listed.cursor : undefined;
+  } while (cursor);
+}
+
 export default {
   async fetch(req, env) {
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(req, env) });
@@ -285,6 +442,11 @@ export default {
       if ((req.method === "GET" || req.method === "HEAD") && url.pathname.startsWith("/avatar/object/")) {
         return await handleObject(req, env, url);
       }
+      if ((req.method === "GET" || req.method === "HEAD") && url.pathname.startsWith("/avatar/output/")) {
+        return await handleOutput(req, env, url);
+      }
+      if (req.method === "POST" && url.pathname === "/avatar/output/import") return await handleOutputImport(req, env);
+      if (req.method === "POST" && url.pathname === "/avatar/output/sign") return await handleOutputSign(req, env);
       if (req.method === "POST" && url.pathname === "/avatar/multipart/create") return await handleCreate(req, env);
       if (req.method === "PUT" && url.pathname === "/avatar/multipart/part") return await handleUploadPart(req, env, url);
       if (req.method === "POST" && url.pathname === "/avatar/multipart/complete") return await handleComplete(req, env);
@@ -298,5 +460,6 @@ export default {
   },
   async scheduled(event, env, ctx) {
     ctx.waitUntil(cleanupOldInputs(env));
+    ctx.waitUntil(cleanupOldOutputs(env));
   }
 };
