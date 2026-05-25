@@ -198,19 +198,66 @@ async function handleAbort(req, env) {
   return json(req, env, { ok: true });
 }
 
+function parseRangeHeader(rangeHeader, size) {
+  if (!rangeHeader) return null;
+  if (!Number.isSafeInteger(size) || size < 1) return { error: true };
+
+  const match = String(rangeHeader).trim().match(/^bytes=(\d*)-(\d*)$/);
+  if (!match || (!match[1] && !match[2])) return { error: true };
+
+  let start;
+  let end;
+  if (!match[1]) {
+    const suffix = Number(match[2]);
+    if (!Number.isSafeInteger(suffix) || suffix <= 0) return { error: true };
+    start = Math.max(size - suffix, 0);
+    end = size - 1;
+  } else {
+    start = Number(match[1]);
+    end = match[2] ? Number(match[2]) : size - 1;
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end)) return { error: true };
+    if (start >= size || end < start) return { error: true };
+    end = Math.min(end, size - 1);
+  }
+
+  return { offset: start, length: end - start + 1, start, end };
+}
+
+function objectHeaders(req, env, object, range) {
+  const headers = new Headers(corsHeaders(req, env));
+  object.writeHttpMetadata(headers);
+  headers.set("etag", object.httpEtag);
+  headers.set("accept-ranges", "bytes");
+  headers.set("cache-control", "private, max-age=300");
+  headers.set("content-length", String(range ? range.length : object.size));
+  if (range) headers.set("content-range", `bytes ${range.start}-${range.end}/${object.size}`);
+  return headers;
+}
+
 async function handleObject(req, env, url) {
   const prefix = "/avatar/object/";
   const key = decodeURIComponent(url.pathname.slice(prefix.length));
   const ok = await verifyObjectSignature(env, key, url.searchParams.get("exp"), url.searchParams.get("sig"));
   if (!ok) return new Response("Forbidden", { status: 403, headers: corsHeaders(req, env) });
-  const object = await env.AVATAR_INPUTS.get(key);
-  if (!object) return new Response("Not Found", { status: 404, headers: corsHeaders(req, env) });
-  const headers = new Headers(corsHeaders(req, env));
-  object.writeHttpMetadata(headers);
-  headers.set("etag", object.httpEtag);
-  headers.set("cache-control", "private, max-age=300");
-  if (req.method === "HEAD") return new Response(null, { headers });
-  return new Response(object.body, { headers });
+
+  const metadata = await env.AVATAR_INPUTS.head(key);
+  if (!metadata) return new Response("Not Found", { status: 404, headers: corsHeaders(req, env) });
+
+  const range = parseRangeHeader(req.headers.get("Range"), metadata.size);
+  if (range && range.error) {
+    const headers = new Headers(corsHeaders(req, env));
+    headers.set("accept-ranges", "bytes");
+    headers.set("content-range", `bytes */${metadata.size}`);
+    return new Response("Range Not Satisfiable", { status: 416, headers });
+  }
+
+  const status = range ? 206 : 200;
+  const headers = objectHeaders(req, env, metadata, range);
+  if (req.method === "HEAD") return new Response(null, { status, headers });
+
+  const object = await env.AVATAR_INPUTS.get(key, range ? { range: { offset: range.offset, length: range.length } } : undefined);
+  if (!object || !object.body) return new Response("Not Found", { status: 404, headers: corsHeaders(req, env) });
+  return new Response(object.body, { status, headers });
 }
 
 async function cleanupOldInputs(env) {
