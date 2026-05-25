@@ -201,3 +201,66 @@ create policy avatar_generation_tasks_service_only on public.avatar_generation_t
   with check (false);
 
 revoke all on table public.avatar_generation_tasks from anon, authenticated;
+
+-- Private storage bucket for temporary RunningHub avatar clone inputs.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'avatar-inputs',
+  'avatar-inputs',
+  false,
+  314572800,
+  array[
+    'video/mp4',
+    'video/quicktime',
+    'video/webm',
+    'audio/mpeg',
+    'audio/mp3',
+    'audio/wav',
+    'audio/x-wav',
+    'audio/mp4',
+    'audio/aac',
+    'audio/webm',
+    'audio/ogg'
+  ]
+)
+on conflict (id) do update
+set public = excluded.public,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists avatar_inputs_insert_own_folder on storage.objects;
+drop policy if exists avatar_inputs_select_own_folder on storage.objects;
+drop policy if exists avatar_inputs_update_own_folder on storage.objects;
+drop policy if exists avatar_inputs_delete_own_folder on storage.objects;
+
+create policy avatar_inputs_insert_own_folder on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'avatar-inputs'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy avatar_inputs_select_own_folder on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'avatar-inputs'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy avatar_inputs_update_own_folder on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'avatar-inputs'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  )
+  with check (
+    bucket_id = 'avatar-inputs'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy avatar_inputs_delete_own_folder on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'avatar-inputs'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );

@@ -4167,6 +4167,38 @@ async function callRunningHubAvatarJson(action, payload) {
   return data;
 }
 
+function avatarFileExt(file, fallback) {
+  const name = String(file && file.name || '');
+  const match = name.match(/\.([a-z0-9]+)$/i);
+  return (match ? match[1].toLowerCase() : fallback).replace(/[^a-z0-9]/g, '') || fallback;
+}
+
+async function uploadAvatarInputToStorage(file, kind) {
+  if (!_SB || !_SB.storage) throw new Error('Supabase Storage 尚未載入。');
+  const sessionRes = await _SB.auth.getSession();
+  const session = sessionRes && sessionRes.data && sessionRes.data.session;
+  const userId = session && session.user && session.user.id;
+  if (!userId) throw new Error('請重新登入後再上傳形象素材。');
+
+  const fallbackExt = kind === 'video' ? 'mp4' : 'wav';
+  const path = `${userId}/${Date.now()}-${kind}.${avatarFileExt(file, fallbackExt)}`;
+  const { error: uploadError } = await _SB.storage
+    .from('avatar-inputs')
+    .upload(path, file, {
+      cacheControl: '86400',
+      contentType: file.type || (kind === 'video' ? 'video/mp4' : 'audio/wav'),
+      upsert: false
+    });
+  if (uploadError) throw new Error(uploadError.message || '素材上傳失敗');
+
+  const { data, error: signedError } = await _SB.storage
+    .from('avatar-inputs')
+    .createSignedUrl(path, 86400);
+  if (signedError || !data || !data.signedUrl) throw new Error((signedError && signedError.message) || '無法建立素材安全連結');
+
+  return { path, signedUrl: data.signedUrl };
+}
+
 function renderAvatarTaskResult(data) {
   const result = document.getElementById('avatar-result');
   if (!result) return;
@@ -4260,15 +4292,25 @@ async function generateAvatarClone() {
     if (load) load.style.display = 'flex';
     if (result) result.innerHTML = '';
 
-    const form = new FormData();
-    form.append('video', avatarVideoFile, avatarVideoFile.name || 'avatar-video.mp4');
-    form.append('audio', avatarAudioFile, avatarAudioFile.name || 'avatar-audio.wav');
-    form.append('duration_seconds', String(avatarAudioSeconds));
+    if (result) result.innerHTML = '<div class="audio-player-box">正在上傳素材並建立安全連結...</div>';
+    const videoUpload = await uploadAvatarInputToStorage(avatarVideoFile, 'video');
+    const audioUpload = await uploadAvatarInputToStorage(avatarAudioFile, 'audio');
+    if (result) result.innerHTML = '<div class="audio-player-box">素材已上傳，正在提交 RunningHub 任務...</div>';
 
     const res = await fetch(RUNNINGHUB_AVATAR_FUNCTION_URL, {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + token },
-      body: form
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        action: 'submit_urls',
+        video_url: videoUpload.signedUrl,
+        audio_url: audioUpload.signedUrl,
+        video_path: videoUpload.path,
+        audio_path: audioUpload.path,
+        duration_seconds: avatarAudioSeconds
+      })
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.detail || data.error || '形象克隆提交失敗');
