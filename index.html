@@ -1143,6 +1143,7 @@ async function finishStudentLogin(data, loginId) {
   if (typeof loadCloudVoices === 'function') await loadCloudVoices();
   if (typeof renderVoiceList === 'function') renderVoiceList();
   if (typeof updateVoiceDropdown === 'function') updateVoiceDropdown();
+  if (typeof loadAvatarLibrary === 'function') loadAvatarLibrary();
   toast('🔓 登入成功！歡迎回來 ' + (data.name || currentUser));
 }
 
@@ -2388,6 +2389,18 @@ async function decrAvatar(secs) {
     <button class="btn-gold" id="avatar-generate-btn" onclick="generateAvatarClone()">🧑‍💼 生成形象克隆影片</button>
     <div id="avatar-load" style="display:none" class="loading"><div class="spinner"></div>形象克隆服務正在生成影片，請保持此頁開啟...</div>
     <div id="avatar-result" style="margin-top:16px"></div>
+    <div class="audio-player-box" style="margin-top:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <div>
+          <div style="font-size:14px;font-weight:900;color:var(--gold)">我的形象影片</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">近 7 天生成的影片可在這裡預覽與下載。</div>
+        </div>
+        <button class="btn-outline" style="padding:8px 12px;font-size:12px" onclick="loadAvatarLibrary()">刷新</button>
+      </div>
+      <div id="avatar-library-list" style="display:grid;gap:10px">
+        <div style="font-size:12px;color:var(--t3)">登入後會顯示最近生成的形象影片。</div>
+      </div>
+    </div>
   </div>
 
     <!-- 課程面板 -->
@@ -4219,6 +4232,86 @@ function avatarErrorText(error, fallback) {
   return raw;
 }
 
+function avatarDateText(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return '';
+  return date.toLocaleString('zh-TW', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function avatarLibraryStatusText(status) {
+  if (status === 'SUCCESS') return '已生成';
+  if (status === 'FAILED') return '生成失敗';
+  if (status === 'EXPIRED') return '已過期';
+  return '生成中';
+}
+
+function renderAvatarLibrary(items) {
+  const box = document.getElementById('avatar-library-list');
+  if (!box) return;
+  const list = Array.isArray(items) ? items : [];
+  if (!list.length) {
+    box.innerHTML = '<div style="font-size:12px;color:var(--t3)">目前沒有可下載的形象影片。</div>';
+    return;
+  }
+  box.innerHTML = list.map(function(item) {
+    const status = String(item.status || 'RUNNING');
+    const ready = status === 'SUCCESS' && (item.previewUrl || item.downloadUrl);
+    const expired = status === 'EXPIRED';
+    const failed = status === 'FAILED';
+    const title = escapeHtml(item.title || '形象克隆影片');
+    const created = avatarDateText(item.createdAt);
+    const expires = avatarDateText(item.outputExpiresAt);
+    const statusColor = ready ? 'var(--green)' : (failed || expired ? 'var(--red)' : 'var(--gold)');
+    const meta = [
+      created ? `建立：${escapeHtml(created)}` : '',
+      expires && ready ? `保存至：${escapeHtml(expires)}` : '',
+      item.requestedSeconds ? `時長：${escapeHtml(_fmtSec(item.requestedSeconds))}` : ''
+    ].filter(Boolean).join('　');
+    return `
+      <div style="border:1px solid var(--bdr);border-radius:10px;padding:12px;background:rgba(255,255,255,.02)">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
+          <div style="min-width:180px;flex:1">
+            <div style="font-size:13px;font-weight:900;color:var(--t1)">${title}</div>
+            <div style="font-size:11px;color:var(--t3);margin-top:5px">${meta || '形象克隆影片'}</div>
+          </div>
+          <div style="font-size:12px;font-weight:800;color:${statusColor}">${avatarLibraryStatusText(status)}</div>
+        </div>
+        ${ready ? `
+          <video src="${escapeHtml(item.previewUrl || item.downloadUrl)}" controls style="width:100%;border-radius:8px;background:#000;margin-top:10px;max-height:260px"></video>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+            <a class="btn-outline" href="${escapeHtml(item.downloadUrl || item.previewUrl)}" download style="display:inline-flex;align-items:center;justify-content:center">下載影片</a>
+          </div>
+        ` : `
+          <div style="font-size:12px;color:var(--t3);margin-top:8px">${expired ? '此影片已超過保存期限。' : (failed ? '此影片生成失敗，請重新送出。' : '系統正在處理，完成後會顯示下載按鈕。')}</div>
+        `}
+      </div>
+    `;
+  }).join('');
+}
+
+async function loadAvatarLibrary() {
+  const box = document.getElementById('avatar-library-list');
+  if (box) box.innerHTML = '<div style="font-size:12px;color:var(--t3)">正在讀取形象影片...</div>';
+  try {
+    const data = await callChiwaAvatarJson('list', {});
+    renderAvatarLibrary(data.items || []);
+    if (data.student) {
+      currentUserData = Object.assign(currentUserData || {}, data.student);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
+    }
+  } catch (e) {
+    const message = avatarErrorText(e, '讀取形象影片失敗，請稍後再試。');
+    if (box) box.innerHTML = `<div style="font-size:12px;color:var(--red)">❌ ${escapeHtml(message)}</div>`;
+  }
+}
+
 function uploadAvatarInputWithTus(file, path, session, kind, onProgress) {
   if (!window.tus || !window.tus.Upload) {
     throw new Error('大檔上傳元件尚未載入，請重新整理後再試。');
@@ -4443,6 +4536,7 @@ async function pollAvatarTask(taskId) {
       const btn = document.getElementById('avatar-generate-btn');
       if (load) load.style.display = 'none';
       if (btn) btn.disabled = false;
+      loadAvatarLibrary();
       toast(`✅ 形象克隆完成，已扣除 ${data.requestedSeconds || avatarAudioSeconds || 0} 秒形象額度。`);
       return;
     }
@@ -4451,6 +4545,7 @@ async function pollAvatarTask(taskId) {
       const btn = document.getElementById('avatar-generate-btn');
       if (load) load.style.display = 'none';
       if (btn) btn.disabled = false;
+      loadAvatarLibrary();
       toast('❌ 形象克隆生成失敗。');
       return;
     }
@@ -4529,6 +4624,7 @@ async function generateAvatarClone() {
 
     avatarTaskStartedAt = Date.now();
     renderAvatarTaskResult(data);
+    loadAvatarLibrary();
     toast('✅ 形象克隆任務已送出，系統會自動查詢結果。');
     pollAvatarTask(data.taskId);
   } catch(e) {

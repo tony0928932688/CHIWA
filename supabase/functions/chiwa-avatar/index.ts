@@ -281,6 +281,49 @@ async function signAvatarOutput(apiKey: string, task: any) {
   return data;
 }
 
+function taskTitle(task: any, index = 0) {
+  const created = task.created_at ? new Date(task.created_at) : new Date();
+  const stamp = Number.isFinite(created.getTime()) ? created.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
+  return `形象克隆影片 ${stamp}-${String(index + 1).padStart(2, "0")}`;
+}
+
+async function handleList(req: Request) {
+  const apiKey = Deno.env.get(PROVIDER_SECRET_NAME) || "";
+  if (!apiKey) return neutralError("avatar_service_not_configured", 500);
+
+  const student = await getAuthorizedStudent(req);
+  const { data: rows, error } = await supabaseAdmin
+    .from("avatar_generation_tasks")
+    .select("task_id,status,requested_seconds,charged,result_file,result_expires_at,output_type,created_at,updated_at")
+    .eq("student_id", student.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  if (error) throw new Error(error.message);
+
+  const now = Date.now();
+  const items = [];
+  for (const task of rows || []) {
+    const expiresAt = task.result_expires_at || "";
+    const isReady = task.status === "SUCCESS" && task.result_file && (!expiresAt || Date.parse(expiresAt) > now);
+    const isExpired = task.status === "SUCCESS" && task.result_file && expiresAt && Date.parse(expiresAt) <= now;
+    const links = isReady ? await signAvatarOutput(apiKey, task) : null;
+    items.push({
+      taskId: task.task_id,
+      title: taskTitle(task, items.length),
+      status: isExpired ? "EXPIRED" : task.status,
+      requestedSeconds: task.requested_seconds,
+      charged: task.charged,
+      createdAt: task.created_at,
+      updatedAt: task.updated_at,
+      outputExpiresAt: expiresAt,
+      previewUrl: links?.previewUrl || "",
+      downloadUrl: links?.downloadUrl || "",
+    });
+  }
+
+  return jsonResponse({ items, retentionDays: OUTPUT_RETENTION_DAYS, student: publicStudent(student) });
+}
+
 async function handleQuery(req: Request, body: any) {
   const apiKey = Deno.env.get(PROVIDER_SECRET_NAME) || "";
   if (!apiKey) return neutralError("avatar_service_not_configured", 500);
@@ -376,6 +419,7 @@ Deno.serve(async (req: Request) => {
     const action = String(body.action || "").trim();
     if (action === "submit_urls") return await handleSubmitUrls(req, body);
     if (action === "query") return await handleQuery(req, body);
+    if (action === "list") return await handleList(req);
     return neutralError("unknown_action", 400);
   } catch (error) {
     console.error(error);
