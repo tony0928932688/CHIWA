@@ -1085,6 +1085,7 @@ const _SB = (window.supabase && typeof supabase.createClient === 'function')
   : null;
 const CARTESIA_VOICE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/cartesia-voice';
 const CHIWA_SECURE_API_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-secure-api';
+const RUNNINGHUB_AVATAR_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/runninghub-avatar';
 let currentUser = '';
 let currentUserData = null;
 
@@ -1122,8 +1123,9 @@ async function finishStudentLogin(data, loginId) {
 
   if (data.ai_usage === null || data.ai_usage === undefined) data.ai_usage = 300;
   if (data.voice_seconds === null || data.voice_seconds === undefined) data.voice_seconds = 3600;
+  if (data.avatar_seconds === null || data.avatar_seconds === undefined) data.avatar_seconds = 1800;
 
-  updateUsageUI(data.ai_usage, data.voice_seconds);
+  updateUsageUI(data.ai_usage, data.voice_seconds, data.avatar_seconds);
 
   const mub = document.getElementById('mobile-usage-bar');
   if (mub) mub.style.display = 'none';
@@ -1312,7 +1314,10 @@ function _fmtSec(secs) {
 }
 
 // 次數與語音秒數顯示全站同步更新
-function updateUsageUI(aiUsage, voiceSec) {
+function updateUsageUI(aiUsage, voiceSec, avatarSec) {
+  avatarSec = avatarSec === null || avatarSec === undefined
+    ? (currentUserData && currentUserData.avatar_seconds !== undefined ? currentUserData.avatar_seconds : 1800)
+    : avatarSec;
   // --- PC 側邊欄 AI 次數 ---
   const un = document.getElementById('unum');
   const uf = document.getElementById('ufill');
@@ -1349,14 +1354,30 @@ function updateUsageUI(aiUsage, voiceSec) {
   const mvn = document.getElementById('m-voice-num');
   if (mvn) mvn.textContent = vfmt;
 
+  // --- PC 側邊欄形象秒數 ---
+  const avnSb = document.getElementById('avatar-num-sidebar');
+  const avbSb = document.getElementById('avatar-bar-sidebar');
+  const avfmt = _fmtSec(avatarSec);
+  if (avnSb) avnSb.innerHTML = avfmt + '<span style="font-size:10px;color:var(--t3);font-weight:400">/30:00</span>';
+  if (avbSb) avbSb.style.width = Math.max(0, Math.min(100, Math.round((avatarSec / 1800) * 100))) + '%';
+
+  // --- 形象克隆面板剩餘秒數 ---
+  const arem = document.getElementById('avatar-rem-seconds');
+  if (arem) arem.innerHTML = avfmt + '<span style="font-size:11px;color:var(--t3);font-weight:400">/30:00</span>';
+
+  // --- 手機版頂部列形象 ---
+  const mavn = document.getElementById('m-avatar-num');
+  if (mavn) mavn.textContent = avfmt;
+
   // --- 下次重置日期 ---
   const now = new Date();
-  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  const resetStr = `${nextMonth.getFullYear()}年${nextMonth.getMonth() + 1}月1日`;
+  const quotaReset = currentUserData && currentUserData.quota_reset_at ? new Date(currentUserData.quota_reset_at) : null;
+  const nextReset = quotaReset && Number.isFinite(quotaReset.getTime()) ? quotaReset : new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const resetStr = `${nextReset.getFullYear()}年${nextReset.getMonth() + 1}月${nextReset.getDate()}日`;
   const rdEl = document.getElementById('reset-date');
   if (rdEl) rdEl.textContent = resetStr;
   const mrdEl = document.getElementById('m-reset-days');
-  const daysLeft = Math.ceil((nextMonth - now) / 86400000);
+  const daysLeft = Math.max(0, Math.ceil((nextReset - now) / 86400000));
   if (mrdEl) mrdEl.textContent = `${daysLeft}天後重置`;
 
   // 全域相容變數（安全寫入，避免 head 腳本區 ReferenceError）
@@ -1368,12 +1389,12 @@ async function decrAI() {
   if (!currentUserData) return;
   if (currentUserData.is_admin) return; // 管理員不扣點
   currentUserData.ai_usage = Math.max(0, (currentUserData.ai_usage || 0) - 1);
-  updateUsageUI(currentUserData.ai_usage, currentUserData.voice_seconds || 0);
+  updateUsageUI(currentUserData.ai_usage, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
   try {
     const secure = await callChiwaSecure('usage', { type: 'ai', amount: 1 });
     if (secure && secure.student) {
       currentUserData = Object.assign(currentUserData, secure.student);
-      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
     }
   } catch(e) { console.error('decrAI error:', e); }
   aiUse = currentUserData.ai_usage;
@@ -1384,14 +1405,28 @@ async function decrVoice(secs) {
   if (!currentUserData) return;
   if (currentUserData.is_admin) return; // 管理員不扣
   currentUserData.voice_seconds = Math.max(0, (currentUserData.voice_seconds || 0) - secs);
-  updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds);
+  updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds, currentUserData.avatar_seconds || 0);
   try {
     const secure = await callChiwaSecure('usage', { type: 'voice', amount: secs });
     if (secure && secure.student) {
       currentUserData = Object.assign(currentUserData, secure.student);
-      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
     }
   } catch(e) { console.error('decrVoice error:', e); }
+}
+
+async function decrAvatar(secs) {
+  if (!currentUserData) return;
+  if (currentUserData.is_admin) return;
+  currentUserData.avatar_seconds = Math.max(0, (currentUserData.avatar_seconds || 0) - secs);
+  updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds);
+  try {
+    const secure = await callChiwaSecure('usage', { type: 'avatar', amount: secs });
+    if (secure && secure.student) {
+      currentUserData = Object.assign(currentUserData, secure.student);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
+    }
+  } catch(e) { console.error('decrAvatar error:', e); }
 }
 </script>
 </head>
@@ -2142,6 +2177,10 @@ async function decrVoice(secs) {
         <span class="sb-icon">🎙️</span>
         <span>語音克隆</span>
       </div>
+      <div class="sb-item" onclick="swP('avatar', this)">
+        <span class="sb-icon">🧑‍💼</span>
+        <span>形象克隆</span>
+      </div>
       <div class="sb-item" onclick="swP('course', this)">
         <span class="sb-icon">📚</span>
         <span>課程面板</span>
@@ -2164,6 +2203,10 @@ async function decrVoice(secs) {
       <div class="sb-ul" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase">語音剩餘秒數</div>
       <div style="font-size:15px;font-weight:900;color:var(--blue);font-family:'Space Mono',monospace" id="voice-num-sidebar">—<span style="font-size:10px;color:var(--t3);font-weight:400">/60:00</span></div>
       <div class="sb-ubar"><div id="voice-bar-sidebar" style="height:100%;background:var(--blue);border-radius:2px;width:0%;transition:width .3s"></div></div>
+      <div style="height:1px;background:var(--bdr);margin:8px 0"></div>
+      <div class="sb-ul" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase">形象剩餘秒數</div>
+      <div style="font-size:15px;font-weight:900;color:var(--purple);font-family:'Space Mono',monospace" id="avatar-num-sidebar">—<span style="font-size:10px;color:var(--t3);font-weight:400">/30:00</span></div>
+      <div class="sb-ubar"><div id="avatar-bar-sidebar" style="height:100%;background:var(--purple);border-radius:2px;width:0%;transition:width .3s"></div></div>
       <div style="height:1px;background:var(--bdr);margin:8px 0"></div>
       <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace">下次重置：<span id="reset-date">—</span></div>
     </div>
@@ -2307,6 +2350,38 @@ async function decrVoice(secs) {
     </div>
     <div id="tts-load" style="display:none" class="loading"><div class="spinner"></div>正在透過吉娃 AI 語音系統生成聲音...</div>
     <div id="tts-audio-container"></div>
+  </div>
+
+    <!-- 形象克隆 -->
+    <div class="panel" id="p-avatar">
+    <div class="sec-title">🧑‍💼 形象克隆</div>
+    <div class="sec-sub">上傳正面形象影片與乾淨人聲，透過 RunningHub 生成 AI 口播形象影片</div>
+    <div style="background:var(--purple-bg);border:1px solid rgba(167,139,250,.25);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace;text-transform:uppercase">形象剩餘秒數</div>
+        <div style="font-size:15px;font-weight:900;color:var(--purple);font-family:'Space Mono',monospace" id="avatar-rem-seconds">30:00<span style="font-size:11px;color:var(--t3);font-weight:400">/30:00</span></div>
+      </div>
+      <div style="font-size:11px;color:var(--t3)">單支最高 02:00，依生成影片秒數扣除</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px" class="script-grid">
+      <div style="background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px">
+        <div style="font-size:14px;font-weight:800;margin-bottom:8px">步驟 1：上傳形象影片</div>
+        <div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">請使用臉部正面、光線清楚、沒有遮擋的影片。</div>
+        <input type="file" id="avatar-video-input" accept="video/*" style="display:none" onchange="handleAvatarFileUpload(event,'video')">
+        <button class="btn-outline" style="width:100%" onclick="document.getElementById('avatar-video-input').click()">🎥 選擇形象影片</button>
+        <div id="avatar-video-status" style="font-size:11px;color:var(--t3);margin-top:10px">尚未選擇影片</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px">
+        <div style="font-size:14px;font-weight:800;margin-bottom:8px">步驟 2：上傳人聲音檔</div>
+        <div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">音檔長度會作為本次形象影片扣秒依據，最高 120 秒。</div>
+        <input type="file" id="avatar-audio-input" accept="audio/*" style="display:none" onchange="handleAvatarFileUpload(event,'audio')">
+        <button class="btn-outline" style="width:100%" onclick="document.getElementById('avatar-audio-input').click()">🎧 選擇人聲音檔</button>
+        <div id="avatar-audio-status" style="font-size:11px;color:var(--t3);margin-top:10px">尚未選擇音檔</div>
+      </div>
+    </div>
+    <button class="btn-gold" id="avatar-generate-btn" onclick="generateAvatarClone()">🧑‍💼 生成形象克隆影片</button>
+    <div id="avatar-load" style="display:none" class="loading"><div class="spinner"></div>RunningHub 正在生成形象影片，請保持此頁開啟...</div>
+    <div id="avatar-result" style="margin-top:16px"></div>
   </div>
 
     <!-- 課程面板 -->
@@ -2464,6 +2539,9 @@ async function decrVoice(secs) {
         <div style="width: 140px;">
           <input type="text" id="adm-new-voice" value="3600" placeholder="語音秒數" class="tinput" style="background: var(--card2)">
         </div>
+        <div style="width: 140px;">
+          <input type="text" id="adm-new-avatar" value="1800" placeholder="形象秒數" class="tinput" style="background: var(--card2)">
+        </div>
         <button class="btn-gold" onclick="addNewStudentFromAdmin()" style="border-radius: 10px; padding: 10px 20px;">開通 / 更新</button>
       </div>
     </div>
@@ -2484,6 +2562,7 @@ async function decrVoice(secs) {
               <th>方案 / 備註</th>
               <th>AI 次數</th>
               <th>語音秒數</th>
+              <th>形象秒數</th>
               <th style="text-align: right;">權限操作</th>
             </tr>
           </thead>
@@ -2673,7 +2752,10 @@ async function decrVoice(secs) {
   <div class="mn-item" id="mn-voice" onclick="swPM('voice',3)">
     <span class="mn-icon">🎙️</span><span>語音</span>
   </div>
-  <div class="mn-item" id="mn-course" onclick="swPM('course',4)">
+  <div class="mn-item" id="mn-avatar" onclick="swPM('avatar',4)">
+    <span class="mn-icon">🧑‍💼</span><span>形象</span>
+  </div>
+  <div class="mn-item" id="mn-course" onclick="swPM('course',5)">
     <span class="mn-icon">📚</span><span>課程</span>
   </div>
 </div>
@@ -2688,6 +2770,10 @@ async function decrVoice(secs) {
   <div class="mub-item">
     <span class="mub-label">語音</span>
     <span class="mub-num" id="m-voice-num" style="color:var(--blue)">58:30</span>
+  </div>
+  <div class="mub-item">
+    <span class="mub-label">形象</span>
+    <span class="mub-num" id="m-avatar-num" style="color:var(--purple)">30:00</span>
   </div>
   <div style="flex:1;text-align:right;font-size:9px;color:var(--t3);font-family:'Space Mono',monospace">
     <span id="m-reset-days"></span>
@@ -4009,6 +4095,194 @@ async function generateTTSAudio() {
   }
 }
 
+let avatarVideoFile = null;
+let avatarAudioFile = null;
+let avatarAudioSeconds = 0;
+let avatarPollTimer = null;
+
+function setAvatarStatus(type, text, ok) {
+  const el = document.getElementById(type === 'video' ? 'avatar-video-status' : 'avatar-audio-status');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = ok ? 'var(--green)' : 'var(--t3)';
+}
+
+function handleAvatarFileUpload(event, type) {
+  const input = event && event.target;
+  const file = input && input.files && input.files[0];
+  if (!file) return;
+
+  if (type === 'video') {
+    if (!file.type.startsWith('video/')) {
+      toast('❌ 請上傳影片檔。');
+      input.value = '';
+      return;
+    }
+    avatarVideoFile = file;
+    setAvatarStatus('video', '已選擇影片：' + file.name, true);
+    toast('✅ 形象影片已載入。');
+    return;
+  }
+
+  if (!file.type.startsWith('audio/')) {
+    toast('❌ 請上傳音檔。');
+    input.value = '';
+    return;
+  }
+
+  const audio = document.createElement('audio');
+  const url = URL.createObjectURL(file);
+  audio.preload = 'metadata';
+  audio.onloadedmetadata = function() {
+    URL.revokeObjectURL(url);
+    avatarAudioFile = file;
+    avatarAudioSeconds = Math.max(1, Math.ceil(Number.isFinite(audio.duration) ? audio.duration : 0));
+    setAvatarStatus('audio', '已選擇音檔：' + file.name + '（' + _fmtSec(avatarAudioSeconds) + '）', true);
+    if (avatarAudioSeconds > 120) toast('⚠️ 單支形象影片最高 2 分鐘，請裁切音檔到 120 秒內。');
+    else toast('✅ 人聲音檔已載入。');
+  };
+  audio.onerror = function() {
+    URL.revokeObjectURL(url);
+    avatarAudioFile = null;
+    avatarAudioSeconds = 0;
+    setAvatarStatus('audio', '音檔秒數讀取失敗，請換一個音檔。', false);
+    toast('❌ 無法讀取音檔秒數。');
+  };
+  audio.src = url;
+}
+
+async function callRunningHubAvatarJson(action, payload) {
+  const token = await getVoiceSessionToken();
+  if (!token) throw new Error('請使用 Google 登入後再使用形象克隆功能。');
+  const res = await fetch(RUNNINGHUB_AVATAR_FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(Object.assign({ action: action }, payload || {}))
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || data.error || '形象克隆服務暫時無法使用');
+  return data;
+}
+
+function renderAvatarTaskResult(data) {
+  const result = document.getElementById('avatar-result');
+  if (!result) return;
+  if (!data) {
+    result.innerHTML = '';
+    return;
+  }
+  const status = data.status || 'RUNNING';
+  if (status === 'SUCCESS' && data.resultUrl) {
+    result.innerHTML = `
+      <div class="audio-player-box">
+        <div style="font-size:14px;font-weight:800;margin-bottom:10px;color:var(--green)">✅ 形象克隆影片已生成</div>
+        <video src="${escapeHtml(data.resultUrl)}" controls style="width:100%;border-radius:10px;background:#000"></video>
+        <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+          <a class="btn-outline" href="${escapeHtml(data.resultUrl)}" target="_blank" style="display:inline-flex;align-items:center;justify-content:center">開啟影片連結</a>
+        </div>
+        <div style="font-size:11px;color:var(--t3);margin-top:8px">RunningHub 生成連結通常只保留 24 小時，請盡快下載保存。</div>
+      </div>
+    `;
+    return;
+  }
+  if (status === 'FAILED') {
+    result.innerHTML = `<div class="audio-player-box" style="border-color:rgba(255,107,107,.35);color:var(--red)">❌ 生成失敗：${escapeHtml(data.errorMessage || data.errorCode || '未知錯誤')}</div>`;
+    return;
+  }
+  result.innerHTML = `<div class="audio-player-box">任務 ${escapeHtml(data.taskId || '')} 狀態：${escapeHtml(status)}。系統會自動查詢完成結果。</div>`;
+}
+
+async function pollAvatarTask(taskId) {
+  if (!taskId) return;
+  try {
+    const data = await callRunningHubAvatarJson('query', { taskId });
+    if (data.student) {
+      currentUserData = Object.assign(currentUserData || {}, data.student);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
+    }
+    renderAvatarTaskResult(data);
+    if (data.status === 'SUCCESS') {
+      const load = document.getElementById('avatar-load');
+      const btn = document.getElementById('avatar-generate-btn');
+      if (load) load.style.display = 'none';
+      if (btn) btn.disabled = false;
+      toast(`✅ 形象克隆完成，已扣除 ${data.requestedSeconds || avatarAudioSeconds || 0} 秒形象額度。`);
+      return;
+    }
+    if (data.status === 'FAILED') {
+      const load = document.getElementById('avatar-load');
+      const btn = document.getElementById('avatar-generate-btn');
+      if (load) load.style.display = 'none';
+      if (btn) btn.disabled = false;
+      toast('❌ 形象克隆生成失敗。');
+      return;
+    }
+    avatarPollTimer = setTimeout(function() { pollAvatarTask(taskId); }, 8000);
+  } catch(e) {
+    const load = document.getElementById('avatar-load');
+    const btn = document.getElementById('avatar-generate-btn');
+    if (load) load.style.display = 'none';
+    if (btn) btn.disabled = false;
+    toast('❌ ' + (e.message || '查詢形象克隆任務失敗'));
+  }
+}
+
+async function generateAvatarClone() {
+  const btn = document.getElementById('avatar-generate-btn');
+  const load = document.getElementById('avatar-load');
+  const result = document.getElementById('avatar-result');
+
+  if (!avatarVideoFile) {
+    toast('❌ 請先上傳形象影片。');
+    return;
+  }
+  if (!avatarAudioFile || !avatarAudioSeconds) {
+    toast('❌ 請先上傳可讀取秒數的人聲音檔。');
+    return;
+  }
+  if (avatarAudioSeconds > 120) {
+    toast('❌ 單支形象影片最高只能 2 分鐘，請裁切音檔到 120 秒內。');
+    return;
+  }
+  if (currentUserData && !currentUserData.is_admin && (currentUserData.avatar_seconds || 0) < avatarAudioSeconds) {
+    toast(`❌ 形象剩餘秒數不足！本次需 ${_fmtSec(avatarAudioSeconds)}，目前剩餘 ${_fmtSec(currentUserData.avatar_seconds || 0)}。`);
+    return;
+  }
+
+  try {
+    const token = await getVoiceSessionToken();
+    if (!token) throw new Error('請使用 Google 登入後再使用形象克隆。');
+    if (avatarPollTimer) clearTimeout(avatarPollTimer);
+    if (btn) btn.disabled = true;
+    if (load) load.style.display = 'flex';
+    if (result) result.innerHTML = '';
+
+    const form = new FormData();
+    form.append('video', avatarVideoFile, avatarVideoFile.name || 'avatar-video.mp4');
+    form.append('audio', avatarAudioFile, avatarAudioFile.name || 'avatar-audio.wav');
+    form.append('duration_seconds', String(avatarAudioSeconds));
+
+    const res = await fetch(RUNNINGHUB_AVATAR_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+      body: form
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || data.error || '形象克隆提交失敗');
+
+    renderAvatarTaskResult(data);
+    toast('✅ 形象克隆任務已送出，系統會自動查詢結果。');
+    pollAvatarTask(data.taskId);
+  } catch(e) {
+    if (load) load.style.display = 'none';
+    if (btn) btn.disabled = false;
+    toast('❌ ' + (e.message || '形象克隆提交失敗，請稍後再試。'));
+  }
+}
+
 
 // 7 單元完整大綱資料庫
 const courseData = [
@@ -4648,7 +4922,7 @@ renderAdminPanel = async function() {
   const unitSelect = document.getElementById('adm-course-unit-select');
   if (unitSelect && unitSelect.children.length === 0) initAdminCourseSelects();
 
-  tbody.innerHTML = '<tr><td colspan="7" style="color:var(--t2);padding:18px">正在讀取學員授權資料...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8" style="color:var(--t2);padding:18px">正在讀取學員授權資料...</td></tr>';
   let rows = [];
   let sourceText = 'Supabase';
   try {
@@ -4668,9 +4942,10 @@ renderAdminPanel = async function() {
       status: s.status || '正常',
       note: s.note || '',
       ai_usage: s.ai_usage,
-      voice_seconds: s.voice_seconds
+      voice_seconds: s.voice_seconds,
+      avatar_seconds: s.avatar_seconds
     }));
-    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--red);padding:18px">讀取 Supabase 失敗：${escapeHtml(e.message || '權限或連線異常')}。目前顯示本機備援資料，正式上線前需修正資料庫權限。</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);padding:18px">讀取 Supabase 失敗：${escapeHtml(e.message || '權限或連線異常')}。目前顯示本機備援資料，正式上線前需修正資料庫權限。</td></tr>`;
   }
 
   totalNum.textContent = rows.length;
@@ -4696,6 +4971,7 @@ renderAdminPanel = async function() {
           <td><input id="adm-note-${key}" class="tinput" value="${escapeHtml(s.note || s.plan || '')}" style="background:var(--card2);min-width:130px"></td>
           <td><input id="adm-ai-${key}" class="tinput" value="${escapeHtml(String(s.ai_usage ?? 300))}" style="background:var(--card2);width:86px"></td>
           <td><input id="adm-voice-${key}" class="tinput" value="${escapeHtml(String(s.voice_seconds ?? 3600))}" style="background:var(--card2);width:96px"></td>
+          <td><input id="adm-avatar-${key}" class="tinput" value="${escapeHtml(String(s.avatar_seconds ?? 1800))}" style="background:var(--card2);width:96px"></td>
           <td style="text-align:right;white-space:nowrap">
             <button class="admin-btn-sm" onclick="saveStudentQuotaFromAdmin('${encodeURIComponent(id)}')">儲存</button>
             <button class="${btnClass}" onclick="toggleStudentBan('${encodeURIComponent(id)}')">${btnText}</button>
@@ -4746,6 +5022,7 @@ async function saveStudentQuotaFromAdmin(encodedId) {
   const key = adminDomKey(id);
   const ai = parseInt(document.getElementById('adm-ai-' + key)?.value || '300', 10);
   const voice = parseInt(document.getElementById('adm-voice-' + key)?.value || '3600', 10);
+  const avatar = parseInt(document.getElementById('adm-avatar-' + key)?.value || '1800', 10);
   const note = document.getElementById('adm-note-' + key)?.value.trim() || '';
   if (!_SB) {
     toast('❌ 資料庫尚未載入，無法儲存');
@@ -4754,7 +5031,8 @@ async function saveStudentQuotaFromAdmin(encodedId) {
 
   const payload = {
     ai_usage: Number.isFinite(ai) ? ai : 300,
-    voice_seconds: Number.isFinite(voice) ? voice : 3600
+    voice_seconds: Number.isFinite(voice) ? voice : 3600,
+    avatar_seconds: Number.isFinite(avatar) ? avatar : 1800
   };
   if (note) payload.note = note;
 
@@ -4769,7 +5047,7 @@ async function saveStudentQuotaFromAdmin(encodedId) {
     return;
   }
 
-  adminLog(`💾 額度更新：${id}，AI ${payload.ai_usage} 次，語音 ${payload.voice_seconds} 秒。`);
+  adminLog(`💾 額度更新：${id}，AI ${payload.ai_usage} 次，語音 ${payload.voice_seconds} 秒，形象 ${payload.avatar_seconds} 秒。`);
   await renderAdminPanel();
   toast('✅ 學員額度已更新');
 }
@@ -4780,6 +5058,7 @@ addNewStudentFromAdmin = async function() {
   const noteInput = document.getElementById('adm-new-note');
   const aiInput = document.getElementById('adm-new-ai');
   const voiceInput = document.getElementById('adm-new-voice');
+  const avatarInput = document.getElementById('adm-new-avatar');
   if (!emailInput || !noteInput) return;
 
   const email = emailInput.value.trim().toLowerCase();
@@ -4787,6 +5066,7 @@ addNewStudentFromAdmin = async function() {
   const note = noteInput.value.trim() || 'AI自媒體變現自學課程';
   const ai = parseInt(aiInput?.value || '300', 10);
   const voice = parseInt(voiceInput?.value || '3600', 10);
+  const avatar = parseInt(avatarInput?.value || '1800', 10);
 
   if (!email || !email.includes('@')) {
     toast('❌ 請輸入正確的學員 Google Email');
@@ -4804,7 +5084,8 @@ addNewStudentFromAdmin = async function() {
     status: '正常',
     is_admin: false,
     ai_usage: Number.isFinite(ai) ? ai : 300,
-    voice_seconds: Number.isFinite(voice) ? voice : 3600
+    voice_seconds: Number.isFinite(voice) ? voice : 3600,
+    avatar_seconds: Number.isFinite(avatar) ? avatar : 1800
   };
   const fullPayload = Object.assign({}, basePayload, {
     email: email,
@@ -4823,7 +5104,7 @@ addNewStudentFromAdmin = async function() {
     return;
   }
 
-  adminLog(`➕ 學員開通：${email}，AI ${basePayload.ai_usage} 次，語音 ${basePayload.voice_seconds} 秒。`);
+  adminLog(`➕ 學員開通：${email}，AI ${basePayload.ai_usage} 次，語音 ${basePayload.voice_seconds} 秒，形象 ${basePayload.avatar_seconds} 秒。`);
   emailInput.value = '';
   if (nameInput) nameInput.value = '';
   noteInput.value = '';
