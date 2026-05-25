@@ -4099,6 +4099,7 @@ let avatarVideoFile = null;
 let avatarAudioFile = null;
 let avatarAudioSeconds = 0;
 let avatarPollTimer = null;
+let avatarTaskStartedAt = 0;
 
 function setAvatarStatus(type, text, ok) {
   const el = document.getElementById(type === 'video' ? 'avatar-video-status' : 'avatar-audio-status');
@@ -4173,6 +4174,41 @@ function avatarFileExt(file, fallback) {
   return (match ? match[1].toLowerCase() : fallback).replace(/[^a-z0-9]/g, '') || fallback;
 }
 
+function avatarFileMime(file, kind) {
+  const ext = avatarFileExt(file, kind === 'video' ? 'mp4' : 'wav');
+  const declared = String(file && file.type || '').trim();
+  if (declared && declared !== 'application/octet-stream') return declared;
+  const byExt = {
+    mp4: 'video/mp4',
+    mov: 'video/quicktime',
+    m4v: 'video/x-m4v',
+    webm: 'video/webm',
+    mp3: 'audio/mpeg',
+    m4a: 'audio/mp4',
+    wav: 'audio/wav',
+    wave: 'audio/wav',
+    aac: 'audio/aac',
+    ogg: 'audio/ogg'
+  };
+  return byExt[ext] || (kind === 'video' ? 'video/mp4' : 'audio/wav');
+}
+
+function avatarRenderBox(message, tone) {
+  const result = document.getElementById('avatar-result');
+  if (!result) return;
+  const color = tone === 'error' ? 'var(--red)' : (tone === 'ok' ? 'var(--green)' : 'var(--t2)');
+  const border = tone === 'error' ? 'rgba(255,107,107,.35)' : 'rgba(212,175,55,.22)';
+  result.innerHTML = `<div class="audio-player-box" style="border-color:${border};color:${color}">${message}</div>`;
+}
+
+function avatarErrorText(error, fallback) {
+  const raw = String(error && error.message || error || fallback || '形象克隆提交失敗，請稍後再試。');
+  if (/mime|type/i.test(raw)) return '檔案格式被儲存空間拒絕，請改用 MP4 影片與 WAV/MP3 音檔後再試。';
+  if (/size|too large|payload/i.test(raw)) return '檔案太大，上傳失敗。請先把形象影片壓縮或裁切到 2 分鐘內再試。';
+  if (/row-level security|policy|permission|unauthorized|jwt/i.test(raw)) return '登入授權已失效，請重新整理網頁並用 Google 登入後再試。';
+  return raw;
+}
+
 async function uploadAvatarInputToStorage(file, kind) {
   if (!_SB || !_SB.storage) throw new Error('Supabase Storage 尚未載入。');
   const sessionRes = await _SB.auth.getSession();
@@ -4186,7 +4222,7 @@ async function uploadAvatarInputToStorage(file, kind) {
     .from('avatar-inputs')
     .upload(path, file, {
       cacheControl: '86400',
-      contentType: file.type || (kind === 'video' ? 'video/mp4' : 'audio/wav'),
+      contentType: avatarFileMime(file, kind),
       upsert: false
     });
   if (uploadError) throw new Error(uploadError.message || '素材上傳失敗');
@@ -4224,7 +4260,15 @@ function renderAvatarTaskResult(data) {
     result.innerHTML = `<div class="audio-player-box" style="border-color:rgba(255,107,107,.35);color:var(--red)">❌ 生成失敗：${escapeHtml(data.errorMessage || data.errorCode || '未知錯誤')}</div>`;
     return;
   }
-  result.innerHTML = `<div class="audio-player-box">任務 ${escapeHtml(data.taskId || '')} 狀態：${escapeHtml(status)}。系統會自動查詢完成結果。</div>`;
+  const elapsed = avatarTaskStartedAt ? Math.floor((Date.now() - avatarTaskStartedAt) / 1000) : 0;
+  result.innerHTML = `
+    <div class="audio-player-box">
+      <div style="font-weight:800;margin-bottom:6px">RunningHub 任務已送出</div>
+      <div>任務 ID：${escapeHtml(data.taskId || '')}</div>
+      <div>目前狀態：${escapeHtml(status)}，已等待 ${_fmtSec(elapsed)}</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:8px">系統每 8 秒會自動查詢一次；如果 RunningHub 排隊較久，這裡會持續更新。</div>
+    </div>
+  `;
 }
 
 async function pollAvatarTask(taskId) {
@@ -4258,7 +4302,9 @@ async function pollAvatarTask(taskId) {
     const btn = document.getElementById('avatar-generate-btn');
     if (load) load.style.display = 'none';
     if (btn) btn.disabled = false;
-    toast('❌ ' + (e.message || '查詢形象克隆任務失敗'));
+    const message = avatarErrorText(e, '查詢形象克隆任務失敗');
+    avatarRenderBox('❌ ' + escapeHtml(message), 'error');
+    toast('❌ ' + message);
   }
 }
 
@@ -4292,10 +4338,12 @@ async function generateAvatarClone() {
     if (load) load.style.display = 'flex';
     if (result) result.innerHTML = '';
 
-    if (result) result.innerHTML = '<div class="audio-player-box">正在上傳素材並建立安全連結...</div>';
+    avatarTaskStartedAt = 0;
+    avatarRenderBox('正在上傳形象影片並建立安全連結...', 'info');
     const videoUpload = await uploadAvatarInputToStorage(avatarVideoFile, 'video');
+    avatarRenderBox('形象影片已上傳，正在上傳人聲音檔...', 'info');
     const audioUpload = await uploadAvatarInputToStorage(avatarAudioFile, 'audio');
-    if (result) result.innerHTML = '<div class="audio-player-box">素材已上傳，正在提交 RunningHub 任務...</div>';
+    avatarRenderBox('素材已上傳，正在提交 RunningHub 任務...', 'info');
 
     const res = await fetch(RUNNINGHUB_AVATAR_FUNCTION_URL, {
       method: 'POST',
@@ -4315,13 +4363,16 @@ async function generateAvatarClone() {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.detail || data.error || '形象克隆提交失敗');
 
+    avatarTaskStartedAt = Date.now();
     renderAvatarTaskResult(data);
     toast('✅ 形象克隆任務已送出，系統會自動查詢結果。');
     pollAvatarTask(data.taskId);
   } catch(e) {
     if (load) load.style.display = 'none';
     if (btn) btn.disabled = false;
-    toast('❌ ' + (e.message || '形象克隆提交失敗，請稍後再試。'));
+    const message = avatarErrorText(e, '形象克隆提交失敗，請稍後再試。');
+    avatarRenderBox('❌ ' + escapeHtml(message), 'error');
+    toast('❌ ' + message);
   }
 }
 

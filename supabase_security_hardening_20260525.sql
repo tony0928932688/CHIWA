@@ -208,20 +208,8 @@ values (
   'avatar-inputs',
   'avatar-inputs',
   false,
-  314572800,
-  array[
-    'video/mp4',
-    'video/quicktime',
-    'video/webm',
-    'audio/mpeg',
-    'audio/mp3',
-    'audio/wav',
-    'audio/x-wav',
-    'audio/mp4',
-    'audio/aac',
-    'audio/webm',
-    'audio/ogg'
-  ]
+  1073741824,
+  null
 )
 on conflict (id) do update
 set public = excluded.public,
