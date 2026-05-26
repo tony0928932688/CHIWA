@@ -2282,13 +2282,13 @@ async function decrAvatar(secs) {
     </div>
 
     <div class="sb-nav">
-      <div class="sb-item on" data-panel="topic" onclick="swP('topic', this)">
-        <span class="sb-icon">🎯</span>
-        <span>選題生成</span>
-      </div>
-      <div class="sb-item" data-panel="profile" onclick="swP('profile', this)">
+      <div class="sb-item on" data-panel="profile" onclick="swP('profile', this)">
         <span class="sb-icon">🧭</span>
         <span>帳號定位</span>
+      </div>
+      <div class="sb-item" data-panel="topic" onclick="swP('topic', this)">
+        <span class="sb-icon">🎯</span>
+        <span>選題生成</span>
       </div>
       <div class="sb-item" data-panel="script" onclick="swP('script', this)">
         <span class="sb-icon">🎬</span>
@@ -3019,11 +3019,11 @@ async function decrAvatar(secs) {
 
 <!-- 手機版底部導覽列 -->
 <div id="mobile-nav" style="display:none">
-  <div class="mn-item on" id="mn-topic" onclick="swPM('topic',0)">
-    <span class="mn-icon">🎯</span><span>選題</span>
-  </div>
-  <div class="mn-item" id="mn-profile" onclick="swPM('profile',1)">
+  <div class="mn-item on" id="mn-profile" onclick="swPM('profile',0)">
     <span class="mn-icon">🧭</span><span>定位</span>
+  </div>
+  <div class="mn-item" id="mn-topic" onclick="swPM('topic',1)">
+    <span class="mn-icon">🎯</span><span>選題</span>
   </div>
   <div class="mn-item" id="mn-script" onclick="swPM('script',2)">
     <span class="mn-icon">🎬</span><span>口播</span>
@@ -3303,7 +3303,7 @@ function goPage(pageId) {
   if (targetPage) {
     targetPage.classList.add('active');
       if (pageId === 'workspace') {
-      swP('topic', sidebarItemFor('topic'));
+      swP('profile', sidebarItemFor('profile'));
     }
   } else {
     toast('🚧 頁面開發中：' + pageId);
