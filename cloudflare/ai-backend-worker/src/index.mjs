@@ -103,6 +103,15 @@ const TAIWAN_CASUAL_TONE_RULES = `
 「啊」= 音調放鬆。
 「……」= 自動放慢拉長。`;
 
+const CONTENT_FIRST_COPY_RULES = `
+內容優先規則：
+你是專業台灣口播文案撰寫師。
+規則一：先寫完整的商品或服務相關內容，語氣詞（欸/啊/喔/啦）只佔全文 10% 以下。
+規則二：文案必須包含：開場鉤子、痛點、解法、CTA。
+規則三：禁止生成只有語氣詞沒有實質內容的文案。
+規則四：台灣繁體中文，口語化但有內容。
+規則五：台灣口語規則只能修飾內容，不能取代內容；每一句都必須提供觀點、案例、細節、原因、解法或行動。`;
+
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -151,11 +160,12 @@ function buildSystemPrompt({ type, fmt, tone, systemPrompt }) {
     parts.push('以下規則是附加安全與語氣規則，不可以覆蓋前面指定的功能邏輯、輸出格式、欄位名稱或使用者要求。');
     parts.push(TIKTOK_COMPLIANCE_RULES);
     parts.push(TAIWAN_CASUAL_TONE_RULES);
+    if (normalized === 'script' || normalized === 'marketing') parts.push(CONTENT_FIRST_COPY_RULES);
   }
 
   if (normalized === 'script') {
     parts.push(`本次腳本格式：${fmt === 'simple' ? '純口播格式' : '分鏡腳本格式'}。本次語氣：${tone || 'casual'}。`);
-    parts.push('如果是分鏡腳本，必須保留【開場鉤子】【段落一】【段落二】【段落三】【行動呼籲】以及「秒數、口說、畫面、剪輯提示」等原本結構。所有口說文案加總約 300-500 個中文字，適合 1-2 分鐘口播。台灣口語規則只套用在「口說」文案，不要讓畫面與剪輯欄位變得鬆散。');
+    parts.push('如果是分鏡腳本，必須保留【開場鉤子】【段落一】【段落二】【行動呼籲】以及「秒數、口說、畫面、剪輯提示」等原本結構。預設所有口說文案加總約 200 個中文字，適合 60 秒口播。台灣口語規則只套用在「口說」文案，不要讓畫面與剪輯欄位變得鬆散。');
   }
   if (normalized === 'marketing') {
     parts.push('行銷文案要保留說服力與平台感；若輸出 hashtag，數量最多 5 個，且不可套用與腳本行業無關的品牌或分類標籤。');

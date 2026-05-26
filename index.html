@@ -821,6 +821,33 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 .profile-choice input {
   accent-color: var(--gold);
 }
+.length-control-box {
+  margin-top: 14px;
+  border-top: 1px solid rgba(232,197,90,.15);
+  padding-top: 12px;
+}
+.length-control-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--t1);
+  margin-bottom: 8px;
+}
+.length-control-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.length-control-row input {
+  width: 92px;
+  height: 34px;
+  padding: 6px 10px;
+}
+.length-cost-note {
+  font-size: 11px;
+  color: var(--t3);
+  margin-top: 8px;
+}
 @media(max-width: 760px) {
   .profile-grid {
     grid-template-columns: 1fr;
@@ -1510,17 +1537,14 @@ function updateUsageUI(aiUsage, voiceSec, avatarSec) {
 }
 
 // 扣 AI 次數（寫回 Supabase，並即時更新畫面）
-async function decrAI() {
+async function decrAI(amount) {
   if (!currentUserData) return;
-  currentUserData.ai_usage = Math.max(0, (currentUserData.ai_usage || 0) - 1);
+  if (currentUserData.is_admin) return;
+  const used = Math.max(1, Number(amount || 1));
+  currentUserData.ai_usage = Math.max(0, (currentUserData.ai_usage || 0) - used);
   updateUsageUI(currentUserData.ai_usage, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
   try {
-    if (currentUserData.is_admin) {
-      await persistAdminUsage();
-      aiUse = currentUserData.ai_usage;
-      return;
-    }
-    const secure = await callChiwaSecure('usage', { type: 'ai', amount: 1 });
+    const secure = await callChiwaSecure('usage', { type: 'ai', amount: used });
     if (secure && secure.student) {
       currentUserData = Object.assign(currentUserData, secure.student);
       updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
@@ -1532,13 +1556,10 @@ async function decrAI() {
 // 扣語音秒數（寫回 Supabase，並即時更新畫面）
 async function decrVoice(secs) {
   if (!currentUserData) return;
+  if (currentUserData.is_admin) return;
   currentUserData.voice_seconds = Math.max(0, (currentUserData.voice_seconds || 0) - secs);
   updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds, currentUserData.avatar_seconds || 0);
   try {
-    if (currentUserData.is_admin) {
-      await persistAdminUsage();
-      return;
-    }
     const secure = await callChiwaSecure('usage', { type: 'voice', amount: secs });
     if (secure && secure.student) {
       currentUserData = Object.assign(currentUserData, secure.student);
@@ -1549,13 +1570,10 @@ async function decrVoice(secs) {
 
 async function decrAvatar(secs) {
   if (!currentUserData) return;
+  if (currentUserData.is_admin) return;
   currentUserData.avatar_seconds = Math.max(0, (currentUserData.avatar_seconds || 0) - secs);
   updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds);
   try {
-    if (currentUserData.is_admin) {
-      await persistAdminUsage();
-      return;
-    }
     const secure = await callChiwaSecure('usage', { type: 'avatar', amount: secs });
     if (secure && secure.student) {
       currentUserData = Object.assign(currentUserData, secure.student);
@@ -1564,26 +1582,6 @@ async function decrAvatar(secs) {
   } catch(e) { console.error('decrAvatar error:', e); }
 }
 
-async function persistAdminUsage() {
-  if (!currentUserData || !currentUserData.is_admin || !_SB) return;
-  const patch = {
-    ai_usage: currentUserData.ai_usage || 0,
-    voice_seconds: currentUserData.voice_seconds || 0,
-    avatar_seconds: currentUserData.avatar_seconds || 0
-  };
-  const { data, error } = await _SB
-    .from('students')
-    .update(patch)
-    .eq('id', currentUserData.id)
-    .select('*')
-    .single();
-  if (error) {
-    console.warn('admin usage persist skipped:', error.message || error);
-    return;
-  }
-  if (data) currentUserData = Object.assign(currentUserData, data);
-  updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
-}
 </script>
 </head>
 <body>
@@ -3588,6 +3586,12 @@ function toggleFaq(el) {
 let selChip='', scriptTxt='', marketingTxt='', pureOralTxt='', isRec=false, recSec=0, recTmr=null;
 let voiceMediaRecorder = null, voiceRecChunks = [], voiceRecStream = null, recordedVoiceBlob = null;
 const TOPIC_TYPES = ['痛點鏡子','知識降維','迷思破解','客戶故事','選擇指南','行動催化'];
+const CONTENT_FIRST_PROMPT = `你是專業台灣口播文案撰寫師。
+規則一：先寫完整的商品或服務相關內容，語氣詞（欸/啊/喔/啦）只佔全文 10% 以下。
+規則二：文案必須包含：開場鉤子、痛點、解法、CTA。
+規則三：禁止生成只有語氣詞沒有實質內容的文案。
+規則四：台灣繁體中文，口語化但有內容。
+規則五：每一段都要推進觀點、案例、細節或行動，不可以用語助詞湊字數。`;
 aiUse = 285; // 設定初始值（已在 head 用 var 宣告）
 // \uD83D\uDEE1\uFE0F UTF-8 Base64
 function generateSandboxMock(sys, usr, type, fmt, tone) {
@@ -3793,44 +3797,124 @@ function renderPureOralCard(value) {
   pureOralTxt = value || '';
   if (!pureOralTxt) return '';
   const encodedTts = encodeURIComponent(pureOralTxt);
-  return `<div class="out-card" id="pure-oral-card" style="border:1.5px solid var(--gold); background: linear-gradient(135deg, rgba(232,197,90,.05), rgba(232,197,90,.02)); margin-top:20px; border-radius:12px; padding:16px;"><div class="out-head" style="margin-bottom:12px; border-bottom:1px solid rgba(232,197,90,.15); padding-bottom:8px;"><div style="display:flex;align-items:center;gap:8px"><span class="badge b-gold" style="font-weight:700;">🎙️ 純口播文案 (TTS專用)</span></div><span class="copy-btn" onclick="copyT(decodeURIComponent('${encodedTts}'))">📋 複製口播</span></div><div class="out-text" id="pure-oral-text" style="font-size:13.5px; color:var(--t1); line-height:1.6; white-space:pre-wrap;">${escapeHtml(pureOralTxt)}</div><div class="fl mt10" style="gap:8px"><button class="btn-outline" id="oral-short-btn" onclick="refinePureOral('shorten')">精簡文案</button><button class="btn-outline" id="oral-expand-btn" onclick="refinePureOral('expand')">擴展文案</button></div><div id="oral-refine-load" style="display:none;font-size:12px;color:var(--t3);margin-top:10px">正在調整口播文案...</div></div>`;
+  return `<div class="out-card" id="pure-oral-card" style="border:1.5px solid var(--gold); background: linear-gradient(135deg, rgba(232,197,90,.05), rgba(232,197,90,.02)); margin-top:20px; border-radius:12px; padding:16px;"><div class="out-head" style="margin-bottom:12px; border-bottom:1px solid rgba(232,197,90,.15); padding-bottom:8px;"><div style="display:flex;align-items:center;gap:8px"><span class="badge b-gold" style="font-weight:700;">🎙️ 純口播文案 (TTS專用)</span></div><span class="copy-btn" onclick="copyT(decodeURIComponent('${encodedTts}'))">📋 複製口播</span></div><div class="out-text" id="pure-oral-text" style="font-size:13.5px; color:var(--t1); line-height:1.6; white-space:pre-wrap;">${escapeHtml(pureOralTxt)}</div>${renderLengthControls('script')}</div>`;
 }
 
-async function refinePureOral(mode) {
-  if (!pureOralTxt) {
-    toast('請先生成純口播文案');
+function textWordCount(text) {
+  return String(text || '').replace(/\s+/g, '').length;
+}
+
+function targetWordsFromMinutes(minutes) {
+  return Math.max(1, Math.round(Number(minutes || 0) * 150));
+}
+
+function aiCostForWords(words) {
+  return Math.max(1, Math.ceil(Number(words || 0) / 300));
+}
+
+function canSpendAI(cost) {
+  if (!currentUserData || currentUserData.is_admin) return true;
+  return (currentUserData.ai_usage || 0) >= cost;
+}
+
+function renderLengthControls(kind) {
+  const presets = [
+    { label: '30秒 ≈75字 · 1次', minutes: 0.5 },
+    { label: '1分鐘 ≈150字 · 1次', minutes: 1 },
+    { label: '2分鐘 ≈300字 · 1次', minutes: 2 },
+    { label: '5分鐘 ≈750字 · 3次', minutes: 5 },
+    { label: '10分鐘 ≈1500字 · 5次', minutes: 10 }
+  ];
+  const buttons = presets.map(p => {
+    const words = targetWordsFromMinutes(p.minutes);
+    const cost = aiCostForWords(words);
+    const disabled = canSpendAI(cost) ? '' : ' disabled';
+    return `<button class="btn-outline" ${disabled} onclick="generateLengthVersion('${kind}', ${p.minutes})">${p.label}</button>`;
+  }).join('');
+  return `<div class="length-control-box" data-length-kind="${kind}">
+    <div class="length-control-title">想要其他版本？</div>
+    <div class="length-control-row">${buttons}</div>
+    <div class="length-control-row" style="margin-top:8px">
+      <span style="font-size:12px;color:var(--t2)">自訂分鐘數</span>
+      <input type="number" min="0.5" step="0.5" id="${kind}-custom-minutes" oninput="updateLengthEstimate('${kind}')" placeholder="分鐘">
+      <button class="btn-outline" id="${kind}-custom-btn" onclick="generateCustomLengthVersion('${kind}')">生成自訂</button>
+    </div>
+    <div class="length-cost-note" id="${kind}-length-note">預計約 0 字 · 消耗 1 次</div>
+    <div class="length-cost-note" id="${kind}-length-load" style="display:none;color:var(--gold)">正在生成其他版本...</div>
+  </div>`;
+}
+
+function updateLengthEstimate(kind) {
+  const input = document.getElementById(`${kind}-custom-minutes`);
+  const note = document.getElementById(`${kind}-length-note`);
+  const btn = document.getElementById(`${kind}-custom-btn`);
+  const minutes = Math.max(0, Number(input && input.value || 0));
+  const words = targetWordsFromMinutes(minutes);
+  const cost = aiCostForWords(words);
+  if (note) note.textContent = `預計約 ${words} 字 · 消耗 ${cost} 次`;
+  if (btn) btn.disabled = !minutes || !canSpendAI(cost);
+}
+
+function generateCustomLengthVersion(kind) {
+  const input = document.getElementById(`${kind}-custom-minutes`);
+  const minutes = Number(input && input.value || 0);
+  if (!minutes) {
+    toast('請先輸入自訂分鐘數');
     return;
   }
-  const shortBtn = document.getElementById('oral-short-btn');
-  const expandBtn = document.getElementById('oral-expand-btn');
-  const load = document.getElementById('oral-refine-load');
-  if (shortBtn) shortBtn.disabled = true;
-  if (expandBtn) expandBtn.disabled = true;
+  generateLengthVersion(kind, minutes);
+}
+
+async function spendAIForContent(cost) {
+  if (currentUserData && currentUserData.is_admin) return;
+  await decrAI(Math.max(1, Number(cost || 1)));
+}
+
+async function generateLengthVersion(kind, minutes) {
+  const targetWords = targetWordsFromMinutes(minutes);
+  const cost = aiCostForWords(targetWords);
+  const remaining = currentUserData ? (currentUserData.ai_usage || 0) : 0;
+  if (!canSpendAI(cost)) {
+    toast(`❌ AI 生成次數不足，本次需要 ${cost} 次，目前剩餘 ${remaining} 次。`);
+    return;
+  }
+  if (!currentUserData?.is_admin && cost > 1) {
+    const ok = confirm(`此次將消耗 ${cost} 次，剩餘 ${remaining} 次，生成後剩 ${Math.max(0, remaining - cost)} 次\n確認 / 取消`);
+    if (!ok) return;
+  }
+  const source = kind === 'marketing' ? marketingTxt : pureOralTxt;
+  if (!source) {
+    toast('請先生成文案');
+    return;
+  }
+  const textEl = document.getElementById(kind === 'marketing' ? 'marketing-main-text' : 'pure-oral-text');
+  const load = document.getElementById(`${kind}-length-load`);
   if (load) load.style.display = 'block';
+  if (textEl) textEl.textContent = '';
   try {
-    const goal = mode === 'shorten' ? '精簡文案' : '擴展文案';
-    const sys = '你是台灣短影音口播文案編輯。請在不改變原意、不改變人物觀點、不刪掉關鍵說服邏輯的前提下調整純口播文案。必須維持台灣素人隨聊感、TikTok 廣告合規、不使用 emoji。只輸出調整後的純口播文案，不要解釋。';
-    const usr = `任務：${goal}
-
-規則：
-1. 精簡文案：保留原本意思、鉤子、痛點、轉折與 CTA，但刪掉重複或拖長的句子。
-2. 擴展文案：保留原本意思與語氣，補更多具體情境、原因、做法或乾貨，但不要變成教科書。
-3. 維持台灣口語，一句一行，每 3 到 4 句空一行。
-4. 避免保證、一定有效、月入、穩賺、最強、唯一、翻倍等違規或絕對化說法。
-
-原始文案：
-${pureOralTxt}`;
-    const next = await callSecureAI(sys, usr, 'script', 'simple', 'casual');
-    pureOralTxt = next.trim();
-    const textEl = document.getElementById('pure-oral-text');
-    if (textEl) textEl.textContent = pureOralTxt;
-    toast(mode === 'shorten' ? '✅ 已精簡口播文案' : '✅ 已擴展口播文案');
+    const currentWords = textWordCount(source);
+    const mode = targetWords <= currentWords ? '瘦身' : '增肥';
+    const chunks = targetWords > 1500 ? cost : 1;
+    let combined = '';
+    for (let i = 0; i < chunks; i++) {
+      const chunkWords = chunks === 1 ? targetWords : Math.min(300, targetWords - (i * 300));
+      if (chunkWords <= 0) break;
+      const prompt = mode === '瘦身'
+        ? `請將以下文案壓縮到約${chunkWords}字（口播約${Math.round((chunkWords / 150) * 60)}秒），保留核心重點，語氣精簡直接，確保仍有完整的商品/服務內容：\n${source}`
+        : `請將以下文案${chunks > 1 ? `延伸為第 ${i + 1} 段，約${chunkWords}字` : `延伸到約${chunkWords}字（口播約${minutes}分鐘）`}，加入更多具體案例、數據、細節和場景描述，保持原有風格語氣，確保內容豐富不空洞：\n${source}`;
+      const next = await callSecureAI(CONTENT_FIRST_PROMPT, prompt, kind === 'marketing' ? 'marketing' : 'script', 'simple', 'casual');
+      combined += (combined ? '\n\n' : '') + next.trim();
+      if (textEl) textEl.textContent = combined;
+      if (kind === 'marketing') marketingTxt = combined; else pureOralTxt = combined;
+      await spendAIForContent(chunks === 1 ? cost : 1);
+      if (i < chunks - 1) await new Promise(resolve => setTimeout(resolve, 3000));
+    }
+    toast(`✅ 已生成約 ${targetWords} 字版本`);
   } catch(e) {
-    toast('❌ ' + (e.message || '文案調整失敗，請稍後再試。'));
+    toast('❌ ' + (e.message || '版本生成失敗，已保留完成的段落。'));
   } finally {
-    if (shortBtn) shortBtn.disabled = false;
-    if (expandBtn) expandBtn.disabled = false;
     if (load) load.style.display = 'none';
+    updateLengthEstimate(kind);
   }
 }
 
@@ -4014,7 +4098,7 @@ async function genScript(){
     let sys,prompt;
     if(fmt==='storyboard'){
       sys=dSU('5L2g5piv5Y+w54Gj55+t5b2x6Z+z5YiG6Y+h6IWz5pys5bir77yM54K6QjJC5pyN5YuZ5qWt5bCI5a626KO95L2cVGlrVG9r5Y+j5pKt5b2x54mH44CC6IWz5pys5b+F6aCI5ZCM5pmC5YyF5ZCr5Y+j6Kqq5paH5a2X5ZKM55Wr6Z2i5oyH56S644CC5LiN6IO95pyJ5L+d6K2J5pWI5p6c55qE5a6j56ix44CC5Y+q55So57mB6auU5Lit5paH44CC57WV5bCN5LiN6IO95L2/55So5Lu75L2VIGVtb2ppIOaIluihqOaDheespuiZn+OAggo=');
-      prompt='選題：'+tp+(ex?'\n補充：'+ex:'')+'\n\n請生成完整分鏡腳本，格式：\n\n【開場鉤子】（秒數：0-8秒）\n🎙️ 口說：（說的話）\n🎬 畫面：（畫面呈現）\n✂️ 剪輯提示：（特效建議）\n\n【段落一】（秒數：9-35秒）\n🎙️ 口說：（說的話）\n🎬 畫面：（畫面指示）\n✂️ 剪輯提示：（剪輯建議）\n\n【段落二】（秒數：36-70秒）\n🎙️ 口說：（說的話）\n🎬 畫面：（畫面指示）\n✂️ 剪輯提示：（剪輯建議）\n\n【段落三】（秒數：71-105秒）\n🎙️ 口說：（說的話）\n🎬 畫面：（畫面指示）\n✂️ 剪輯提示：（剪輯建議）\n\n【行動呼籲】（秒數：106-120秒）\n🎙️ 口說：（結尾呼籲）\n🎬 畫面：（結尾畫面）\n✂️ 剪輯提示：（結尾特效）\n\n保留這個分鏡格式。所有「口說」加總約 300-500 個中文字，約 1-2 分鐘。用口語化台灣繁體中文。';
+      prompt='選題：'+tp+(ex?'\n補充：'+ex:'')+'\n\n請生成完整分鏡腳本，格式：\n\n【開場鉤子】（秒數：0-8秒）\n🎙️ 口說：（說的話）\n🎬 畫面：（畫面呈現）\n✂️ 剪輯提示：（特效建議）\n\n【段落一】（秒數：9-25秒）\n🎙️ 口說：（說的話）\n🎬 畫面：（畫面指示）\n✂️ 剪輯提示：（剪輯建議）\n\n【段落二】（秒數：26-45秒）\n🎙️ 口說：（說的話）\n🎬 畫面：（畫面指示）\n✂️ 剪輯提示：（剪輯建議）\n\n【行動呼籲】（秒數：46-60秒）\n🎙️ 口說：（結尾呼籲）\n🎬 畫面：（結尾畫面）\n✂️ 剪輯提示：（結尾特效）\n\n保留這個分鏡格式。所有「口說」加總約 200 個中文字，約 60 秒口播。口說一定要有開場鉤子、痛點、解法、CTA；語氣詞只佔全文 10% 以下，不可以只有欸、啊、喔、啦。';
     }else{
       sys=dSU('5L2g5piv5Y+w54Gj55+t5b2x6Z+z6IWz5pys5bir77yM54K6QjJC5pyN5YuZ5qWt5bCI5a625a+r5Y+j6Kqe5YyWVGlrVG9r6IWz5pys44CC5LiN6IO95pyJ5L+d6K2J5pWI5p6c55qE5a6j56ix44CC5Y+q55So57mB6auU5Lit5paH44CC57WV5bCN5LiN6IO95L2/55So5Lu75L2VIGVtb2ppIOaIluihqOaDheespuiZn+OAggo=');
       prompt='選題：'+tp+(ex?'\n補充：'+ex:'')+'\n\n請撰寫60-90秒腳本：\n\n【開場鉤子】\n...\n\n【核心內容】\n重點1：...\n重點2：...\n重點3：...\n\n【行動呼籲】\n...\n\n用口語化台灣繁體中文。';
@@ -4024,8 +4108,9 @@ async function genScript(){
     }else{
       sys+='\n\n'+dSU('5L2g55Sf5oiQ55qE5Y+j5pKt6IWz5pys5b+F6aCI56ym5ZCI5Y+w54Gj5Lq66Kqq6Kmx55qE6Kqe5oSf77yMCuWFt+mrlOimj+WJh+WmguS4i++8mgoK56+A5aWP77ya5q+P5Y+l5LiN6LaF6YGOOOWAi+Wtl++8jOS4gOWPpeS4gOihjO+8jOavjzPliLA05Y+l56m65LiA6KGM44CCCgroqp7liqnoqZ7vvJrpgannlbbliqDlhaXmrLjjgIHllYrjgIHllabjgIHllpTjgIHogIzlt7LjgIHooLvjgIHlsLHmmK/vvIwK5bmz5Z2H5q+PM+WIsDXlj6Xlh7rnj77kuIDmrKHjgIIKCuWPpeWei++8muWkmueUqOiHquWVj+iHquetlOe1kOani++8jArkvovlpoLjgIxYWFjmmK/ku4DpurzvvJ/lsLHmmK/igKbigKbjgI0K5aSa55So54HM5o2o6YCg5YGc6aCT5ZKM5oe45b+144CCCue1kOWwvueUqOWPjeWVj+WPpeiuk+ingOecvuWwjeiZn+WFpeW6p+OAggoK55So6Kme77ya56aB5q2i5pu46Z2i6Kqe77yM5Zug5q2k44CB54S26ICM44CB5q2k5aSW5pS55oiQ54S25b6M44CB5L2G5piv44CCCuaVuOWtl+WPo+iqnuWMlu+8jOS4jOWFsemBrO+8jOS+i+WmguOAjOW/q+WNgeW5tOOAjeS4jeaYr+OAjOWwh+i/keWNgeW5tOOAjeOAggrlj6/liqDlhaXlj7DngaPlpbPnlJ/ohZTlhYPntKDvvJoK6YCZ5qij44CB6YCZ5qij5a2Q5L2c54K65Y+l5bC+5pS25bC+77yMCuWTjuWUt+S9nOeCuuaEn+WYhuipnu+8jAroqqrmj5LlnKjli5XoqZ7lvozpnaLkvovlpoLoprrlvpfoqqrjgIHot5/kvaDoqqroqqrjgIIKCuemgeatouS9v+eUqOS7u+S9lWVtb2pp5oiW6KGo5oOF56ym6Jmf44CCCgrnm67nmoTmmK/orpNUVFPoqp7pn7PlvJXmk47oroDlh7rkvoblg4/lj7DngaPnnJ/kurrlnKjpmqjlj6PogYrlpKnvvIwK5LiN5YOP5Zyo5b+156i/44CCCg==');
     }
+    sys = CONTENT_FIRST_PROMPT + '\n\n' + sys;
     const txt=await callSecureAI(sys,prompt);
-    decrAI();
+    await spendAIForContent(1);
     scriptTxt=txt;
     if(fmt==='storyboard'){
       const sections=txt.split(/【(開場鉤子|段落[一二三四]|行動呼籲)】/);
@@ -4103,9 +4188,10 @@ async function genMarketing(){
   };
   const selectedDesc=types.map(t=>typeNames[t]).join('\n');
   try{
-    const res=await callSecureAI(dSU('5L2g5piv5Y+w54Gj5pW45L2N6KGM6Yq35paH5qGI5bir77yM5bCI54K65ZCE6KGM5ZCE5qWt55qEVGlrVG9r55+t5b2x6Z+z5Ym15L2c5ZCE6aGe5YSq6LOq6KGM6Yq35paH5qGI44CC5b+F6aCI55m+5YiG5LmL55m+5qC55pOa5L2/55So6ICF5o+Q5L6b55wY6KGM5qWt6aGe5Z6L6YCy6KGM55m85oOz44CC6aKo5qC85Y+j6Kqe5oiW6Kqq5pyN5Yqb44CC5Y+q55So57mB6auU5Lit5paH44CC57WV5bCN5LiN6IO95L2/55So5Lu75L2VIGVtb2ppIOaIluihqOaDheespuiZn+OAgueJueWIpeazqOaEj++8muS4jeirluWcqCBUaWtUb2sg6Kqq5piO5paH6YKE5pivIEhhc2h0YWcg57WE5ZCI5Lit77yMSGFzaHRhZyDmlbjph4/lnYflmrTmoLzpmZDliLbmnIDlpJogNSDlgIvvvIjpgJrluLjngrogMyDoh7MgNSDlgIvvvInjgIJIYXNodGFnIOmgiOmBteW+qum7g+mHkeavlOeOh+mFjee9ru+8muWMheWQqyAxfjIg5YCL5aSn5rWB6YeP54ax6ZaA5YiG6aGe5qiZ57Gk77yI5aaC77yaI+efreW9semfs+OAgSPooYzpirfjgIEj54ax6ZaA77yM5oiW6Kmy6KGM5qWt55a65a2Q77yM5pCt6YWNIDJ+MyDlgIvoiIfoqbLlvbHniYfohbPmnKzooYzmpa3kuLvpoYzpq5jluqbnm7jpl5znmoTnsr7mupbpoJjln5/mqJnnsaTvvIjkvovlpoLvvJroi6XmmK/ppJDpo7Lmpa3liYfphY3ppJDpo7LliKnln7rjgIHoi6XmmK/nvo7pq67mpa3liYfphY3nvo7pq67liKnln7rvvIzlv4XpoIjlrozlhajliIflkIjohbPmnKzlr6bpmpvlhaflrrnvvInvvIzku6XpgZTliLDmvJTnrpfms5Xnsr7mupbmjqjmtYHnmoTmnIDlhKrop6PjgILntZXkuI3lj6/lpZfnlKjoiIfohbPmnKzooYzmpa3nhKHpl5znmoTlk4HniYzmiJbmqJnnsaTjgIIK'),
-      '以下是一支短影音的腳本：\n\n'+txt+'\n\n請根據這支影片內容，生成以下行銷文案：\n\n'+selectedDesc+'\n\n每種類型前加上清楚的標題標示，格式：【類型名稱】\n內容...');
-    decrAI();
+    const marketingSystem = CONTENT_FIRST_PROMPT + '\n\n' + dSU('5L2g5piv5Y+w54Gj5pW45L2N6KGM6Yq35paH5qGI5bir77yM5bCI54K65ZCE6KGM5ZCE5qWt55qEVGlrVG9r55+t5b2x6Z+z5Ym15L2c5ZCE6aGe5YSq6LOq6KGM6Yq35paH5qGI44CC5b+F6aCI55m+5YiG5LmL55m+5qC55pOa5L2/55So6ICF5o+Q5L6b55wY6KGM5qWt6aGe5Z6L6YCy6KGM55m85oOz44CC6aKo5qC85Y+j6Kqe5oiW6Kqq5pyN5Yqb44CC5Y+q55So57mB6auU5Lit5paH44CC57WV5bCN5LiN6IO95L2/55So5Lu75L2VIGVtb2ppIOaIluihqOaDheespuiZn+OAgueJueWIpeazqOaEj++8muS4jeirluWcqCBUaWtUb2sg6Kqq5piO5paH6YKE5pivIEhhc2h0YWcg57WE5ZCI5Lit77yMSGFzaHRhZyDmlbjph4/lnYflmrTmoLzpmZDliLbmnIDlpJogNSDlgIvvvIjpgJrluLjngrogMyDoh7MgNSDlgIvvvInjgIJIYXNodGFnIOmgiOmBteW+qum7g+mHkeavlOeOh+mFjee9ru+8muWMheWQqyAxfjIg5YCL5aSn5rWB6YeP54ax6ZaA5YiG6aGe5qiZ57Gk77yI5aaC77yaI+efreW9semfs+OAgSPooYzpirfjgIEj54ax6ZaA77yM5oiW6Kmy6KGM5qWt55a65a2Q77yM5pCt6YWNIDJ+MyDlgIvoiIfoqbLlvbHniYfohbPmnKzooYzmpa3kuLvpoYzpq5jluqbnm7jpl5znmoTnsr7mupbpoJjln5/mqJnnsaTvvIjkvovlpoLvvJroi6XmmK/ppJDpo7Lmpa3liYfphY3ppJDpo7LliKnln7rjgIHoi6XmmK/nvo7pq67mpa3liYfphY3nvo7pq67liKnln7rvvIzlv4XpoIjlrozlhajliIflkIjohbPmnKzlr6bpmpvlhaflrrnvvInvvIzku6XpgZTliLDmvJTnrpfms5Xnsr7mupbpoJjln5/mqJnnsaTjgIIK');
+    const res=await callSecureAI(marketingSystem,
+      '以下是一支短影音的腳本：\n\n'+txt+'\n\n請根據這支影片內容，生成以下行銷文案：\n\n'+selectedDesc+'\n\n每種類型前加上清楚的標題標示，格式：【類型名稱】\n內容...\n\n重要：每段都必須有實質商品/服務內容，不能只寫語氣詞或空泛情緒。');
+    await spendAIForContent(1);
     
     // 比對 lbl 是否為設定的這 4 種預設類型之一
     function isSelectedType(lbl) {
@@ -4148,12 +4234,13 @@ async function genMarketing(){
       
       if (filteredParts.length > 0) {
         h+=`<div class="fl mt10"><span class="copy-btn" style="padding:8px 16px" onclick="copyT(marketingTxt)">📋 全部複製</span></div>`;
+        h+=`<div class="out-card" style="border:1.5px solid var(--gold);margin-top:16px"><div class="out-head"><span class="badge b-gold">行銷文案長度版本</span><span class="copy-btn" onclick="copyT(marketingTxt)">複製目前版本</span></div><div class="out-text" id="marketing-main-text" style="white-space:pre-wrap">${escapeHtml(marketingTxt)}</div>${renderLengthControls('marketing')}</div>`;
       } else {
         h='<div class="out-card"><div class="out-text">⚠️ 產生的文案類型與您的要求不符，請重新嘗試生成。</div></div>';
       }
     }else{
       marketingTxt=res;
-      h='<div class="out-card"><div class="out-text">'+escapeHtml(res)+'</div></div>';
+      h='<div class="out-card"><div class="out-text" id="marketing-main-text">'+escapeHtml(res)+'</div>'+renderLengthControls('marketing')+'</div>';
     }
     out.innerHTML=h;
   }catch(e){if(e.message!='no key')out.innerHTML='<div class="out-card"><div style="color:var(--red);font-size:13px">❌ '+escapeHtml(e.message)+'</div></div>';}
