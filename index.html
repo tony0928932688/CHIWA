@@ -1121,7 +1121,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const _SB = (window.supabase && typeof supabase.createClient === 'function')
   ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
-const CARTESIA_VOICE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/cartesia-voice';
+const CHIWA_VOICE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-voice';
 const CHIWA_SECURE_API_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-secure-api';
 const CHIWA_AVATAR_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-avatar';
 const CHIWA_AVATAR_R2_WORKER_URL = 'https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev';
@@ -3767,10 +3767,19 @@ async function getVoiceSessionToken() {
   return data && data.session && data.session.access_token ? data.session.access_token : '';
 }
 
-async function callCartesiaVoiceJson(action, payload) {
+function voiceServiceErrorMessage(error, fallback) {
+  const raw = String(error && error.message || error || '').trim();
+  if (/session|login|jwt|unauthorized|forbidden/i.test(raw)) return '請使用 Google 登入後再使用語音功能。';
+  if (/quota|seconds|limit|insufficient/i.test(raw)) return '語音額度不足，請確認剩餘秒數後再試。';
+  if (/audio|file|clip|format|mime/i.test(raw)) return '音檔格式或內容無法辨識，請改用清楚的 MP3、WAV 或 M4A 音檔。';
+  if (/network|fetch|timeout|temporarily/i.test(raw)) return '語音服務暫時連線不穩，請稍後再試。';
+  return fallback || '語音服務暫時無法使用，請稍後再試。';
+}
+
+async function callChiwaVoiceJson(action, payload) {
   const token = await getVoiceSessionToken();
   if (!token) throw new Error('請使用 Google 登入後再使用語音克隆功能。');
-  const res = await fetch(CARTESIA_VOICE_FUNCTION_URL, {
+  const res = await fetch(CHIWA_VOICE_FUNCTION_URL, {
     method: 'POST',
     headers: {
       'Authorization': 'Bearer ' + token,
@@ -3779,7 +3788,7 @@ async function callCartesiaVoiceJson(action, payload) {
     body: JSON.stringify({ action, ...(payload || {}) })
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.detail || data.error || '語音服務暫時無法使用');
+  if (!res.ok) throw new Error(voiceServiceErrorMessage(data.detail || data.error, '語音服務暫時無法使用'));
   return data;
 }
 
@@ -3803,13 +3812,13 @@ async function loadCloudVoices() {
   const token = await getVoiceSessionToken();
   if (!token) return;
   try {
-    const data = await callCartesiaVoiceJson('list', {});
+    const data = await callChiwaVoiceJson('list', {});
     if (Array.isArray(data.systemVoices) && data.systemVoices.length) {
       defaultVoices = data.systemVoices;
     }
     if (Array.isArray(data.voices)) saveStoredVoices(data.voices);
   } catch(e) {
-    console.warn('cloud voices skipped:', e.message || e);
+    console.warn('voice sync skipped:', e.message || e);
   }
 }
 
@@ -4019,9 +4028,9 @@ async function deleteVoice(id) {
     
     saveStoredVoices(cloned);
     try {
-      await callCartesiaVoiceJson('delete', { voice_id: id });
+      await callChiwaVoiceJson('delete', { voice_id: id });
     } catch(e) {
-      console.warn('cloud voice delete skipped:', e.message || e);
+      console.warn('voice delete skipped:', e.message || e);
     }
     
     toast('🗑️ 克隆聲音已成功刪除');
@@ -4052,7 +4061,7 @@ async function cloneV() {
     return;
   }
 
-  toast('⚙️ 正在建立您的 Cartesia 聲音模型...');
+  toast('⚙️ 正在建立您的專屬聲音模型...');
 
   try {
     const form = new FormData();
@@ -4061,13 +4070,13 @@ async function cloneV() {
     form.append('recording_seconds', String(recSec));
     form.append('audio', recordedVoiceBlob, `chiwa-voice-${Date.now()}.${ext}`);
 
-    const res = await fetch(CARTESIA_VOICE_FUNCTION_URL, {
+    const res = await fetch(CHIWA_VOICE_FUNCTION_URL, {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + token },
       body: form
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.detail || data.error || '語音克隆失敗');
+    if (!res.ok) throw new Error(voiceServiceErrorMessage(data.detail || data.error, '語音克隆失敗，請稍後再試。'));
 
     const cloned = getStoredVoices();
     cloned.unshift(data.voice);
@@ -4155,7 +4164,7 @@ async function generateTTSAudio() {
     const token = await getVoiceSessionToken();
     if (!token) throw new Error('請使用 Google 登入後再生成語音。');
 
-    const res = await fetch(CARTESIA_VOICE_FUNCTION_URL, {
+    const res = await fetch(CHIWA_VOICE_FUNCTION_URL, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + token,
@@ -4170,7 +4179,7 @@ async function generateTTSAudio() {
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || data.error || '語音生成失敗');
+      throw new Error(voiceServiceErrorMessage(data.detail || data.error, '語音生成失敗，請稍後再試。'));
     }
 
     const audioBlob = await res.blob();
