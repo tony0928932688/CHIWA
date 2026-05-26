@@ -296,6 +296,9 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,107,.3)}50%{box-shadow:0 0 0 10px rgba(255,107,107,0)}}
 .rec-timer{text-align:center;font-size:22px;font-weight:900;color:var(--red);margin-bottom:4px}
 .rec-hint{text-align:center;font-size:12px;color:var(--t3);margin-bottom:16px}
+.drop-upload{border:1px dashed rgba(212,175,55,.28);border-radius:10px;padding:12px;background:rgba(255,255,255,.015);transition:border-color .15s,background .15s,box-shadow .15s;cursor:pointer}
+.drop-upload:hover,.drop-upload.dragover{border-color:var(--gold);background:rgba(232,197,90,.07);box-shadow:0 0 0 1px rgba(232,197,90,.08) inset}
+.drop-upload .drop-hint{font-size:11px;color:var(--t3);text-align:center;margin-top:8px;line-height:1.5}
 .cg{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 @media(max-width:600px){.cg{grid-template-columns:1fr}}
 .cc{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:18px;transition:transform .2s}
@@ -2332,8 +2335,11 @@ async function decrAvatar(secs) {
       <div id="rbtn" class="rec-btn" onclick="togRec()">🎤</div>
       <div class="rec-timer" id="rtimer">00:00</div>
       <div class="rec-hint" id="rhint">點擊開始錄音</div>
-      <input type="file" id="voice-file-input" accept="audio/*" style="display:none" onchange="handleVoiceFileUpload(event)">
-      <button class="btn-outline" style="width:100%;margin-top:10px" onclick="document.getElementById('voice-file-input').click()">📁 上傳聲音檔</button>
+      <div class="drop-upload" data-drop-kind="voice" onclick="document.getElementById('voice-file-input').click()">
+        <input type="file" id="voice-file-input" accept="audio/*" style="display:none" onchange="handleVoiceFileUpload(event)">
+        <button class="btn-outline" type="button" style="width:100%;margin-top:0" onclick="event.stopPropagation();document.getElementById('voice-file-input').click()">📁 上傳聲音檔</button>
+        <div class="drop-hint">或把聲音檔拖曳到這裡</div>
+      </div>
       <div class="divider"></div>
       <div class="label mb14">步驟 2：為聲音命名</div>
       <input type="text" id="vname" placeholder="例：Tony 專業版" style="margin-bottom:14px">
@@ -2371,18 +2377,20 @@ async function decrAvatar(secs) {
       <div style="font-size:11px;color:var(--t3)">單支最高 02:00，依生成影片秒數扣除</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px" class="script-grid">
-      <div style="background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px">
+      <div class="drop-upload" data-drop-kind="avatar-video" onclick="document.getElementById('avatar-video-input').click()" style="background:var(--card);border:1px dashed rgba(212,175,55,.28);border-radius:12px;padding:16px">
         <div style="font-size:14px;font-weight:800;margin-bottom:8px">步驟 1：上傳形象影片</div>
         <div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">請使用臉部正面、光線清楚、沒有遮擋的影片。</div>
         <input type="file" id="avatar-video-input" accept="video/*" style="display:none" onchange="handleAvatarFileUpload(event,'video')">
-        <button class="btn-outline" style="width:100%" onclick="document.getElementById('avatar-video-input').click()">🎥 選擇形象影片</button>
+        <button class="btn-outline" type="button" style="width:100%" onclick="event.stopPropagation();document.getElementById('avatar-video-input').click()">🎥 選擇形象影片</button>
+        <div class="drop-hint">或把影片拖曳到這裡</div>
         <div id="avatar-video-status" style="font-size:11px;color:var(--t3);margin-top:10px">尚未選擇影片</div>
       </div>
-      <div style="background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px">
+      <div class="drop-upload" data-drop-kind="avatar-audio" onclick="document.getElementById('avatar-audio-input').click()" style="background:var(--card);border:1px dashed rgba(212,175,55,.28);border-radius:12px;padding:16px">
         <div style="font-size:14px;font-weight:800;margin-bottom:8px">步驟 2：上傳人聲音檔</div>
         <div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">音檔長度會作為本次形象影片扣秒依據，最高 120 秒。</div>
         <input type="file" id="avatar-audio-input" accept="audio/*" style="display:none" onchange="handleAvatarFileUpload(event,'audio')">
-        <button class="btn-outline" style="width:100%" onclick="document.getElementById('avatar-audio-input').click()">🎧 選擇人聲音檔</button>
+        <button class="btn-outline" type="button" style="width:100%" onclick="event.stopPropagation();document.getElementById('avatar-audio-input').click()">🎧 選擇人聲音檔</button>
+        <div class="drop-hint">或把音檔拖曳到這裡</div>
         <div id="avatar-audio-status" style="font-size:11px;color:var(--t3);margin-top:10px">尚未選擇音檔</div>
       </div>
     </div>
@@ -3429,7 +3437,8 @@ async function callSecureAI(sys, usr, typeOverride, fmtOverride, toneOverride) {
       type: type,
       userPrompt: usr,
       fmt: finalFmt || 'storyboard',
-      tone: finalTone || 'casual'
+      tone: finalTone || 'casual',
+      systemPrompt: sys || ''
     };
 
     const r = await _sf('https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev/', {
@@ -3785,19 +3794,73 @@ function setVoiceRecordingReady(blob, seconds, label) {
   if (hint) hint.textContent = (label || '聲音檔已就緒') + ' (' + recSec + ' 秒)';
 }
 
-function handleVoiceFileUpload(event) {
-  const input = event && event.target;
-  const file = input && input.files && input.files[0];
-  if (!file) return;
+function resetFileInput(input) {
+  if (input) input.value = '';
+}
+
+function assignDroppedFile(inputId, file) {
+  const input = document.getElementById(inputId);
+  if (!input || !file || typeof DataTransfer === 'undefined') return input;
+  try {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+  } catch(e) {
+    console.warn('drop file assignment skipped:', e.message || e);
+  }
+  return input;
+}
+
+function bindDropUploadZones() {
+  document.querySelectorAll('[data-drop-kind]').forEach(function(zone) {
+    if (zone.dataset.dropBound === '1') return;
+    zone.dataset.dropBound = '1';
+    ['dragenter', 'dragover'].forEach(function(name) {
+      zone.addEventListener(name, function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        zone.classList.add('dragover');
+      });
+    });
+    ['dragleave', 'drop'].forEach(function(name) {
+      zone.addEventListener(name, function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (name === 'dragleave' && zone.contains(event.relatedTarget)) return;
+        zone.classList.remove('dragover');
+      });
+    });
+    zone.addEventListener('drop', function(event) {
+      const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+      if (!file) return;
+      const kind = zone.dataset.dropKind;
+      if (kind === 'voice') {
+        handleVoiceFile(file, assignDroppedFile('voice-file-input', file));
+      } else if (kind === 'avatar-video') {
+        handleAvatarSelectedFile(file, 'video', assignDroppedFile('avatar-video-input', file));
+      } else if (kind === 'avatar-audio') {
+        handleAvatarSelectedFile(file, 'audio', assignDroppedFile('avatar-audio-input', file));
+      }
+    });
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bindDropUploadZones);
+} else {
+  bindDropUploadZones();
+}
+
+function handleVoiceFile(file, input) {
   const audioExtOk = /\.(mp3|wav|m4a|aac|webm|ogg|flac)$/i.test(file.name || '');
   if ((!file.type || !file.type.startsWith('audio/')) && !audioExtOk) {
     toast('❌ 請上傳音訊檔案。');
-    input.value = '';
+    resetFileInput(input);
     return;
   }
   if (file.size < 1000) {
     toast('❌ 音檔太小，請上傳清楚的 30-60 秒聲音檔。');
-    input.value = '';
+    resetFileInput(input);
     return;
   }
 
@@ -3815,6 +3878,13 @@ function handleVoiceFileUpload(event) {
     toast('✅ 聲音檔已載入，可以命名並建立語音模型。');
   };
   audio.src = url;
+}
+
+function handleVoiceFileUpload(event) {
+  const input = event && event.target;
+  const file = input && input.files && input.files[0];
+  if (!file) return;
+  handleVoiceFile(file, input);
 }
 
 // 錄音模組控制
@@ -4127,15 +4197,12 @@ function setAvatarStatus(type, text, ok) {
   el.style.color = ok ? 'var(--green)' : 'var(--t3)';
 }
 
-function handleAvatarFileUpload(event, type) {
-  const input = event && event.target;
-  const file = input && input.files && input.files[0];
-  if (!file) return;
-
+function handleAvatarSelectedFile(file, type, input) {
   if (type === 'video') {
-    if (!file.type.startsWith('video/')) {
+    const videoExtOk = /\.(mp4|mov|m4v|webm)$/i.test(file.name || '');
+    if ((!file.type || !file.type.startsWith('video/')) && !videoExtOk) {
       toast('❌ 請上傳影片檔。');
-      input.value = '';
+      resetFileInput(input);
       return;
     }
     avatarVideoFile = file;
@@ -4144,9 +4211,10 @@ function handleAvatarFileUpload(event, type) {
     return;
   }
 
-  if (!file.type.startsWith('audio/')) {
+  const audioExtOk = /\.(mp3|wav|m4a|aac|webm|ogg|flac)$/i.test(file.name || '');
+  if ((!file.type || !file.type.startsWith('audio/')) && !audioExtOk) {
     toast('❌ 請上傳音檔。');
-    input.value = '';
+    resetFileInput(input);
     return;
   }
 
@@ -4169,6 +4237,13 @@ function handleAvatarFileUpload(event, type) {
     toast('❌ 無法讀取音檔秒數。');
   };
   audio.src = url;
+}
+
+function handleAvatarFileUpload(event, type) {
+  const input = event && event.target;
+  const file = input && input.files && input.files[0];
+  if (!file) return;
+  handleAvatarSelectedFile(file, type, input);
 }
 
 async function callChiwaAvatarJson(action, payload) {

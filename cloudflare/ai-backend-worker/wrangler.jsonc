@@ -1,0 +1,10 @@
+{
+  "$schema": "../avatar-r2-worker/node_modules/wrangler/config-schema.json",
+  "name": "delicate-unit-52chiwa-ai-backend",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-05-26",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}
