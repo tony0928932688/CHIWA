@@ -231,6 +231,10 @@ async function signItem(supabase: ReturnType<typeof createClient>, row: any) {
   return formatItem(row, playUrl);
 }
 
+function isValidTtsRow(row: any) {
+  return !!row?.storage_path && !!String(row?.transcript || "").trim();
+}
+
 async function debitVoiceCredits(supabase: ReturnType<typeof createClient>, student: any, credits: number) {
   const current = Math.max(0, Math.round(Number(student.voice_credits ?? VOICE_CREDITS)));
   if (current < credits) {
@@ -287,6 +291,10 @@ async function handleTts(supabase: ReturnType<typeof createClient>, student: any
   }
 
   const audio = await upstream.arrayBuffer();
+  if (audio.byteLength < 1000) {
+    console.error("voice upstream returned empty audio", audio.byteLength);
+    return json({ error: "voice_service_error" }, 502);
+  }
   const estimatedSeconds = estimateSeconds(text);
   const measuredSeconds = wavDurationSeconds(audio);
   const seconds = measuredSeconds && measuredSeconds <= Math.max(estimatedSeconds * 3, 300) ? measuredSeconds : estimatedSeconds;
@@ -339,10 +347,25 @@ async function listTts(supabase: ReturnType<typeof createClient>, student: any) 
     .eq("student_id", student.id)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
-    .limit(30);
+    .limit(100);
   if (error) return json({ error: "voice_list_error" }, 500);
+
+  const rows = data || [];
+  const invalidIds = rows.filter((row) => !isValidTtsRow(row)).map((row) => row.id).filter(Boolean);
+  if (invalidIds.length) {
+    const { error: cleanupError } = await supabase
+      .from("voice_generations")
+      .update({ deleted_at: new Date().toISOString(), status: "invalid" })
+      .eq("student_id", student.id)
+      .in("id", invalidIds);
+    if (cleanupError) console.error("voice history cleanup error", cleanupError.message);
+  }
+
   const items = [];
-  for (const row of data || []) items.push(await signItem(supabase, row));
+  for (const row of rows.filter(isValidTtsRow).slice(0, 30)) {
+    const item = await signItem(supabase, row);
+    if (item.playUrl) items.push(item);
+  }
   return json({ items, student: publicStudent(student) });
 }
 
@@ -357,8 +380,16 @@ async function deleteTts(supabase: ReturnType<typeof createClient>, student: any
     .is("deleted_at", null)
     .maybeSingle();
   if (!row) return json({ ok: true });
-  await supabase.from("voice_generations").update({ deleted_at: new Date().toISOString() }).eq("id", id).eq("student_id", student.id);
-  if (row.storage_path) await supabase.storage.from("voice-outputs").remove([row.storage_path]);
+  const { error: deleteError } = await supabase
+    .from("voice_generations")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("student_id", student.id);
+  if (deleteError) return json({ error: "voice_delete_error" }, 500);
+  if (row.storage_path) {
+    const { error: storageError } = await supabase.storage.from("voice-outputs").remove([row.storage_path]);
+    if (storageError) console.error("voice storage delete error", storageError.message);
+  }
   return json({ ok: true });
 }
 
@@ -372,7 +403,10 @@ async function downloadTts(supabase: ReturnType<typeof createClient>, student: a
     .eq("student_id", student.id)
     .is("deleted_at", null)
     .maybeSingle();
-  if (error || !row?.storage_path) return json({ error: "voice_file_not_found" }, 404);
+  if (error || !isValidTtsRow(row)) {
+    if (row?.id) await supabase.from("voice_generations").update({ deleted_at: new Date().toISOString(), status: "invalid" }).eq("id", id).eq("student_id", student.id);
+    return json({ error: "voice_file_not_found" }, 404);
+  }
   if (!row.downloaded_at) {
     await supabase.from("voice_generations").update({ downloaded_at: new Date().toISOString() }).eq("id", id).eq("student_id", student.id);
   }

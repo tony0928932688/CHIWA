@@ -5181,7 +5181,7 @@ function updateVoiceCreditButton() {
 function renderTTSHistory(items) {
   const list = document.getElementById('tts-history-list');
   if (!list) return;
-  ttsHistory = Array.isArray(items) ? items : [];
+  ttsHistory = Array.isArray(items) ? items.filter(item => item && item.id && item.playUrl && String(item.text || '').trim()) : [];
   if (!ttsHistory.length) {
     list.innerHTML = '<div style="font-size:12px;color:var(--t3)">尚未生成語音檔</div>';
     return;
@@ -5247,11 +5247,14 @@ async function downloadTTS(id) {
 
 async function deleteTTS(id) {
   if (!id || !confirm('確定要刪除此語音檔嗎？')) return;
+  const previousHistory = ttsHistory.slice();
+  renderTTSHistory(ttsHistory.filter(item => item && item.id !== id));
   try {
     await callChiwaVoiceJson('delete_tts', { generation_id: id });
     toast('🗑️ 語音檔已刪除');
     loadTTSHistory();
   } catch(e) {
+    renderTTSHistory(previousHistory);
     toast('❌ ' + (e.message || '語音檔刪除失敗，請稍後再試。'));
   }
 }
