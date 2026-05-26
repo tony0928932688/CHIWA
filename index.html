@@ -744,6 +744,36 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
   justify-content: space-between;
   gap: 16px;
 }
+.avatar-video-card {
+  display: block;
+}
+.avatar-video-shell {
+  --avatar-video-max-h: 52vh;
+  width: min(100%, 860px, calc(var(--avatar-video-max-h) * 16 / 9));
+  aspect-ratio: 16 / 9;
+  max-height: var(--avatar-video-max-h);
+  margin: 10px auto 0;
+  border-radius: 10px;
+  background: #000;
+  overflow: hidden;
+}
+.avatar-video-shell.compact {
+  --avatar-video-max-h: 260px;
+  width: min(100%, 520px, calc(var(--avatar-video-max-h) * 16 / 9));
+  border-radius: 8px;
+}
+.avatar-video-frame {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  background: #000;
+}
+@media(max-width: 700px) {
+  .avatar-video-shell {
+    --avatar-video-max-h: 44vh;
+  }
+}
 .ap-controls {
   display: flex;
   align-items: center;
@@ -4359,7 +4389,9 @@ function renderAvatarLibrary(items) {
           <div style="font-size:12px;font-weight:800;color:${statusColor}">${avatarLibraryStatusText(status)}</div>
         </div>
         ${ready ? `
-          <video src="${escapeHtml(item.previewUrl || item.downloadUrl)}" controls style="width:100%;border-radius:8px;background:#000;margin-top:10px;max-height:260px"></video>
+          <div class="avatar-video-shell compact">
+            <video class="avatar-video-frame" src="${escapeHtml(item.previewUrl || item.downloadUrl)}" controls></video>
+          </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
             <a class="btn-outline" href="${escapeHtml(item.downloadUrl || item.previewUrl)}" download style="display:inline-flex;align-items:center;justify-content:center">下載影片</a>
           </div>
@@ -4572,9 +4604,11 @@ function renderAvatarTaskResult(data) {
     const previewUrl = data.previewUrl || data.downloadUrl;
     const downloadUrl = data.downloadUrl || data.previewUrl;
     result.innerHTML = `
-      <div class="audio-player-box">
+      <div class="audio-player-box avatar-video-card">
         <div style="font-size:14px;font-weight:800;margin-bottom:10px;color:var(--green)">✅ 形象克隆影片已生成</div>
-        <video src="${escapeHtml(previewUrl)}" controls style="width:100%;border-radius:10px;background:#000"></video>
+        <div class="avatar-video-shell">
+          <video class="avatar-video-frame" src="${escapeHtml(previewUrl)}" controls></video>
+        </div>
         <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
           <a class="btn-outline" href="${escapeHtml(downloadUrl)}" download style="display:inline-flex;align-items:center;justify-content:center">下載影片</a>
         </div>
