@@ -40,7 +40,7 @@
 </script>
 <style>
 :root {
-  --bg:#0a0a0f; --card:#111118; --card2:#1a1a24; --card3:#0d0d18; --bdr:#252535;
+  --bg:#0a0a0f; --card:#111118; --card2:#1a1a24; --card3:#0d0d18; --bdr:#3f4058; --bdr-strong:rgba(232,197,90,.44); --field-bdr:rgba(245,224,160,.34);
   --gold:#e8c55a; --gold-l:#f5e0a0; --gold-d:#8a7230;
   --blue:#4a9eff; --blue-bg:rgba(74,158,255,.08); --blue-bdr:rgba(74,158,255,.25);
   --green:#3ecf8e; --green-bg:rgba(62,207,142,.06); --green-bdr:rgba(62,207,142,.15);
@@ -74,14 +74,15 @@ a{color:inherit;text-decoration:none}
 .mo-note{font-size:11px;color:var(--t3);margin-top:8px;text-align:center}
 
 /* ── SHARED ── */
-textarea,input[type=text],input[type=password],input[type=tel],.tinput{width:100%;background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:10px 14px;color:var(--t1);font-size:13px;font-family:'Noto Sans TC',sans-serif;outline:none;line-height:1.6}
+textarea,input[type=text],input[type=password],input[type=tel],input[type=email],input[type=number],select,.tinput{width:100%;background:var(--card);border:1.5px solid var(--field-bdr);border-radius:10px;padding:10px 14px;color:var(--t1);font-size:13px;font-family:'Noto Sans TC',sans-serif;outline:none;line-height:1.6;box-shadow:inset 0 0 0 1px rgba(255,255,255,.025)}
 textarea{resize:vertical;min-height:80px}
-textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
+textarea:hover,input:hover,select:hover,.tinput:hover{border-color:rgba(245,224,160,.58)}
+textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,197,90,.14),inset 0 0 0 1px rgba(255,255,255,.04)}
 .btn-gold{display:inline-flex;align-items:center;gap:6px;background:var(--gold);color:#0a0a0f;border:none;border-radius:100px;padding:10px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:opacity .2s;white-space:nowrap}
 .btn-gold:hover{opacity:.85}
 .btn-gold:disabled{opacity:.35;cursor:not-allowed}
-.btn-outline{display:inline-flex;align-items:center;gap:6px;background:transparent;color:var(--t2);border:1px solid var(--bdr);border-radius:100px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .15s}
-.btn-outline:hover{border-color:var(--gold-d);color:var(--t1)}
+.btn-outline{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.015);color:var(--t2);border:1.5px solid var(--bdr-strong);border-radius:100px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .15s}
+.btn-outline:hover{border-color:rgba(245,224,160,.74);color:var(--t1);box-shadow:0 0 0 1px rgba(232,197,90,.18)}
 .next-step-btn{margin-top:12px;width:100%;justify-content:center;background:linear-gradient(135deg,var(--gold),#f4dd78);color:#08080c;border:none;box-shadow:0 8px 20px rgba(232,197,90,.18);font-weight:900}
 .next-step-btn:hover{color:#08080c;transform:translateY(-1px);box-shadow:0 10px 26px rgba(232,197,90,.24)}
 .btn-line{display:inline-flex;align-items:center;gap:8px;background:var(--line);color:#fff;border:none;border-radius:100px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .2s}
@@ -98,7 +99,7 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 .out-card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:10px;transition:border-color .2s}
 .out-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
 .out-text{font-size:13px;color:var(--t1);line-height:1.75;white-space:pre-wrap}
-.copy-btn{font-size:11px;color:var(--t3);cursor:pointer;padding:3px 8px;border-radius:6px;border:1px solid var(--bdr);background:var(--card2);transition:all .15s;white-space:nowrap;flex-shrink:0}
+.copy-btn{font-size:11px;color:var(--t3);cursor:pointer;padding:3px 8px;border-radius:6px;border:1px solid var(--bdr-strong);background:var(--card2);transition:all .15s;white-space:nowrap;flex-shrink:0}
 .copy-btn:hover{color:var(--gold);border-color:var(--gold-d)}
 .divider{height:1px;background:var(--bdr);margin:20px 0}
 .fl{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
@@ -276,9 +277,9 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 .sb-logo-t{font-size:15px;font-weight:900;color:var(--gold)}
 .sb-logo-s{font-size:10px;color:var(--t3);margin-top:1px}
 .sb-nav{flex:1;padding:8px 6px;overflow-y:auto}
-.sb-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;cursor:pointer;color:var(--t2);transition:all .15s;margin-bottom:2px;font-size:13px}
-.sb-item:hover{background:var(--card2);color:var(--t1)}
-.sb-item.on{background:rgba(74,158,255,.08);color:var(--blue);border-left:3px solid var(--blue)}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;cursor:pointer;color:var(--t2);transition:all .15s;margin-bottom:2px;font-size:13px;border:1px solid transparent}
+.sb-item:hover{background:var(--card2);color:var(--t1);border-color:rgba(245,224,160,.42)}
+.sb-item.on{background:rgba(74,158,255,.08);color:var(--blue);border-left:3px solid var(--blue);border-color:rgba(74,158,255,.45)}
 .sb-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0}
 .sb-usage{margin:8px;background:rgba(232,197,90,.05);border:1px solid rgba(232,197,90,.15);border-radius:10px;padding:10px 12px}
 .sb-ul{font-size:10px;color:var(--t3)}
@@ -295,19 +296,20 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 .panel{display:none}
 .panel.on{display:block}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
-.chip{padding:7px 14px;border-radius:100px;border:1px solid var(--bdr);cursor:pointer;font-size:12px;color:var(--t2);transition:all .15s;background:var(--card);white-space:nowrap}
-.chip:hover{border-color:var(--gold-d);color:var(--t1)}
+.chip{padding:7px 14px;border-radius:100px;border:1.5px solid var(--bdr-strong);cursor:pointer;font-size:12px;color:var(--t2);transition:all .15s;background:var(--card);white-space:nowrap}
+.chip:hover{border-color:rgba(245,224,160,.74);color:var(--t1);box-shadow:0 0 0 1px rgba(232,197,90,.16)}
 .chip.on{background:var(--gold);color:#0a0a0f;border-color:var(--gold);font-weight:700}
 .vtabs{display:flex;gap:4px;margin-bottom:18px}
-.vtab{padding:8px 18px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--t2);transition:all .15s;border:1px solid transparent}
-.vtab.on{background:rgba(232,197,90,.12);color:var(--gold);border-color:rgba(232,197,90,.3)}
+.vtab{padding:8px 18px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--t2);transition:all .15s;border:1.5px solid rgba(245,224,160,.22)}
+.vtab:hover{border-color:rgba(245,224,160,.58);color:var(--t1)}
+.vtab.on{background:rgba(232,197,90,.12);color:var(--gold);border-color:rgba(232,197,90,.58)}
 .rec-btn{width:72px;height:72px;border-radius:50%;background:var(--card2);border:2px solid var(--bdr);display:flex;align-items:center;justify-content:center;cursor:pointer;margin:0 auto 12px;transition:all .2s;font-size:26px}
 .rec-btn:hover{border-color:var(--red)}
 .rec-btn.rng{background:rgba(255,107,107,.12);border-color:var(--red);animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,107,.3)}50%{box-shadow:0 0 0 10px rgba(255,107,107,0)}}
 .rec-timer{text-align:center;font-size:22px;font-weight:900;color:var(--red);margin-bottom:4px}
 .rec-hint{text-align:center;font-size:12px;color:var(--t3);margin-bottom:16px}
-.drop-upload{border:1px dashed rgba(212,175,55,.28);border-radius:10px;padding:12px;background:rgba(255,255,255,.015);transition:border-color .15s,background .15s,box-shadow .15s;cursor:pointer}
+.drop-upload{border:1.5px dashed rgba(245,224,160,.42);border-radius:10px;padding:12px;background:rgba(255,255,255,.015);transition:border-color .15s,background .15s,box-shadow .15s;cursor:pointer}
 .drop-upload:hover,.drop-upload.dragover{border-color:var(--gold);background:rgba(232,197,90,.07);box-shadow:0 0 0 1px rgba(232,197,90,.08) inset}
 .drop-upload .drop-hint{font-size:11px;color:var(--t3);text-align:center;margin-top:8px;line-height:1.5}
 .cg{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
@@ -389,7 +391,7 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 .ubar-wrap{width:100px;height:4px;background:var(--bdr);border-radius:2px;overflow:hidden;display:inline-block;vertical-align:middle}
 .ubar-fill{height:100%;border-radius:2px;background:var(--gold)}
 .ubar-fill.low{background:var(--red)}
-.admin-btn-sm{font-size:11px;padding:4px 12px;border-radius:6px;border:1px solid var(--bdr);background:var(--card2);color:var(--t2);cursor:pointer;transition:all .15s;font-family:'Noto Sans TC',sans-serif}
+.admin-btn-sm{font-size:11px;padding:4px 12px;border-radius:6px;border:1px solid var(--bdr-strong);background:var(--card2);color:var(--t2);cursor:pointer;transition:all .15s;font-family:'Noto Sans TC',sans-serif}
 .admin-btn-sm:hover{border-color:var(--gold-d);color:var(--gold)}
 .admin-btn-sm.danger:hover{border-color:var(--red);color:var(--red)}
 .add-student-form{padding:20px;display:none}
@@ -688,7 +690,7 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 }
 .voice-card {
   background: var(--card);
-  border: 1px solid var(--bdr);
+  border: 1.5px solid rgba(245,224,160,.28);
   border-radius: 14px;
   padding: 16px;
   display: flex;
@@ -697,7 +699,8 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
   transition: all 0.15s;
 }
 .voice-card:hover {
-  border-color: var(--gold-d);
+  border-color: rgba(245,224,160,.68);
+  box-shadow: 0 0 0 1px rgba(232,197,90,.14);
 }
 .voice-card-l {
   display: flex;
@@ -733,7 +736,7 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 6px;
-  border: 1px solid var(--bdr);
+  border: 1px solid var(--bdr-strong);
   background: var(--card2);
   transition: all 0.15s;
 }
@@ -746,7 +749,7 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
 /* 產生的語音播放器 */
 .audio-player-box {
   background: rgba(74, 158, 255, 0.05);
-  border: 1px solid rgba(74, 158, 255, 0.2);
+  border: 1.5px solid rgba(74, 158, 255, 0.36);
   border-radius: 12px;
   padding: 14px 18px;
   margin-top: 14px;
@@ -769,7 +772,7 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
   gap: 12px;
   align-items: center;
   background: rgba(255,255,255,.035);
-  border: 1px solid rgba(255,255,255,.06);
+  border: 1.5px solid rgba(245,224,160,.22);
   border-radius: 10px;
   padding: 12px;
 }
@@ -1342,12 +1345,14 @@ async function finishStudentLogin(data, loginId) {
 
   if (data.ai_usage === null || data.ai_usage === undefined) data.ai_usage = 300;
   if (data.voice_credits === null || data.voice_credits === undefined) data.voice_credits = data.voice_minutes !== undefined && data.voice_minutes !== null ? Math.round(Number(data.voice_minutes) * 150) : 10000;
-  if (data[AVATAR_MINUTES_KEY] === null || data[AVATAR_MINUTES_KEY] === undefined) data[AVATAR_MINUTES_KEY] = data.avatar_seconds !== undefined && data.avatar_seconds !== null ? Math.round((Number(data.avatar_seconds) / 60) * 10) / 10 : 30;
+  if (data.avatar_seconds === null || data.avatar_seconds === undefined) data.avatar_seconds = data[AVATAR_MINUTES_KEY] !== undefined && data[AVATAR_MINUTES_KEY] !== null ? Math.round(Number(data[AVATAR_MINUTES_KEY]) * 60) : 1800;
+  if (data[AVATAR_MINUTES_KEY] === null || data[AVATAR_MINUTES_KEY] === undefined) data[AVATAR_MINUTES_KEY] = Math.round((Number(data.avatar_seconds) / 60) * 10) / 10;
   data.voice_minutes = Math.round((Number(data.voice_credits || 0) / 150) * 10) / 10;
   data.voice_seconds = Math.round(Number(data.voice_minutes || 0) * 60);
-  data.avatar_seconds = Math.round(Number(data[AVATAR_MINUTES_KEY] || 0) * 60);
+  data.avatar_seconds = Math.max(0, Math.round(Number(data.avatar_seconds || 0)));
+  data[AVATAR_MINUTES_KEY] = Math.round((data.avatar_seconds / 60) * 10) / 10;
 
-  updateUsageUI(data.ai_usage, data.voice_credits, data[AVATAR_MINUTES_KEY]);
+  updateUsageUI(data.ai_usage, data.voice_credits, data.avatar_seconds);
 
   const mub = document.getElementById('mobile-usage-bar');
   if (mub) mub.style.display = 'none';
@@ -1418,7 +1423,7 @@ async function loginWithGoogleEmail(email) {
     if (!student) throw new Error('此 Google 帳號尚未開通學員權限。');
     if (err) err.style.display = 'none';
     await finishStudentLogin(student, email);
-    if (secure.reset) toast('新月份開始，AI 次數、語音字數與影像克隆分鐘已自動重置。');
+    if (secure.reset) toast('新週期開始，AI 次數、語音字數與影像克隆秒數已自動重置。');
   } catch(e) {
     console.error('Google login profile error:', e);
     if (err) {
@@ -1614,25 +1619,32 @@ function _nextResetDate() {
   return new Date(now.getFullYear(), now.getMonth() + 1, 1);
 }
 
-// 次數、語音字數與影像分鐘數顯示全站同步更新
+function _avatarSeconds(primary, minutesValue, fallbackSeconds) {
+  if (primary !== null && primary !== undefined) return Math.max(0, Math.round(_num(primary, fallbackSeconds)));
+  if (minutesValue !== null && minutesValue !== undefined) return Math.max(0, Math.round(_num(minutesValue, fallbackSeconds / 60) * 60));
+  return fallbackSeconds;
+}
+
+// 次數、語音字數與影像秒數顯示全站同步更新
 function updateUsageUI(aiUsage, voiceValue, avatarValue) {
   aiUsage = Math.max(0, Math.round(_num(aiUsage, 0)));
   const voiceCredits = _voiceCredits(
     currentUserData && currentUserData.voice_credits !== undefined ? currentUserData.voice_credits : voiceValue,
     10000
   );
-  const avatarMin = _quotaMinutes(
-    currentUserData && currentUserData[AVATAR_MINUTES_KEY] !== undefined ? currentUserData[AVATAR_MINUTES_KEY] : avatarValue,
-    currentUserData && currentUserData.avatar_seconds !== undefined ? currentUserData.avatar_seconds : null,
-    30
+  const avatarSeconds = _avatarSeconds(
+    currentUserData && currentUserData.avatar_seconds !== undefined ? currentUserData.avatar_seconds : avatarValue,
+    currentUserData && currentUserData[AVATAR_MINUTES_KEY] !== undefined ? currentUserData[AVATAR_MINUTES_KEY] : null,
+    1800
   );
+  const avatarMin = Math.round((avatarSeconds / 60) * 10) / 10;
   if (currentUserData) {
     currentUserData.ai_usage = aiUsage;
     currentUserData.voice_credits = voiceCredits;
     currentUserData.voice_minutes = Math.round((voiceCredits / 150) * 10) / 10;
     currentUserData[AVATAR_MINUTES_KEY] = avatarMin;
     currentUserData.voice_seconds = Math.round(currentUserData.voice_minutes * 60);
-    currentUserData.avatar_seconds = Math.round(avatarMin * 60);
+    currentUserData.avatar_seconds = avatarSeconds;
   }
   // --- PC 側邊欄 AI 次數 ---
   const un = document.getElementById('unum');
@@ -1683,20 +1695,20 @@ function updateUsageUI(aiUsage, voiceValue, avatarValue) {
     mvn.style.color = voiceColor;
   }
 
-  // --- PC 側邊欄影像克隆分鐘 ---
+  // --- PC 側邊欄影像克隆秒數 ---
   const avnSb = document.getElementById('avatar-num-sidebar');
   const avbSb = document.getElementById('avatar-bar-sidebar');
-  const avfmt = _fmtMin(avatarMin);
-  if (avnSb) avnSb.innerHTML = avfmt + '<span style="font-size:10px;color:var(--t3);font-weight:400">/30分</span>';
-  if (avbSb) avbSb.style.width = Math.max(0, Math.min(100, Math.round((avatarMin / 30) * 100))) + '%';
+  const avfmt = _fmtCredits(avatarSeconds);
+  if (avnSb) avnSb.innerHTML = avfmt + '<span style="font-size:10px;color:var(--t3);font-weight:400">/1,800秒</span>';
+  if (avbSb) avbSb.style.width = Math.max(0, Math.min(100, Math.round((avatarSeconds / 1800) * 100))) + '%';
 
-  // --- 形象克隆面板剩餘分鐘 ---
+  // --- 形象克隆面板剩餘秒數 ---
   const arem = document.getElementById('avatar-rem-seconds');
-  if (arem) arem.innerHTML = avfmt + '<span style="font-size:11px;color:var(--t3);font-weight:400">/30分</span>';
+  if (arem) arem.innerHTML = avfmt + '<span style="font-size:11px;color:var(--t3);font-weight:400">/1,800秒</span>';
 
   // --- 手機版頂部列形象 ---
   const mavn = document.getElementById('m-avatar-num');
-  if (mavn) mavn.textContent = avfmt + '分';
+  if (mavn) mavn.textContent = avfmt + '秒';
 
   // --- 下次重置日期 ---
   const now = new Date();
@@ -1717,16 +1729,12 @@ async function decrAI(amount) {
   if (!currentUserData) return;
   const used = Math.max(1, Number(amount || 1));
   currentUserData.ai_usage = Math.max(0, (currentUserData.ai_usage || 0) - used);
-  updateUsageUI(currentUserData.ai_usage, currentUserData.voice_credits, currentUserData[AVATAR_MINUTES_KEY]);
-  if (currentUserData.is_admin) {
-    console.log('[quota] admin AI UI decremented only', { used, ai_usage: currentUserData.ai_usage });
-    return;
-  }
+  updateUsageUI(currentUserData.ai_usage, currentUserData.voice_credits, currentUserData.avatar_seconds);
   try {
     const secure = await callChiwaSecure('usage', { type: 'ai', amount: used });
     if (secure && secure.student) {
       currentUserData = Object.assign(currentUserData, secure.student);
-      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData[AVATAR_MINUTES_KEY]);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData.avatar_seconds);
       console.log('[quota] AI usage saved to Supabase', { used, ai_usage: currentUserData.ai_usage });
     }
   } catch(e) { console.error('decrAI error:', e); }
@@ -1740,16 +1748,12 @@ async function decrVoice(charCount) {
   currentUserData.voice_credits = Math.max(0, Math.round(Number(currentUserData.voice_credits ?? 10000) - used));
   currentUserData.voice_minutes = Math.round((currentUserData.voice_credits / 150) * 10) / 10;
   currentUserData.voice_seconds = Math.round(currentUserData.voice_minutes * 60);
-  updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData[AVATAR_MINUTES_KEY]);
-  if (currentUserData.is_admin) {
-    console.log('[quota] admin voice UI decremented only', { used, voice_credits: currentUserData.voice_credits });
-    return;
-  }
+  updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData.avatar_seconds);
   try {
     const secure = await callChiwaSecure('usage', { type: 'voice', amount: used });
     if (secure && secure.student) {
       currentUserData = Object.assign(currentUserData, secure.student);
-      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData[AVATAR_MINUTES_KEY]);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData.avatar_seconds);
       console.log('[quota] voice credits saved to Supabase', { used, voice_credits: currentUserData.voice_credits });
     }
   } catch(e) { console.error('decrVoice error:', e); }
@@ -1757,20 +1761,16 @@ async function decrVoice(charCount) {
 
 async function decrAvatar(secs) {
   if (!currentUserData) return;
-  const used = Math.max(0.1, Math.ceil(Number(secs || 0) / 6) / 10);
-  currentUserData[AVATAR_MINUTES_KEY] = Math.max(0, Math.round((Number(currentUserData[AVATAR_MINUTES_KEY] ?? 30) - used) * 10) / 10);
-  currentUserData.avatar_seconds = Math.round(currentUserData[AVATAR_MINUTES_KEY] * 60);
-  updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData[AVATAR_MINUTES_KEY]);
-  if (currentUserData.is_admin) {
-    console.log('[quota] admin image clone UI decremented only', { used, avatar_minutes: currentUserData[AVATAR_MINUTES_KEY] });
-    return;
-  }
+  const used = Math.max(1, Math.round(Number(secs || 0)));
+  currentUserData.avatar_seconds = Math.max(0, Math.round(Number(currentUserData.avatar_seconds ?? 1800) - used));
+  currentUserData[AVATAR_MINUTES_KEY] = Math.round((currentUserData.avatar_seconds / 60) * 10) / 10;
+  updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData.avatar_seconds);
   try {
     const secure = await callChiwaSecure('usage', { type: 'avatar', amount: used });
     if (secure && secure.student) {
       currentUserData = Object.assign(currentUserData, secure.student);
-      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData[AVATAR_MINUTES_KEY]);
-      console.log('[quota] image clone minutes saved to Supabase', { used, avatar_minutes: currentUserData[AVATAR_MINUTES_KEY] });
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData.avatar_seconds);
+      console.log('[quota] image clone seconds saved to Supabase', { used, avatar_seconds: currentUserData.avatar_seconds });
     }
   } catch(e) { console.error('decrAvatar error:', e); }
 }
@@ -2318,7 +2318,7 @@ async function decrAvatar(secs) {
         <ul>
           <li>您須提供真實且正確的個人資料以申請服務</li>
           <li>帳號及密碼請妥善保管，不得轉讓或分享給他人使用</li>
-          <li>AI 工作台每月使用次數、語音字數及影像克隆分鐘依方案規定，超出限額需另行購買</li>
+          <li>AI 工作台每月使用次數、語音字數及影像克隆秒數依方案規定，超出限額需另行購買</li>
           <li>禁止使用本服務生成違法、侵權、誤導性或有害內容</li>
         </ul>
 
@@ -2563,8 +2563,8 @@ async function decrAvatar(secs) {
       <div style="font-size:15px;font-weight:900;color:var(--blue);font-family:'Space Mono',monospace" id="voice-num-sidebar">—<span style="font-size:10px;color:var(--t3);font-weight:400">/10,000字</span></div>
       <div class="sb-ubar"><div id="voice-bar-sidebar" style="height:100%;background:var(--blue);border-radius:2px;width:0%;transition:width .3s"></div></div>
       <div style="height:1px;background:var(--bdr);margin:8px 0"></div>
-      <div class="sb-ul" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase">影像克隆剩餘分鐘</div>
-      <div style="font-size:15px;font-weight:900;color:var(--purple);font-family:'Space Mono',monospace" id="avatar-num-sidebar">—<span style="font-size:10px;color:var(--t3);font-weight:400">/30分</span></div>
+      <div class="sb-ul" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase">影像克隆剩餘秒數</div>
+      <div style="font-size:15px;font-weight:900;color:var(--purple);font-family:'Space Mono',monospace" id="avatar-num-sidebar">—<span style="font-size:10px;color:var(--t3);font-weight:400">/1,800秒</span></div>
       <div class="sb-ubar"><div id="avatar-bar-sidebar" style="height:100%;background:var(--purple);border-radius:2px;width:0%;transition:width .3s"></div></div>
       <div style="height:1px;background:var(--bdr);margin:8px 0"></div>
       <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace">下次重置：<span id="reset-date">—</span></div>
@@ -2869,13 +2869,13 @@ async function decrAvatar(secs) {
     <div class="sec-sub">上傳正面形象影片與乾淨人聲，生成 AI 口播形象影片</div>
     <div style="background:var(--purple-bg);border:1px solid rgba(167,139,250,.25);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
       <div>
-        <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace;text-transform:uppercase">影像克隆剩餘分鐘</div>
-        <div style="font-size:15px;font-weight:900;color:var(--purple);font-family:'Space Mono',monospace" id="avatar-rem-seconds">30<span style="font-size:11px;color:var(--t3);font-weight:400">/30分</span></div>
+        <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace;text-transform:uppercase">影像克隆剩餘秒數</div>
+        <div style="font-size:15px;font-weight:900;color:var(--purple);font-family:'Space Mono',monospace" id="avatar-rem-seconds">1,800<span style="font-size:11px;color:var(--t3);font-weight:400">/1,800秒</span></div>
       </div>
       <div style="font-size:11px;color:var(--t3)">單支最高 02:00，依生成影片秒數扣除</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px" class="script-grid">
-      <div class="drop-upload" data-drop-kind="avatar-video" onclick="document.getElementById('avatar-video-input').click()" style="background:var(--card);border:1px dashed rgba(212,175,55,.28);border-radius:12px;padding:16px">
+      <div class="drop-upload" data-drop-kind="avatar-video" onclick="document.getElementById('avatar-video-input').click()" style="background:var(--card);border-radius:12px;padding:16px">
         <div style="font-size:14px;font-weight:800;margin-bottom:8px">步驟 1：上傳形象影片</div>
         <div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">請使用臉部正面、光線清楚、沒有遮擋的影片。</div>
         <input type="file" id="avatar-video-input" accept="video/*" style="display:none" onchange="handleAvatarFileUpload(event,'video')">
@@ -2883,7 +2883,7 @@ async function decrAvatar(secs) {
         <div class="drop-hint">或把影片拖曳到這裡</div>
         <div id="avatar-video-status" style="font-size:11px;color:var(--t3);margin-top:10px">尚未選擇影片</div>
       </div>
-      <div class="drop-upload" data-drop-kind="avatar-audio" onclick="document.getElementById('avatar-audio-input').click()" style="background:var(--card);border:1px dashed rgba(212,175,55,.28);border-radius:12px;padding:16px">
+      <div class="drop-upload" data-drop-kind="avatar-audio" onclick="document.getElementById('avatar-audio-input').click()" style="background:var(--card);border-radius:12px;padding:16px">
         <div style="font-size:14px;font-weight:800;margin-bottom:8px">步驟 2：上傳人聲音檔</div>
         <div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">音檔長度會作為本次影像克隆扣點依據，最高 2 分鐘。</div>
         <input type="file" id="avatar-audio-input" accept="audio/*" style="display:none" onchange="handleAvatarFileUpload(event,'audio')">
@@ -3065,7 +3065,7 @@ async function decrAvatar(secs) {
           <input type="text" id="adm-new-voice" value="10000" placeholder="語音字數" class="tinput" style="background: var(--card2)">
         </div>
         <div style="width: 140px;">
-          <input type="text" id="adm-new-avatar" value="30" placeholder="影像克隆分鐘" class="tinput" style="background: var(--card2)">
+          <input type="text" id="adm-new-avatar" value="1800" placeholder="影像克隆秒數" class="tinput" style="background: var(--card2)">
         </div>
         <button class="btn-gold" onclick="addNewStudentFromAdmin()" style="border-radius: 10px; padding: 10px 20px;">開通 / 更新</button>
       </div>
@@ -3087,7 +3087,7 @@ async function decrAvatar(secs) {
               <th>方案 / 備註</th>
               <th>AI 次數</th>
               <th>語音字數</th>
-              <th>影像克隆分鐘</th>
+              <th>影像克隆秒數</th>
               <th style="text-align: right;">權限操作</th>
             </tr>
           </thead>
@@ -4256,7 +4256,7 @@ function aiCostForWords(words) {
 }
 
 function canSpendAI(cost) {
-  if (!currentUserData || currentUserData.is_admin) return true;
+  if (!currentUserData) return true;
   return (currentUserData.ai_usage || 0) >= cost;
 }
 
@@ -4320,7 +4320,7 @@ async function generateLengthVersion(kind, minutes) {
     toast(`❌ AI 生成次數不足，本次需要 ${cost} 次，目前剩餘 ${remaining} 次。`);
     return;
   }
-  if (!currentUserData?.is_admin && cost > 1) {
+  if (cost > 1) {
     const ok = confirm(`此次將消耗 ${cost} 次，剩餘 ${remaining} 次，生成後剩 ${Math.max(0, remaining - cost)} 次\n確認 / 取消`);
     if (!ok) return;
   }
@@ -4990,7 +4990,7 @@ function renderVoiceList() {
   const container = document.getElementById('my-voices-container');
   if (!container) return;
   
-  let cloned = getStoredVoices();
+  let cloned = getStoredVoices().filter(v => v && v.id && v.name);
   
   if (cloned.length === 0) {
     container.innerHTML = `
@@ -5076,8 +5076,10 @@ async function cloneV() {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(voiceServiceErrorMessage(data.detail || data.error, '語音克隆失敗，請稍後再試。'));
 
-    const cloned = getStoredVoices();
-    cloned.unshift(data.voice);
+    const createdVoice = data.voice || data.model || null;
+    if (!createdVoice || !createdVoice.id) throw new Error('聲音模型已建立但未取得可用 ID，請重新整理後再試。');
+    const cloned = getStoredVoices().filter(v => v && v.id !== createdVoice.id);
+    cloned.unshift(createdVoice);
     saveStoredVoices(cloned);
     toast(`🎯 聲音「${name}」克隆並存檔成功！`);
     
@@ -5102,7 +5104,7 @@ function updateVoiceDropdown() {
   const select = document.getElementById('tts-voice-select');
   if (!select) return;
   
-  let cloned = getStoredVoices();
+  let cloned = getStoredVoices().filter(v => v && v.id && v.name);
   
   select.innerHTML = '';
   
@@ -5138,7 +5140,7 @@ function estimateVoiceCreditsFromText(text) {
 function updateStudentQuotaFromVoice(data) {
   if (data && data.student) {
     currentUserData = Object.assign(currentUserData || {}, data.student);
-    updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData[AVATAR_MINUTES_KEY]);
+    updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData.avatar_seconds);
     updateVoiceCreditButton();
   }
 }
@@ -5153,7 +5155,7 @@ function updateVoiceCreditButton() {
   if (!btn || !input || !currentUserData) return;
   const need = estimateVoiceCreditsFromText(input.value || '');
   const remaining = voiceCreditsRemaining();
-  btn.disabled = !!need && !currentUserData.is_admin && remaining < need;
+  btn.disabled = !!need && remaining < need;
   btn.title = btn.disabled ? `語音額度不足：此次需要 ${need} 字，目前剩餘 ${remaining} 字` : '';
 }
 
@@ -5250,7 +5252,7 @@ async function generateTTSAudio() {
 
   const chars = estimateVoiceCreditsFromText(text);
   const currentVoiceCredits = voiceCreditsRemaining();
-  if (currentUserData && !currentUserData.is_admin && currentVoiceCredits < chars) {
+  if (currentUserData && currentVoiceCredits < chars) {
     const reset = _nextResetDate();
     toast(`❌ 語音額度不足。此次需要 ${_fmtCredits(chars)} 字，你只剩 ${_fmtCredits(currentVoiceCredits)} 字。下次重置日：${reset.getFullYear()}年${reset.getMonth() + 1}月${reset.getDate()}日`);
     updateVoiceCreditButton();
@@ -5295,9 +5297,6 @@ async function generateTTSAudio() {
     load.style.display = 'none';
     btn.disabled = false;
     updateStudentQuotaFromVoice(data);
-    if (currentUserData && currentUserData.is_admin) {
-      await decrVoice(data.deductedCredits || chars);
-    }
 
     container.innerHTML = `
       <div class="audio-player-box">
@@ -5487,7 +5486,7 @@ function renderAvatarLibrary(items) {
       item.requestedSeconds ? `時長：${escapeHtml(_fmtSec(item.requestedSeconds))}` : ''
     ].filter(Boolean).join('　');
     return `
-      <div style="border:1px solid var(--bdr);border-radius:10px;padding:12px;background:rgba(255,255,255,.02)">
+      <div style="border:1.5px solid rgba(245,224,160,.24);border-radius:10px;padding:12px;background:rgba(255,255,255,.02)">
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
           <div style="min-width:180px;flex:1">
             <div style="font-size:13px;font-weight:900;color:var(--t1)">${title}</div>
@@ -5518,7 +5517,7 @@ async function loadAvatarLibrary() {
     renderAvatarLibrary(data.items || []);
     if (data.student) {
       currentUserData = Object.assign(currentUserData || {}, data.student);
-      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData[AVATAR_MINUTES_KEY]);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData.avatar_seconds);
     }
   } catch (e) {
     const message = avatarErrorText(e, '讀取形象影片失敗，請稍後再試。');
@@ -5741,11 +5740,10 @@ function renderAvatarTaskResult(data) {
 async function pollAvatarTask(taskId) {
   if (!taskId) return;
   try {
-    const avatarMinutesBeforePoll = currentUserData ? Number(currentUserData[AVATAR_MINUTES_KEY] ?? 0) : 0;
     const data = await callChiwaAvatarJson('query', { taskId });
     if (data.student) {
       currentUserData = Object.assign(currentUserData || {}, data.student);
-      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData[AVATAR_MINUTES_KEY]);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_credits, currentUserData.avatar_seconds);
     }
     renderAvatarTaskResult(data);
     if (data.status === 'SUCCESS') {
@@ -5753,12 +5751,9 @@ async function pollAvatarTask(taskId) {
       const btn = document.getElementById('avatar-generate-btn');
       if (load) load.style.display = 'none';
       if (btn) btn.disabled = false;
-      if (currentUserData && currentUserData.is_admin && Number(currentUserData[AVATAR_MINUTES_KEY] ?? 0) >= avatarMinutesBeforePoll) {
-        await decrAvatar(data.requestedSeconds || avatarAudioSeconds || 0);
-      }
       loadAvatarLibrary();
-      const usedMin = Math.max(0.1, Math.ceil(Number(data.requestedSeconds || avatarAudioSeconds || 0) / 6) / 10);
-      toast(`✅ 形象克隆完成，已扣除約 ${_fmtMin(usedMin)} 分影像克隆額度。`);
+      const usedSeconds = Math.max(1, Math.round(Number(data.requestedSeconds || avatarAudioSeconds || 0)));
+      toast(`✅ 形象克隆完成，已扣除 ${_fmtCredits(usedSeconds)} 秒影像克隆額度。`);
       return;
     }
     if (data.status === 'FAILED') {
@@ -5799,14 +5794,14 @@ async function generateAvatarClone() {
     toast('❌ 單支形象影片最高只能 2 分鐘，請裁切音檔到 120 秒內。');
     return;
   }
-  const requestedAvatarMinutes = Math.max(0.1, Math.ceil(Number(avatarAudioSeconds || 0) / 6) / 10);
-  const remainingAvatarMinutes = _quotaMinutes(
-    currentUserData && currentUserData[AVATAR_MINUTES_KEY] !== undefined ? currentUserData[AVATAR_MINUTES_KEY] : null,
+  const requestedAvatarSeconds = Math.max(1, Math.round(Number(avatarAudioSeconds || 0)));
+  const remainingAvatarSeconds = _avatarSeconds(
     currentUserData && currentUserData.avatar_seconds !== undefined ? currentUserData.avatar_seconds : null,
-    30
+    currentUserData && currentUserData[AVATAR_MINUTES_KEY] !== undefined ? currentUserData[AVATAR_MINUTES_KEY] : null,
+    1800
   );
-  if (currentUserData && !currentUserData.is_admin && remainingAvatarMinutes < requestedAvatarMinutes) {
-    toast(`❌ 影像克隆剩餘分鐘不足！本次需 ${_fmtMin(requestedAvatarMinutes)} 分，目前剩餘 ${_fmtMin(remainingAvatarMinutes)} 分。`);
+  if (currentUserData && remainingAvatarSeconds < requestedAvatarSeconds) {
+    toast(`❌ 影像克隆剩餘秒數不足！本次需 ${_fmtCredits(requestedAvatarSeconds)} 秒，目前剩餘 ${_fmtCredits(remainingAvatarSeconds)} 秒。`);
     return;
   }
 
@@ -6554,7 +6549,7 @@ renderAdminPanel = async function() {
           <td><input id="adm-note-${key}" class="tinput" value="${escapeHtml(s.note || s.plan || '')}" style="background:var(--card2);min-width:130px"></td>
           <td><input id="adm-ai-${key}" class="tinput" value="${escapeHtml(String(s.ai_usage ?? 300))}" style="background:var(--card2);width:86px"></td>
           <td><input id="adm-voice-${key}" class="tinput" value="${escapeHtml(String(s.voice_credits ?? 10000))}" style="background:var(--card2);width:96px"></td>
-          <td><input id="adm-avatar-${key}" class="tinput" value="${escapeHtml(String(s[AVATAR_MINUTES_KEY] ?? (s.avatar_seconds !== undefined ? Math.round((Number(s.avatar_seconds) / 60) * 10) / 10 : 30)))}" style="background:var(--card2);width:96px"></td>
+          <td><input id="adm-avatar-${key}" class="tinput" value="${escapeHtml(String(s.avatar_seconds ?? (s[AVATAR_MINUTES_KEY] !== undefined ? Math.round(Number(s[AVATAR_MINUTES_KEY]) * 60) : 1800)))}" style="background:var(--card2);width:96px"></td>
           <td style="text-align:right;white-space:nowrap">
             <button class="admin-btn-sm" onclick="saveStudentQuotaFromAdmin('${encodeURIComponent(id)}')">儲存</button>
             <button class="${btnClass}" onclick="toggleStudentBan('${encodeURIComponent(id)}')">${btnText}</button>
@@ -6605,7 +6600,7 @@ async function saveStudentQuotaFromAdmin(encodedId) {
   const key = adminDomKey(id);
   const ai = parseInt(document.getElementById('adm-ai-' + key)?.value || '300', 10);
   const voice = Number(document.getElementById('adm-voice-' + key)?.value || '10000');
-  const avatar = Number(document.getElementById('adm-avatar-' + key)?.value || '30');
+  const avatar = Number(document.getElementById('adm-avatar-' + key)?.value || '1800');
   const note = document.getElementById('adm-note-' + key)?.value.trim() || '';
   if (!_SB) {
     toast('❌ 資料庫尚未載入，無法儲存');
@@ -6616,9 +6611,9 @@ async function saveStudentQuotaFromAdmin(encodedId) {
     ai_usage: Number.isFinite(ai) ? ai : 300,
     voice_credits: Number.isFinite(voice) ? Math.round(voice) : 10000,
     voice_minutes: Number.isFinite(voice) ? Math.round((voice / 150) * 10) / 10 : 66.7,
-    [AVATAR_MINUTES_KEY]: Number.isFinite(avatar) ? avatar : 30,
+    [AVATAR_MINUTES_KEY]: Number.isFinite(avatar) ? Math.round((avatar / 60) * 10) / 10 : 30,
     voice_seconds: Number.isFinite(voice) ? Math.round((voice / 150) * 60) : 4000,
-    avatar_seconds: Number.isFinite(avatar) ? Math.round(avatar * 60) : 1800
+    avatar_seconds: Number.isFinite(avatar) ? Math.round(avatar) : 1800
   };
   if (note) payload.note = note;
 
@@ -6633,7 +6628,7 @@ async function saveStudentQuotaFromAdmin(encodedId) {
     return;
   }
 
-  adminLog(`💾 額度更新：${id}，AI ${payload.ai_usage} 次，語音 ${payload.voice_credits} 字，影像克隆 ${payload[AVATAR_MINUTES_KEY]} 分。`);
+  adminLog(`💾 額度更新：${id}，AI ${payload.ai_usage} 次，語音 ${payload.voice_credits} 字，影像克隆 ${payload.avatar_seconds} 秒。`);
   await renderAdminPanel();
   toast('✅ 學員額度已更新');
 }
@@ -6652,7 +6647,7 @@ addNewStudentFromAdmin = async function() {
   const note = noteInput.value.trim() || 'AI自媒體變現自學課程';
   const ai = parseInt(aiInput?.value || '300', 10);
   const voice = Number(voiceInput?.value || '10000');
-  const avatar = Number(avatarInput?.value || '30');
+  const avatar = Number(avatarInput?.value || '1800');
 
   if (!email || !email.includes('@')) {
     toast('❌ 請輸入正確的學員 Google Email');
@@ -6672,9 +6667,9 @@ addNewStudentFromAdmin = async function() {
     ai_usage: Number.isFinite(ai) ? ai : 300,
     voice_credits: Number.isFinite(voice) ? Math.round(voice) : 10000,
     voice_minutes: Number.isFinite(voice) ? Math.round((voice / 150) * 10) / 10 : 66.7,
-    [AVATAR_MINUTES_KEY]: Number.isFinite(avatar) ? avatar : 30,
+    [AVATAR_MINUTES_KEY]: Number.isFinite(avatar) ? Math.round((avatar / 60) * 10) / 10 : 30,
     voice_seconds: Number.isFinite(voice) ? Math.round((voice / 150) * 60) : 4000,
-    avatar_seconds: Number.isFinite(avatar) ? Math.round(avatar * 60) : 1800
+    avatar_seconds: Number.isFinite(avatar) ? Math.round(avatar) : 1800
   };
   const fullPayload = Object.assign({}, basePayload, {
     email: email,
@@ -6693,7 +6688,7 @@ addNewStudentFromAdmin = async function() {
     return;
   }
 
-  adminLog(`➕ 學員開通：${email}，AI ${basePayload.ai_usage} 次，語音 ${basePayload.voice_credits} 字，影像克隆 ${basePayload[AVATAR_MINUTES_KEY]} 分。`);
+  adminLog(`➕ 學員開通：${email}，AI ${basePayload.ai_usage} 次，語音 ${basePayload.voice_credits} 字，影像克隆 ${basePayload.avatar_seconds} 秒。`);
   emailInput.value = '';
   if (nameInput) nameInput.value = '';
   noteInput.value = '';

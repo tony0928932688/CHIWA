@@ -4,6 +4,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const AI_QUOTA = 300;
 const VOICE_CREDITS = 10000;
 const HEYGEN_MINUTES = 30;
+const AVATAR_SECONDS = 1800;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,7 +36,8 @@ function round1(value: number) {
 function publicStudent(row: any) {
   const voiceCredits = row.voice_credits ?? VOICE_CREDITS;
   const voiceMinutes = row.voice_minutes ?? round1(Number(voiceCredits) / 150);
-  const heygenMinutes = row.heygen_minutes ?? (row.avatar_seconds === null || row.avatar_seconds === undefined ? HEYGEN_MINUTES : round1(Number(row.avatar_seconds) / 60));
+  const avatarSeconds = row.avatar_seconds === null || row.avatar_seconds === undefined ? Math.round(Number(row.heygen_minutes ?? HEYGEN_MINUTES) * 60) : Math.max(0, Math.round(Number(row.avatar_seconds)));
+  const heygenMinutes = round1(avatarSeconds / 60);
   return {
     id: row.id,
     email: row.email,
@@ -47,7 +49,7 @@ function publicStudent(row: any) {
     voice_minutes: voiceMinutes,
     heygen_minutes: heygenMinutes,
     voice_seconds: Math.round(voiceMinutes * 60),
-    avatar_seconds: Math.round(heygenMinutes * 60),
+    avatar_seconds: avatarSeconds,
     reset_month: row.reset_month,
     quota_started_at: row.quota_started_at,
     quota_reset_at: row.quota_reset_at,
@@ -133,7 +135,7 @@ async function refreshQuotaCycle(student: any) {
     patch.voice_minutes = round1(VOICE_CREDITS / 150);
     patch.heygen_minutes = HEYGEN_MINUTES;
     patch.voice_seconds = Math.round((VOICE_CREDITS / 150) * 60);
-    patch.avatar_seconds = HEYGEN_MINUTES * 60;
+    patch.avatar_seconds = AVATAR_SECONDS;
     patch.reset_month = ym;
     patch.quota_started_at = start.toISOString();
     patch.quota_reset_at = nextMonthStart(now).toISOString();
@@ -147,9 +149,11 @@ async function refreshQuotaCycle(student: any) {
       patch.voice_minutes = round1(credits / 150);
       patch.voice_seconds = Math.round(Number(patch.voice_minutes) * 60);
     }
-    if (student.heygen_minutes === null || student.heygen_minutes === undefined) {
-      patch.heygen_minutes = student.avatar_seconds === null || student.avatar_seconds === undefined ? HEYGEN_MINUTES : round1(Number(student.avatar_seconds) / 60);
-      patch.avatar_seconds = Math.round(Number(patch.heygen_minutes) * 60);
+    if (student.avatar_seconds === null || student.avatar_seconds === undefined) {
+      patch.avatar_seconds = student.heygen_minutes === null || student.heygen_minutes === undefined ? AVATAR_SECONDS : Math.round(Number(student.heygen_minutes) * 60);
+      patch.heygen_minutes = round1(Number(patch.avatar_seconds) / 60);
+    } else if (student.heygen_minutes === null || student.heygen_minutes === undefined) {
+      patch.heygen_minutes = round1(Number(student.avatar_seconds) / 60);
     }
     if (!student.quota_started_at) patch.quota_started_at = start.toISOString();
     if (!student.quota_reset_at) patch.quota_reset_at = nextMonthStart(now).toISOString();
@@ -173,8 +177,6 @@ async function handleUsage(req: Request, body: any) {
   const rawAmount = Number(body.amount || 1);
   const amount = Math.max(1, Math.round(rawAmount || 1));
 
-  if (student.is_admin) return jsonResponse({ student: publicStudent(student), used: 0 });
-
   const update: Record<string, number> = {};
   if (type === "ai") {
     update.ai_usage = Math.max(0, Number(student.ai_usage || 0) - amount);
@@ -184,9 +186,10 @@ async function handleUsage(req: Request, body: any) {
     update.voice_minutes = round1(next / 150);
     update.voice_seconds = Math.round(update.voice_minutes * 60);
   } else if (type === "heygen" || type === "avatar") {
-    const next = round1(Number(student.heygen_minutes ?? HEYGEN_MINUTES) - amount);
-    update.heygen_minutes = next;
-    update.avatar_seconds = Math.round(next * 60);
+    const currentSeconds = Math.max(0, Math.round(Number(student.avatar_seconds ?? AVATAR_SECONDS)));
+    const nextSeconds = Math.max(0, currentSeconds - amount);
+    update.avatar_seconds = nextSeconds;
+    update.heygen_minutes = round1(nextSeconds / 60);
   } else {
     return jsonResponse({ error: "invalid_usage_type" }, 400);
   }

@@ -80,7 +80,8 @@ function authToken(req: Request) {
 function publicStudent(row: any) {
   const voiceCredits = row.voice_credits ?? VOICE_CREDITS;
   const voiceMinutes = row.voice_minutes ?? round1(Number(voiceCredits) / 150);
-  const heygenMinutes = row.heygen_minutes ?? (row.avatar_seconds === null || row.avatar_seconds === undefined ? 30 : round1(Number(row.avatar_seconds) / 60));
+  const avatarSeconds = row.avatar_seconds === null || row.avatar_seconds === undefined ? Math.round(Number(row.heygen_minutes ?? 30) * 60) : Math.max(0, Math.round(Number(row.avatar_seconds)));
+  const heygenMinutes = round1(avatarSeconds / 60);
   return {
     id: row.id,
     email: row.email,
@@ -91,7 +92,7 @@ function publicStudent(row: any) {
     voice_minutes: voiceMinutes,
     heygen_minutes: heygenMinutes,
     voice_seconds: Math.round(voiceMinutes * 60),
-    avatar_seconds: Math.round(heygenMinutes * 60),
+    avatar_seconds: avatarSeconds,
     quota_started_at: row.quota_started_at,
     quota_reset_at: row.quota_reset_at,
     status: row.status,
@@ -142,6 +143,15 @@ async function resolveVoiceId(supabase: ReturnType<typeof createClient>, student
     .is("deleted_at", null)
     .maybeSingle();
   if (model?.cartesia_voice_id) return { providerVoiceId: model.cartesia_voice_id, voiceName: model.name || "我的克隆聲音", modelUuid: model.id };
+
+  const { data: modelByProvider } = await supabase
+    .from("voice_models")
+    .select("id,name,cartesia_voice_id")
+    .eq("cartesia_voice_id", id)
+    .eq("student_id", studentId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (modelByProvider?.cartesia_voice_id) return { providerVoiceId: modelByProvider.cartesia_voice_id, voiceName: modelByProvider.name || "我的克隆聲音", modelUuid: modelByProvider.id };
   throw new Error("voice_unavailable");
 }
 
@@ -170,7 +180,6 @@ async function signItem(supabase: ReturnType<typeof createClient>, row: any) {
 }
 
 async function debitVoiceCredits(supabase: ReturnType<typeof createClient>, student: any, credits: number) {
-  if (student.is_admin) return student;
   const current = Math.max(0, Math.round(Number(student.voice_credits ?? VOICE_CREDITS)));
   if (current < credits) {
     throw Object.assign(new Error("insufficient_voice_credits"), { status: 402 });
@@ -195,7 +204,7 @@ async function handleTts(supabase: ReturnType<typeof createClient>, student: any
   if (!text) return json({ error: "missing_text" }, 400);
   const credits = estimateVoiceCredits(text);
   const remaining = Math.max(0, Math.round(Number(student.voice_credits ?? VOICE_CREDITS)));
-  if (!student.is_admin && remaining < credits) return json({ error: "insufficient_voice_credits" }, 402);
+  if (remaining < credits) return json({ error: "insufficient_voice_credits" }, 402);
 
   const lang = languageCode(payload.language);
   const { providerVoiceId, voiceName, modelUuid } = await resolveVoiceId(supabase, student.id, payload.voice_id);
@@ -214,7 +223,7 @@ async function handleTts(supabase: ReturnType<typeof createClient>, student: any
       model_id: "sonic-3.5",
       transcript: text,
       language: lang,
-      voice: { id: providerVoiceId },
+      voice: { mode: "id", id: providerVoiceId },
       output_format: { container: "wav", encoding: "pcm_s16le", sample_rate: 44100 },
     }),
   });
