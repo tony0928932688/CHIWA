@@ -1233,6 +1233,7 @@ const _SB = (window.supabase && typeof supabase.createClient === 'function')
 const CHIWA_VOICE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-voice';
 const CHIWA_SECURE_API_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-secure-api';
 const CHIWA_PROFILE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-profile';
+const CHIWA_HISTORY_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-history';
 const CHIWA_AVATAR_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-avatar';
 const CHIWA_AVATAR_R2_WORKER_URL = 'https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev';
 let currentUser = '';
@@ -1288,6 +1289,7 @@ async function finishStudentLogin(data, loginId) {
   if (typeof updateVoiceDropdown === 'function') updateVoiceDropdown();
   if (typeof loadTTSHistory === 'function') loadTTSHistory();
   if (typeof loadAvatarLibrary === 'function') loadAvatarLibrary();
+  if (typeof loadGenerationHistory === 'function') loadGenerationHistory();
   if (typeof renderProfileForm === 'function') renderProfileForm();
   toast('🔓 登入成功！歡迎回來 ' + (data.name || currentUser));
 }
@@ -2315,6 +2317,10 @@ async function decrAvatar(secs) {
         <span class="sb-icon">🧭</span>
         <span>帳號定位</span>
       </div>
+      <div class="sb-item" data-panel="history" onclick="swP('history', this)">
+        <span class="sb-icon">🗂️</span>
+        <span>生成紀錄</span>
+      </div>
       <div class="sb-item" data-panel="topic" onclick="swP('topic', this)">
         <span class="sb-icon">🎯</span>
         <span>選題生成</span>
@@ -2505,6 +2511,25 @@ async function decrAvatar(secs) {
       <button class="btn-outline" onclick="renderProfileForm()">還原目前設定</button>
     </div>
     <div id="profile-save-load" style="display:none" class="loading"><div class="spinner"></div>正在儲存帳號定位...</div>
+  </div>
+
+  <div class="panel" id="p-history">
+    <div class="sec-title">🗂️ 生成紀錄</div>
+    <div class="sec-sub">登入後產生的選題、口播文案、行銷文案與合規檢查，都會自動保存在這裡。</div>
+    <div class="fl mt10" style="gap:8px;margin-bottom:14px">
+      <select id="history-type-filter" class="tinput" style="height:38px;max-width:180px" onchange="loadGenerationHistory()">
+        <option value="">全部紀錄</option>
+        <option value="topics">選題生成</option>
+        <option value="script">口播文案</option>
+        <option value="marketing">行銷文案</option>
+        <option value="compliance">文案合規</option>
+      </select>
+      <button class="btn-outline" onclick="loadGenerationHistory()">刷新紀錄</button>
+    </div>
+    <div id="history-load" style="display:none" class="loading"><div class="spinner"></div>正在讀取生成紀錄...</div>
+    <div id="history-list" style="display:grid;gap:12px">
+      <div class="out-card"><div class="out-text">登入後的 AI 生成結果會顯示在這裡。</div></div>
+    </div>
   </div>
 
     <!-- 口播文案 -->
@@ -3052,22 +3077,25 @@ async function decrAvatar(secs) {
   <div class="mn-item on" id="mn-profile" onclick="swPM('profile',0)">
     <span class="mn-icon">🧭</span><span>定位</span>
   </div>
-  <div class="mn-item" id="mn-topic" onclick="swPM('topic',1)">
+  <div class="mn-item" id="mn-history" onclick="swPM('history',1)">
+    <span class="mn-icon">🗂️</span><span>紀錄</span>
+  </div>
+  <div class="mn-item" id="mn-topic" onclick="swPM('topic',2)">
     <span class="mn-icon">🎯</span><span>選題</span>
   </div>
-  <div class="mn-item" id="mn-script" onclick="swPM('script',2)">
+  <div class="mn-item" id="mn-script" onclick="swPM('script',3)">
     <span class="mn-icon">🎬</span><span>口播</span>
   </div>
-  <div class="mn-item" id="mn-marketing" onclick="swPM('marketing',3)">
+  <div class="mn-item" id="mn-marketing" onclick="swPM('marketing',4)">
     <span class="mn-icon">✍️</span><span>文案</span>
   </div>
-  <div class="mn-item" id="mn-voice" onclick="swPM('voice',4)">
+  <div class="mn-item" id="mn-voice" onclick="swPM('voice',5)">
     <span class="mn-icon">🎙️</span><span>語音</span>
   </div>
-  <div class="mn-item" id="mn-avatar" onclick="swPM('avatar',5)">
+  <div class="mn-item" id="mn-avatar" onclick="swPM('avatar',6)">
     <span class="mn-icon">🧑‍💼</span><span>形象</span>
   </div>
-  <div class="mn-item" id="mn-course" onclick="swPM('course',6)">
+  <div class="mn-item" id="mn-course" onclick="swPM('course',7)">
     <span class="mn-icon">📚</span><span>課程</span>
   </div>
 </div>
@@ -3414,6 +3442,7 @@ function swP(name, el) {
   if (panel) panel.classList.add('on');
   if (el) el.classList.add('on');
   if (name === 'profile' && typeof renderProfileForm === 'function') renderProfileForm();
+  if (name === 'history' && typeof loadGenerationHistory === 'function') loadGenerationHistory();
   // 切換到課程面板時自動重新渲染單元列表
   if (name === 'course') renderUnitGrid();
   // 切換到管理後台時自動刷新影片設定 UI
@@ -3581,6 +3610,150 @@ function buildProfilePrompt(profile) {
 /* 常見問題摺疊卡片切換 */
 function toggleFaq(el) {
   el.classList.toggle('open');
+}
+
+let generationHistory = [];
+
+function generationTypeLabel(type) {
+  const map = {
+    topics: '選題生成',
+    script: '口播文案',
+    marketing: '行銷文案',
+    compliance: '文案合規',
+    other: 'AI 生成'
+  };
+  return map[type] || map.other;
+}
+
+function generationTitleFor(type, inputText) {
+  const text = String(inputText || '').replace(/\s+/g, ' ').trim();
+  const label = generationTypeLabel(type);
+  if (!text) return label;
+  return `${label}｜${text.slice(0, 46)}`;
+}
+
+async function callChiwaHistory(action, payload) {
+  const token = await getVoiceSessionToken();
+  if (!token) throw new Error('請先登入後再使用生成紀錄。');
+  const res = await fetch(CHIWA_HISTORY_FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(Object.assign({ action }, payload || {}))
+  });
+  const data = await res.json().catch(function() { return {}; });
+  if (!res.ok) throw new Error(data.error || '生成紀錄服務暫時無法使用。');
+  return data;
+}
+
+async function saveGenerationHistory(record) {
+  if (!currentUserData || !record || !record.outputText) return null;
+  try {
+    const type = record.type || 'other';
+    const data = await callChiwaHistory('save', {
+      type,
+      title: record.title || generationTitleFor(type, record.inputText),
+      inputText: record.inputText || '',
+      outputText: record.outputText || '',
+      meta: record.meta || {}
+    });
+    if (data.item) {
+      generationHistory = [data.item].concat(generationHistory.filter(item => item.id !== data.item.id)).slice(0, 80);
+      renderGenerationHistory(generationHistory);
+    }
+    return data.item || null;
+  } catch(e) {
+    console.warn('generation history save skipped:', e.message || e);
+    return null;
+  }
+}
+
+async function loadGenerationHistory() {
+  if (!currentUserData) return;
+  const list = document.getElementById('history-list');
+  const load = document.getElementById('history-load');
+  const filter = document.getElementById('history-type-filter');
+  if (load) load.style.display = 'flex';
+  try {
+    const data = await callChiwaHistory('list', {
+      type: filter && filter.value ? filter.value : '',
+      limit: 60
+    });
+    generationHistory = Array.isArray(data.items) ? data.items : [];
+    renderGenerationHistory(generationHistory);
+  } catch(e) {
+    if (list) list.innerHTML = '<div class="out-card"><div class="out-text">暫時無法讀取生成紀錄，請稍後再試。</div></div>';
+    console.warn('generation history load skipped:', e.message || e);
+  } finally {
+    if (load) load.style.display = 'none';
+  }
+}
+
+function renderGenerationHistory(items) {
+  const list = document.getElementById('history-list');
+  if (!list) return;
+  const rows = Array.isArray(items) ? items : [];
+  if (!rows.length) {
+    list.innerHTML = '<div class="out-card"><div class="out-text">目前還沒有生成紀錄。之後每次產生選題、口播文案、行銷文案或合規檢查，都會自動保存在這裡。</div></div>';
+    return;
+  }
+  list.innerHTML = rows.map(item => {
+    const type = item.type || 'other';
+    const created = item.createdAt ? new Date(item.createdAt).toLocaleString() : '';
+    const output = item.outputText || '';
+    const input = item.inputText || '';
+    return `<div class="out-card">
+      <div class="out-head">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span class="badge b-gold">${escapeHtml(generationTypeLabel(type))}</span>
+          <span style="font-size:11px;color:var(--t3)">${escapeHtml(created)}</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="copy-btn" onclick="copyT(decodeURIComponent('${encodeURIComponent(output)}'))">複製</span>
+          <span class="copy-btn" onclick="reuseGenerationHistory('${escapeHtml(item.id)}')">帶回功能</span>
+          <span class="copy-btn" onclick="deleteGenerationHistory('${escapeHtml(item.id)}')">刪除</span>
+        </div>
+      </div>
+      <div style="font-size:13px;font-weight:800;margin-bottom:8px;color:var(--t1)">${escapeHtml(item.title || generationTypeLabel(type))}</div>
+      ${input ? `<div style="font-size:11px;color:var(--t3);margin-bottom:8px">輸入：${escapeHtml(input.slice(0, 180))}${input.length > 180 ? '...' : ''}</div>` : ''}
+      <div class="out-text" style="white-space:pre-wrap;max-height:260px;overflow:auto">${escapeHtml(output)}</div>
+    </div>`;
+  }).join('');
+}
+
+function reuseGenerationHistory(id) {
+  const item = generationHistory.find(row => row.id === id);
+  if (!item) return;
+  const text = item.outputText || '';
+  if (item.type === 'topics') {
+    const el = document.getElementById('stopic');
+    if (el) el.value = text.split('\n').find(Boolean) || text.slice(0, 120);
+    swP('script', sidebarItemFor('script'));
+  } else if (item.type === 'script') {
+    const c = document.getElementById('cin');
+    const m = document.getElementById('mkin');
+    if (c) c.value = text;
+    if (m) m.value = text;
+    swP('marketing', sidebarItemFor('marketing'));
+  } else {
+    copyT(text);
+  }
+  toast('已帶回可接續使用的內容。');
+}
+
+async function deleteGenerationHistory(id) {
+  if (!id) return;
+  if (!confirm('確定要刪除這筆生成紀錄嗎？')) return;
+  try {
+    await callChiwaHistory('delete', { id });
+    generationHistory = generationHistory.filter(item => item.id !== id);
+    renderGenerationHistory(generationHistory);
+    toast('已刪除生成紀錄。');
+  } catch(e) {
+    toast('刪除失敗，請稍後再試。');
+  }
 }
 
 let selChip='', scriptTxt='', marketingTxt='', pureOralTxt='', isRec=false, recSec=0, recTmr=null;
@@ -3983,7 +4156,9 @@ async function callSecureAI(sys, usr, typeOverride, fmtOverride, toneOverride) {
   const isSandbox = localStorage.getItem('chiwa_sandbox_mode') === 'true';
   if (isSandbox) {
     toast('\u2699\uFE0F \u5DF2\u555F\u52D5\u300C\u672C\u5730 AI \u6C99\u76D2\u6A21\u64EC\u6A21\u5F0F\u300D\uFF01');
-    return new Promise(resolve => setTimeout(() => resolve(removeEmojis(generateSandboxMock(sys, usr, type, finalFmt, finalTone))), 1000));
+    const sandboxText = await new Promise(resolve => setTimeout(() => resolve(removeEmojis(generateSandboxMock(sys, usr, type, finalFmt, finalTone))), 1000));
+    await saveGenerationHistory({ type, inputText: usr, outputText: sandboxText, meta: { fmt: finalFmt || 'storyboard', tone: finalTone || 'casual', sandbox: true } });
+    return sandboxText;
   }
 
   try {
@@ -4015,14 +4190,18 @@ async function callSecureAI(sys, usr, typeOverride, fmtOverride, toneOverride) {
     }
 
     if (d.content && d.content[0] && d.content[0].text) {
-      return removeEmojis(d.content[0].text);
+      const aiText = removeEmojis(d.content[0].text);
+      await saveGenerationHistory({ type, inputText: usr, outputText: aiText, meta: { fmt: finalFmt || 'storyboard', tone: finalTone || 'casual' } });
+      return aiText;
     } else {
       throw new Error('Response format invalid');
     }
   } catch (err) {
     console.error('API call failed, falling back to sandbox mode:', err);
     toast('\u2699\uFE0F \u9023\u7DDA\u53D7\u9650\uFF0C\u5DF2\u81EA\u52D5\u555F\u52D5\u300C\u672C\u5730 AI \u667A\u6162\u6C99\u76D2\u6A21\u64EC\u300D\uFF01');
-    return new Promise(resolve => setTimeout(() => resolve(removeEmojis(generateSandboxMock(sys, usr, type, finalFmt, finalTone))), 1200));
+    const fallbackText = await new Promise(resolve => setTimeout(() => resolve(removeEmojis(generateSandboxMock(sys, usr, type, finalFmt, finalTone))), 1200));
+    await saveGenerationHistory({ type, inputText: usr, outputText: fallbackText, meta: { fmt: finalFmt || 'storyboard', tone: finalTone || 'casual', fallback: true } });
+    return fallbackText;
   }
 }
 
