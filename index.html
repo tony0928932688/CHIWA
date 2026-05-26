@@ -1512,10 +1512,14 @@ function updateUsageUI(aiUsage, voiceSec, avatarSec) {
 // 扣 AI 次數（寫回 Supabase，並即時更新畫面）
 async function decrAI() {
   if (!currentUserData) return;
-  if (currentUserData.is_admin) return; // 管理員不扣點
   currentUserData.ai_usage = Math.max(0, (currentUserData.ai_usage || 0) - 1);
   updateUsageUI(currentUserData.ai_usage, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
   try {
+    if (currentUserData.is_admin) {
+      await persistAdminUsage();
+      aiUse = currentUserData.ai_usage;
+      return;
+    }
     const secure = await callChiwaSecure('usage', { type: 'ai', amount: 1 });
     if (secure && secure.student) {
       currentUserData = Object.assign(currentUserData, secure.student);
@@ -1528,10 +1532,13 @@ async function decrAI() {
 // 扣語音秒數（寫回 Supabase，並即時更新畫面）
 async function decrVoice(secs) {
   if (!currentUserData) return;
-  if (currentUserData.is_admin) return; // 管理員不扣
   currentUserData.voice_seconds = Math.max(0, (currentUserData.voice_seconds || 0) - secs);
   updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds, currentUserData.avatar_seconds || 0);
   try {
+    if (currentUserData.is_admin) {
+      await persistAdminUsage();
+      return;
+    }
     const secure = await callChiwaSecure('usage', { type: 'voice', amount: secs });
     if (secure && secure.student) {
       currentUserData = Object.assign(currentUserData, secure.student);
@@ -1542,16 +1549,40 @@ async function decrVoice(secs) {
 
 async function decrAvatar(secs) {
   if (!currentUserData) return;
-  if (currentUserData.is_admin) return;
   currentUserData.avatar_seconds = Math.max(0, (currentUserData.avatar_seconds || 0) - secs);
   updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds);
   try {
+    if (currentUserData.is_admin) {
+      await persistAdminUsage();
+      return;
+    }
     const secure = await callChiwaSecure('usage', { type: 'avatar', amount: secs });
     if (secure && secure.student) {
       currentUserData = Object.assign(currentUserData, secure.student);
       updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
     }
   } catch(e) { console.error('decrAvatar error:', e); }
+}
+
+async function persistAdminUsage() {
+  if (!currentUserData || !currentUserData.is_admin || !_SB) return;
+  const patch = {
+    ai_usage: currentUserData.ai_usage || 0,
+    voice_seconds: currentUserData.voice_seconds || 0,
+    avatar_seconds: currentUserData.avatar_seconds || 0
+  };
+  const { data, error } = await _SB
+    .from('students')
+    .update(patch)
+    .eq('id', currentUserData.id)
+    .select('*')
+    .single();
+  if (error) {
+    console.warn('admin usage persist skipped:', error.message || error);
+    return;
+  }
+  if (data) currentUserData = Object.assign(currentUserData, data);
+  updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
 }
 </script>
 </head>
@@ -2363,6 +2394,7 @@ async function decrAvatar(secs) {
       <div class="chip" data-t="客戶故事" onclick="selC(this)">👥 客戶故事</div>
       <div class="chip" data-t="選擇指南" onclick="selC(this)">📋 選擇指南</div>
       <div class="chip" data-t="行動催化" onclick="selC(this)">⚡ 行動催化</div>
+      <div class="chip" data-t="隨機分配" onclick="selC(this)">🎲 隨機分配</div>
     </div>
     <div class="label mb14">你的行業 / 專業領域</div>
     <textarea id="ti" placeholder="例：律師、保險顧問、中醫師、室內設計師..." rows="3" maxlength="500"></textarea>
@@ -3555,6 +3587,7 @@ function toggleFaq(el) {
 
 let selChip='', scriptTxt='', marketingTxt='', pureOralTxt='', isRec=false, recSec=0, recTmr=null;
 let voiceMediaRecorder = null, voiceRecChunks = [], voiceRecStream = null, recordedVoiceBlob = null;
+const TOPIC_TYPES = ['痛點鏡子','知識降維','迷思破解','客戶故事','選擇指南','行動催化'];
 aiUse = 285; // 設定初始值（已在 head 用 var 宣告）
 // \uD83D\uDEE1\uFE0F UTF-8 Base64
 function generateSandboxMock(sys, usr, type, fmt, tone) {
@@ -3912,19 +3945,23 @@ async function callSecureAI(sys, usr, typeOverride, fmtOverride, toneOverride) {
 
 /* \u9078\u984C\u751F\u6210 */
 async function genTopics(){
-  const ind=document.getElementById('ti').value.trim();
+  const profile = currentUserData && currentUserData.profile && typeof currentUserData.profile === 'object' ? currentUserData.profile : {};
+  const ind=(document.getElementById('ti').value.trim() || profile.industry || profile.service || '').trim();
   if(!ind){toast('請先輸入你的行業');return;}
   if(!selChip){toast('請先選擇選題類型');return;}
   // 額度檢查
-  if (currentUserData && !currentUserData.is_admin && (currentUserData.ai_usage || 0) <= 0) {
+  if (currentUserData && (currentUserData.ai_usage || 0) <= 0) {
     toast('❌ AI 生成次數已用完！請等待每月1日自動重置。'); return;
   }
   const btn=document.getElementById('tbtn'),ld=document.getElementById('tload'),out=document.getElementById('tout');
   if(!btn||!ld||!out)return;
   btn.disabled=true;ld.style.display='flex';out.innerHTML='';
   try{
+    const typeInstruction = selChip === '隨機分配'
+      ? '選題類型：隨機分配。請從「痛點鏡子、知識降維、迷思破解、客戶故事、選擇指南、行動催化」這 6 種方向中，替 8 個選題隨機分配類型；每一種至少出現 1 次，另外 2 個可隨機重複。'
+      : '選題類型：'+selChip+'。8 個選題都要符合這個類型方向。';
     const txt=await callSecureAI(dSU('5L2g5piv5Y+w54Gj55+t5b2x6Z+z6YG46aGM562W55Wl5bir77yM54K6QjJC5pyN5YuZ5qWt5bCI5a6255Sf5oiQVGlrVG9r6YG46aGM77yM6YG46aGM5b+F6aCI5pyJ5by354OI6Ymk5a2Q5oSf44CC5Y+q55So57mB6auU5Lit5paH5Zue562U44CC57WV5bCN5LiN6IO95L2/55So5Lu75L2VIGVtb2ppIOaIluihqOaDheespuiZn+OAggo='),
-      '行業：'+ind+'\n選題類型：'+selChip+'\n\n請生成5個選題，格式：\n【選題1】\n標題：（20字內）\n副標題：（30字內）\n潛力：高/中/低\n\n【選題2】...');
+      '行業：'+ind+'\n'+typeInstruction+'\n\n請根據學員帳號定位、行業與選題方向，生成 8 個短影音文案選題。每個選題都要能直接展開成 1-2 分鐘口播文案。\n\n格式必須固定如下：\n【選題1】\n類型：（痛點鏡子/知識降維/迷思破解/客戶故事/選擇指南/行動催化）\n標題：（20字內）\n副標題：（30字內）\n潛力：高/中/低\n\n【選題2】...\n\n請輸出到【選題8】。');
     decrAI();
     let blocks=txt.split(/【選題\d+】/).filter(b=>b.trim());
     if(!blocks.length){
@@ -3937,12 +3974,14 @@ async function genTopics(){
         return pickLabeledValue(lines, key);
       };
       const title=pick('標題') || pick('選題標題') || inferTopicTitle(b);
+      const topicType=pick('類型') || (selChip === '隨機分配' ? '' : selChip);
       const sub=pick('副標題') || pick('核心痛點') || pick('痛點');
       const pot=pick('潛力') || (b.includes('高潛力') ? '高' : '');
       if (!title && !sub && !pot) return '';
       const pc=pot.includes('高')?'b-green':pot.includes('中')?'b-gold':'b-blue';
+      const typeBadge = topicType ? `<span class="badge b-blue">${escapeHtml(topicType)}</span>` : '';
       const copyTitle = encodeURIComponent(title || sub || b.trim());
-      return `<div class="out-card"><div class="out-head"><span class="badge ${pc}">潛力 ${pot||'—'}</span><span class="copy-btn" onclick="copyT(decodeURIComponent('${copyTitle}'))">複製</span></div><div style="font-size:14px;font-weight:700;margin-bottom:5px">${escapeHtml(title || 'AI 選題建議')}</div><div style="font-size:12px;color:var(--t2)">${escapeHtml(sub || b.trim())}</div><button class="btn-outline next-step-btn" onclick="useScript(decodeURIComponent('${copyTitle}'))">下一步：用此選題寫腳本 →</button></div>`;
+      return `<div class="out-card"><div class="out-head"><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="badge ${pc}">潛力 ${pot||'—'}</span>${typeBadge}</div><span class="copy-btn" onclick="copyT(decodeURIComponent('${copyTitle}'))">複製</span></div><div style="font-size:14px;font-weight:700;margin-bottom:5px">${escapeHtml(title || 'AI 選題建議')}</div><div style="font-size:12px;color:var(--t2)">${escapeHtml(sub || b.trim())}</div><button class="btn-outline next-step-btn" onclick="useScript(decodeURIComponent('${copyTitle}'))">下一步：用此選題寫腳本 →</button></div>`;
     }).filter(Boolean).join('');
     out.innerHTML=cards || '<div class="out-card"><div class="out-text">'+escapeHtml(txt)+'</div></div>';
   }catch(e){if(e.message!='no key')out.innerHTML='<div class="out-card"><div style="color:var(--red);font-size:13px">❌ '+escapeHtml(e.message)+'</div></div>';}
@@ -3960,7 +3999,7 @@ async function genScript(){
   const tp=document.getElementById('stopic')?.value.trim();
   if(!tp){toast('請先輸入選題標題');return;}
   // 額度檢查
-  if (currentUserData && !currentUserData.is_admin && (currentUserData.ai_usage || 0) <= 0) {
+  if (currentUserData && (currentUserData.ai_usage || 0) <= 0) {
     toast('❌ AI 生成次數已用完！請等待每月1日自動重置。'); return;
   }
   const ex=document.getElementById('sextra')?.value.trim()||'';
@@ -4048,7 +4087,7 @@ async function genMarketing(){
   const txt=document.getElementById('mkin')?.value.trim();
   if(!txt){toast('請先貼入腳本內容');return;}
   // 額度檢查
-  if (currentUserData && !currentUserData.is_admin && (currentUserData.ai_usage || 0) <= 0) {
+  if (currentUserData && (currentUserData.ai_usage || 0) <= 0) {
     toast('❌ AI 生成次數已用完！請等待每月1日自動重置。'); return;
   }
   const btn=document.getElementById('mkbtn'),ld=document.getElementById('mkload'),out=document.getElementById('mkout');
@@ -4126,7 +4165,7 @@ async function chkComp(){
   const txt=document.getElementById('cin')?.value.trim();
   if(!txt){toast('請先貼入腳本文字');return;}
   // 額度檢查
-  if (currentUserData && !currentUserData.is_admin && (currentUserData.ai_usage || 0) <= 0) {
+  if (currentUserData && (currentUserData.ai_usage || 0) <= 0) {
     toast('❌ AI 生成次數已用完！請等待每月1日自動重置。'); return;
   }
   const btn=document.getElementById('cbtn'),ld=document.getElementById('cload'),out=document.getElementById('cout');
@@ -4584,6 +4623,7 @@ async function loadTTSHistory() {
 async function downloadTTS(id) {
   if (!id) return;
   try {
+    const beforeItem = ttsHistory.find(item => item.id === id) || {};
     const data = await callChiwaVoiceJson('download_tts', { generation_id: id });
     updateStudentQuotaFromVoice(data);
     if (!data.downloadUrl) throw new Error('下載連結建立失敗，請稍後再試。');
@@ -4604,6 +4644,11 @@ async function downloadTTS(id) {
     a.click();
     a.remove();
     if (objectUrl) setTimeout(() => URL.revokeObjectURL(objectUrl), 3000);
+    if (currentUserData && currentUserData.is_admin && !data.deductedSeconds && !beforeItem.downloadedAt && !beforeItem.downloaded_at) {
+      const seconds = Math.max(1, Number(beforeItem.audioSeconds || beforeItem.audio_seconds || data.item?.audioSeconds || 0));
+      await decrVoice(seconds);
+      data.deductedSeconds = seconds;
+    }
     toast(data.deductedSeconds ? `✅ 已開始下載，扣除 ${data.deductedSeconds} 秒語音額度` : '✅ 已開始下載');
     loadTTSHistory();
   } catch(e) {
@@ -5110,6 +5155,7 @@ function renderAvatarTaskResult(data) {
 async function pollAvatarTask(taskId) {
   if (!taskId) return;
   try {
+    const avatarSecondsBeforePoll = currentUserData ? Number(currentUserData.avatar_seconds || 0) : 0;
     const data = await callChiwaAvatarJson('query', { taskId });
     if (data.student) {
       currentUserData = Object.assign(currentUserData || {}, data.student);
@@ -5121,6 +5167,9 @@ async function pollAvatarTask(taskId) {
       const btn = document.getElementById('avatar-generate-btn');
       if (load) load.style.display = 'none';
       if (btn) btn.disabled = false;
+      if (currentUserData && currentUserData.is_admin && Number(currentUserData.avatar_seconds || 0) >= avatarSecondsBeforePoll) {
+        await decrAvatar(data.requestedSeconds || avatarAudioSeconds || 0);
+      }
       loadAvatarLibrary();
       toast(`✅ 形象克隆完成，已扣除 ${data.requestedSeconds || avatarAudioSeconds || 0} 秒形象額度。`);
       return;
@@ -5163,7 +5212,7 @@ async function generateAvatarClone() {
     toast('❌ 單支形象影片最高只能 2 分鐘，請裁切音檔到 120 秒內。');
     return;
   }
-  if (currentUserData && !currentUserData.is_admin && (currentUserData.avatar_seconds || 0) < avatarAudioSeconds) {
+  if (currentUserData && (currentUserData.avatar_seconds || 0) < avatarAudioSeconds) {
     toast(`❌ 形象剩餘秒數不足！本次需 ${_fmtSec(avatarAudioSeconds)}，目前剩餘 ${_fmtSec(currentUserData.avatar_seconds || 0)}。`);
     return;
   }

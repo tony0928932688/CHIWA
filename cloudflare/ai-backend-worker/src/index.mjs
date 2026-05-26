@@ -160,6 +160,9 @@ function buildSystemPrompt({ type, fmt, tone, systemPrompt }) {
   if (normalized === 'marketing') {
     parts.push('行銷文案要保留說服力與平台感；若輸出 hashtag，數量最多 5 個，且不可套用與腳本行業無關的品牌或分類標籤。');
   }
+  if (normalized === 'topics') {
+    parts.push('選題生成必須根據學員背景與目標受眾痛點輸出 8 條；如果使用者要求隨機分配，需在 8 條中混合痛點鏡子、知識降維、迷思破解、客戶故事、選擇指南、行動催化等方向，且保留「類型」欄位。');
+  }
   return parts.join('\n\n');
 }
 
@@ -217,7 +220,7 @@ export default {
 
     try {
       const data = await callAnthropic(env, {
-        max_tokens: type === 'topics' ? 1600 : (type === 'script' ? 3200 : 2400),
+        max_tokens: type === 'topics' ? 2400 : (type === 'script' ? 3200 : 2400),
         temperature: type === 'compliance' ? 0.2 : 0.75,
         system,
         messages: [{ role: 'user', content: userPrompt }]
