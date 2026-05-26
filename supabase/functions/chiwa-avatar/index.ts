@@ -40,6 +40,7 @@ function neutralError(message = "avatar_service_failed", status = 500) {
 }
 
 function publicStudent(row: any) {
+  const voiceCredits = row.voice_credits ?? 10000;
   const voiceMinutes = row.voice_minutes ?? (row.voice_seconds === null || row.voice_seconds === undefined ? 60 : Math.round((Number(row.voice_seconds) / 60) * 10) / 10);
   const heygenMinutes = row.heygen_minutes ?? (row.avatar_seconds === null || row.avatar_seconds === undefined ? DEFAULT_HEYGEN_MINUTES : Math.round((Number(row.avatar_seconds) / 60) * 10) / 10);
   return {
@@ -49,6 +50,7 @@ function publicStudent(row: any) {
     google_enabled: row.google_enabled,
     name: row.name,
     ai_usage: row.ai_usage,
+    voice_credits: Math.max(0, Math.round(Number(voiceCredits))),
     voice_seconds: row.voice_seconds,
     avatar_seconds: row.avatar_seconds,
     voice_minutes: voiceMinutes,

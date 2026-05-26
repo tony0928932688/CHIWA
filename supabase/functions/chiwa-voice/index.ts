@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
-const VOICE_MINUTES = 60;
+const VOICE_CREDITS = 10000;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,9 +30,9 @@ function round1(value: number) {
   return Math.max(0, Math.round(value * 10) / 10);
 }
 
-function estimateVoiceMinutes(text: string) {
+function estimateVoiceCredits(text: string) {
   const len = Array.from(String(text || "").replace(/\s+/g, "")).length;
-  return Math.max(0.1, Math.ceil((len / 150) * 10) / 10);
+  return Math.max(1, len);
 }
 
 function estimateSeconds(text: string) {
@@ -67,7 +67,7 @@ function wavDurationSeconds(buffer: ArrayBuffer) {
 
 function safeError(value: unknown) {
   const raw = String(value || "").toLowerCase();
-  if (raw.includes("quota") || raw.includes("seconds") || raw.includes("minutes") || raw.includes("insufficient")) return "insufficient_voice_minutes";
+  if (raw.includes("quota") || raw.includes("credits") || raw.includes("seconds") || raw.includes("minutes") || raw.includes("insufficient")) return "insufficient_voice_credits";
   if (raw.includes("voice")) return "voice_unavailable";
   return "voice_service_error";
 }
@@ -78,7 +78,8 @@ function authToken(req: Request) {
 }
 
 function publicStudent(row: any) {
-  const voiceMinutes = row.voice_minutes ?? (row.voice_seconds === null || row.voice_seconds === undefined ? VOICE_MINUTES : round1(Number(row.voice_seconds) / 60));
+  const voiceCredits = row.voice_credits ?? VOICE_CREDITS;
+  const voiceMinutes = row.voice_minutes ?? round1(Number(voiceCredits) / 150);
   const heygenMinutes = row.heygen_minutes ?? (row.avatar_seconds === null || row.avatar_seconds === undefined ? 30 : round1(Number(row.avatar_seconds) / 60));
   return {
     id: row.id,
@@ -86,6 +87,7 @@ function publicStudent(row: any) {
     google_email: row.google_email,
     name: row.name,
     ai_usage: row.ai_usage,
+    voice_credits: Math.max(0, Math.round(Number(voiceCredits))),
     voice_minutes: voiceMinutes,
     heygen_minutes: heygenMinutes,
     voice_seconds: Math.round(voiceMinutes * 60),
@@ -151,7 +153,7 @@ function formatItem(row: any, playUrl = "") {
     voiceName: row.voice_name || "發音人",
     language: row.language || "zh",
     audioSeconds: row.audio_seconds || 0,
-    voiceMinutes: estimateVoiceMinutes(text),
+    voiceCredits: estimateVoiceCredits(text),
     createdAt: row.created_at,
     downloadedAt: row.downloaded_at,
     playUrl,
@@ -167,16 +169,20 @@ async function signItem(supabase: ReturnType<typeof createClient>, row: any) {
   return formatItem(row, playUrl);
 }
 
-async function debitVoiceMinutes(supabase: ReturnType<typeof createClient>, student: any, minutes: number) {
+async function debitVoiceCredits(supabase: ReturnType<typeof createClient>, student: any, credits: number) {
   if (student.is_admin) return student;
-  const current = Number(student.voice_minutes ?? (student.voice_seconds === null || student.voice_seconds === undefined ? VOICE_MINUTES : Number(student.voice_seconds) / 60));
-  if (current < minutes) {
-    throw Object.assign(new Error("insufficient_voice_minutes"), { status: 402 });
+  const current = Math.max(0, Math.round(Number(student.voice_credits ?? VOICE_CREDITS)));
+  if (current < credits) {
+    throw Object.assign(new Error("insufficient_voice_credits"), { status: 402 });
   }
-  const next = round1(current - minutes);
+  const next = Math.max(0, current - credits);
   const { data, error } = await supabase
     .from("students")
-    .update({ voice_minutes: next, voice_seconds: Math.round(next * 60) })
+    .update({
+      voice_credits: next,
+      voice_minutes: round1(next / 150),
+      voice_seconds: Math.round((next / 150) * 60),
+    })
     .eq("id", student.id)
     .select("*")
     .single();
@@ -185,11 +191,11 @@ async function debitVoiceMinutes(supabase: ReturnType<typeof createClient>, stud
 }
 
 async function handleTts(supabase: ReturnType<typeof createClient>, student: any, payload: any) {
-  const text = cleanText(payload.text, 1200);
+  const text = cleanText(payload.text, 10000);
   if (!text) return json({ error: "missing_text" }, 400);
-  const minutes = estimateVoiceMinutes(text);
-  const remaining = Number(student.voice_minutes ?? (student.voice_seconds === null || student.voice_seconds === undefined ? VOICE_MINUTES : Number(student.voice_seconds) / 60));
-  if (!student.is_admin && remaining < minutes) return json({ error: "insufficient_voice_minutes" }, 402);
+  const credits = estimateVoiceCredits(text);
+  const remaining = Math.max(0, Math.round(Number(student.voice_credits ?? VOICE_CREDITS)));
+  if (!student.is_admin && remaining < credits) return json({ error: "insufficient_voice_credits" }, 402);
 
   const lang = languageCode(payload.language);
   const { providerVoiceId, voiceName, modelUuid } = await resolveVoiceId(supabase, student.id, payload.voice_id);
@@ -231,7 +237,7 @@ async function handleTts(supabase: ReturnType<typeof createClient>, student: any
 
   let studentNext = student;
   try {
-    studentNext = await debitVoiceMinutes(supabase, student, minutes);
+    studentNext = await debitVoiceCredits(supabase, student, credits);
   } catch (error) {
     await supabase.storage.from("voice-outputs").remove([storagePath]);
     throw error;
@@ -259,8 +265,8 @@ async function handleTts(supabase: ReturnType<typeof createClient>, student: any
     return json({ error: "voice_record_error" }, 500);
   }
 
-  console.log("voice_minutes_saved", JSON.stringify({ studentId: student.id, minutes, admin: !!student.is_admin }));
-  return json({ item: await signItem(supabase, row), deductedMinutes: minutes, student: publicStudent(studentNext) });
+  console.log("voice_credits_saved", JSON.stringify({ studentId: student.id, credits, admin: !!student.is_admin }));
+  return json({ item: await signItem(supabase, row), deductedCredits: credits, student: publicStudent(studentNext) });
 }
 
 async function listTts(supabase: ReturnType<typeof createClient>, student: any) {
@@ -311,7 +317,7 @@ async function downloadTts(supabase: ReturnType<typeof createClient>, student: a
   return json({
     downloadUrl: data?.signedUrl || "",
     fileName: `chiwa-voice-${new Date().toISOString().slice(0, 10)}.wav`,
-    deductedMinutes: 0,
+    deductedCredits: 0,
     student: publicStudent(student),
     item: await signItem(supabase, { ...row, downloaded_at: row.downloaded_at || new Date().toISOString() }),
   });

@@ -2,9 +2,8 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const AI_QUOTA = 300;
-const VOICE_MINUTES = 60;
+const VOICE_CREDITS = 10000;
 const HEYGEN_MINUTES = 30;
-const CYCLE_DAYS = 30;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,7 +33,8 @@ function round1(value: number) {
 }
 
 function publicStudent(row: any) {
-  const voiceMinutes = row.voice_minutes ?? (row.voice_seconds === null || row.voice_seconds === undefined ? VOICE_MINUTES : round1(Number(row.voice_seconds) / 60));
+  const voiceCredits = row.voice_credits ?? VOICE_CREDITS;
+  const voiceMinutes = row.voice_minutes ?? round1(Number(voiceCredits) / 150);
   const heygenMinutes = row.heygen_minutes ?? (row.avatar_seconds === null || row.avatar_seconds === undefined ? HEYGEN_MINUTES : round1(Number(row.avatar_seconds) / 60));
   return {
     id: row.id,
@@ -43,6 +43,7 @@ function publicStudent(row: any) {
     google_enabled: row.google_enabled,
     name: row.name,
     ai_usage: row.ai_usage,
+    voice_credits: Math.max(0, Math.round(Number(voiceCredits))),
     voice_minutes: voiceMinutes,
     heygen_minutes: heygenMinutes,
     voice_seconds: Math.round(voiceMinutes * 60),
@@ -63,20 +64,12 @@ function validDate(value: unknown) {
   return Number.isFinite(date.getTime()) ? date : null;
 }
 
-function addDays(date: Date, days: number) {
-  const next = new Date(date.getTime());
-  next.setUTCDate(next.getUTCDate() + days);
-  return next;
+function currentYearMonth(date = new Date()) {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-function nextCycleReset(start: Date, now: Date) {
-  let next = addDays(start, CYCLE_DAYS);
-  let guard = 0;
-  while (next <= now && guard < 240) {
-    next = addDays(next, CYCLE_DAYS);
-    guard += 1;
-  }
-  return next;
+function nextMonthStart(date = new Date()) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1));
 }
 
 async function getAuthEmail(req: Request) {
@@ -130,22 +123,28 @@ async function getCurrentStudent(req: Request, allowInactive = false) {
 async function refreshQuotaCycle(student: any) {
   const now = new Date();
   const start = validDate(student.quota_started_at) || validDate(student.created_at) || now;
-  const resetAt = validDate(student.quota_reset_at) || addDays(start, CYCLE_DAYS);
+  const ym = currentYearMonth(now);
   const patch: Record<string, unknown> = {};
   let reset = false;
 
-  if (resetAt <= now) {
+  if (student.reset_month !== ym) {
     patch.ai_usage = AI_QUOTA;
-    patch.voice_minutes = VOICE_MINUTES;
+    patch.voice_credits = VOICE_CREDITS;
+    patch.voice_minutes = round1(VOICE_CREDITS / 150);
     patch.heygen_minutes = HEYGEN_MINUTES;
-    patch.voice_seconds = VOICE_MINUTES * 60;
+    patch.voice_seconds = Math.round((VOICE_CREDITS / 150) * 60);
     patch.avatar_seconds = HEYGEN_MINUTES * 60;
+    patch.reset_month = ym;
     patch.quota_started_at = start.toISOString();
-    patch.quota_reset_at = nextCycleReset(start, now).toISOString();
+    patch.quota_reset_at = nextMonthStart(now).toISOString();
     reset = true;
   } else {
-    if (student.voice_minutes === null || student.voice_minutes === undefined) {
-      patch.voice_minutes = student.voice_seconds === null || student.voice_seconds === undefined ? VOICE_MINUTES : round1(Number(student.voice_seconds) / 60);
+    if (student.voice_credits === null || student.voice_credits === undefined) {
+      patch.voice_credits = VOICE_CREDITS;
+    }
+    if (student.voice_minutes === null || student.voice_minutes === undefined || student.voice_seconds === null || student.voice_seconds === undefined) {
+      const credits = Number(patch.voice_credits ?? student.voice_credits ?? VOICE_CREDITS);
+      patch.voice_minutes = round1(credits / 150);
       patch.voice_seconds = Math.round(Number(patch.voice_minutes) * 60);
     }
     if (student.heygen_minutes === null || student.heygen_minutes === undefined) {
@@ -153,7 +152,7 @@ async function refreshQuotaCycle(student: any) {
       patch.avatar_seconds = Math.round(Number(patch.heygen_minutes) * 60);
     }
     if (!student.quota_started_at) patch.quota_started_at = start.toISOString();
-    if (!student.quota_reset_at) patch.quota_reset_at = resetAt.toISOString();
+    if (!student.quota_reset_at) patch.quota_reset_at = nextMonthStart(now).toISOString();
   }
 
   if (Object.keys(patch).length === 0) return { student, reset: false };
@@ -172,7 +171,7 @@ async function handleUsage(req: Request, body: any) {
   const student = await getCurrentStudent(req);
   const type = String(body.type || "").trim();
   const rawAmount = Number(body.amount || 1);
-  const amount = type === "ai" ? Math.max(1, Math.round(rawAmount || 1)) : Math.max(0.1, round1(rawAmount || 0.1));
+  const amount = Math.max(1, Math.round(rawAmount || 1));
 
   if (student.is_admin) return jsonResponse({ student: publicStudent(student), used: 0 });
 
@@ -180,9 +179,10 @@ async function handleUsage(req: Request, body: any) {
   if (type === "ai") {
     update.ai_usage = Math.max(0, Number(student.ai_usage || 0) - amount);
   } else if (type === "voice") {
-    const next = round1(Number(student.voice_minutes ?? VOICE_MINUTES) - amount);
-    update.voice_minutes = next;
-    update.voice_seconds = Math.round(next * 60);
+    const next = Math.max(0, Math.round(Number(student.voice_credits ?? VOICE_CREDITS) - amount));
+    update.voice_credits = next;
+    update.voice_minutes = round1(next / 150);
+    update.voice_seconds = Math.round(update.voice_minutes * 60);
   } else if (type === "heygen" || type === "avatar") {
     const next = round1(Number(student.heygen_minutes ?? HEYGEN_MINUTES) - amount);
     update.heygen_minutes = next;
