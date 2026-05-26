@@ -70,8 +70,10 @@ function currentYearMonth(date = new Date()) {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-function nextMonthStart(date = new Date()) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1));
+function addDays(date: Date, days: number) {
+  const next = new Date(date.getTime());
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
 }
 
 async function getAuthEmail(req: Request) {
@@ -125,11 +127,12 @@ async function getCurrentStudent(req: Request, allowInactive = false) {
 async function refreshQuotaCycle(student: any) {
   const now = new Date();
   const start = validDate(student.quota_started_at) || validDate(student.created_at) || now;
+  const resetAt = validDate(student.quota_reset_at);
   const ym = currentYearMonth(now);
   const patch: Record<string, unknown> = {};
   let reset = false;
 
-  if (student.reset_month !== ym) {
+  if (resetAt && now >= resetAt) {
     patch.ai_usage = AI_QUOTA;
     patch.voice_credits = VOICE_CREDITS;
     patch.voice_minutes = round1(VOICE_CREDITS / 150);
@@ -137,8 +140,8 @@ async function refreshQuotaCycle(student: any) {
     patch.voice_seconds = Math.round((VOICE_CREDITS / 150) * 60);
     patch.avatar_seconds = AVATAR_SECONDS;
     patch.reset_month = ym;
-    patch.quota_started_at = start.toISOString();
-    patch.quota_reset_at = nextMonthStart(now).toISOString();
+    patch.quota_started_at = now.toISOString();
+    patch.quota_reset_at = addDays(now, 30).toISOString();
     reset = true;
   } else {
     if (student.voice_credits === null || student.voice_credits === undefined) {
@@ -156,7 +159,11 @@ async function refreshQuotaCycle(student: any) {
       patch.heygen_minutes = round1(Number(student.avatar_seconds) / 60);
     }
     if (!student.quota_started_at) patch.quota_started_at = start.toISOString();
-    if (!student.quota_reset_at) patch.quota_reset_at = nextMonthStart(now).toISOString();
+    if (!student.quota_reset_at) {
+      const firstReset = addDays(start, 30);
+      patch.quota_reset_at = (firstReset > now ? firstReset : addDays(now, 30)).toISOString();
+    }
+    if (!student.reset_month) patch.reset_month = ym;
   }
 
   if (Object.keys(patch).length === 0) return { student, reset: false };

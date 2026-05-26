@@ -4812,7 +4812,7 @@ async function loadCloudVoices() {
   try {
     const data = await callChiwaVoiceJson('list', {});
     if (Array.isArray(data.systemVoices) && data.systemVoices.length) {
-      defaultVoices = data.systemVoices;
+      defaultVoices = data.systemVoices.filter(v => v && v.id !== 'def-male' && v.enabled !== false);
     }
     if (Array.isArray(data.voices)) saveStoredVoices(data.voices);
   } catch(e) {
@@ -4981,8 +4981,7 @@ async function togRec(){
 
 // 預設發音人
 let defaultVoices = [
-  { id: 'def-female', name: '吉娃AI官方台灣女聲', date: '系統預設', duration: '預置聲音' },
-  { id: 'def-male', name: '吉娃 AI 官方專業男聲', date: '系統預設', duration: '預置聲音' }
+  { id: 'def-female', name: '吉娃AI官方台灣女聲', date: '系統預設', duration: '預置聲音' }
 ];
 
 // 動態渲染語音清單
@@ -5103,8 +5102,9 @@ async function cloneV() {
 function updateVoiceDropdown() {
   const select = document.getElementById('tts-voice-select');
   if (!select) return;
+  const previousValue = select.value;
   
-  let cloned = getStoredVoices().filter(v => v && v.id && v.name);
+  let cloned = getStoredVoices().filter(v => v && v.id && v.name && v.enabled !== false);
   
   select.innerHTML = '';
   
@@ -5123,6 +5123,25 @@ function updateVoiceDropdown() {
     opt.textContent = v.name + ' (我的克隆)';
     select.appendChild(opt);
   });
+
+  if (previousValue && Array.from(select.options).some(opt => opt.value === previousValue)) {
+    select.value = previousValue;
+  }
+}
+
+async function syncVoiceDropdownBeforeTTS(select) {
+  if (!select) return true;
+  const selectedBeforeSync = select.value;
+  await loadCloudVoices();
+  updateVoiceDropdown();
+  if (!selectedBeforeSync) return true;
+  const stillAvailable = Array.from(select.options).some(opt => opt.value === selectedBeforeSync);
+  if (stillAvailable) {
+    select.value = selectedBeforeSync;
+    return true;
+  }
+  toast('已同步可用聲音清單，請重新選擇發音人後再生成。');
+  return false;
 }
 
 let lastGeneratedAudioUrl = '';
@@ -5276,6 +5295,12 @@ async function generateTTSAudio() {
   try {
     const token = await getVoiceSessionToken();
     if (!token) throw new Error('請使用 Google 登入後再生成語音。');
+    if (!(await syncVoiceDropdownBeforeTTS(select))) {
+      load.style.display = 'none';
+      btn.disabled = false;
+      updateVoiceCreditButton();
+      return;
+    }
 
     const res = await fetch(CHIWA_VOICE_FUNCTION_URL, {
       method: 'POST',

@@ -125,6 +125,58 @@ async function proxyLegacy(req: Request, token: string, body?: BodyInit) {
   });
 }
 
+function formatVoiceModel(row: any) {
+  const seconds = Math.max(0, Math.round(Number(row.recording_seconds || 0)));
+  return {
+    id: row.id,
+    name: row.name || "我的聲音",
+    date: String(row.created_at || "").slice(0, 10) || "已建立",
+    duration: seconds ? `語音克隆 · ${seconds}秒` : "語音克隆",
+    enabled: row.deleted_at ? false : true,
+  };
+}
+
+async function listVoices(supabase: ReturnType<typeof createClient>, student: any) {
+  const { data: presets, error: presetError } = await supabase
+    .from("system_voice_presets")
+    .select("id,name,enabled")
+    .eq("enabled", true)
+    .order("id", { ascending: true });
+  if (presetError) return json({ error: "voice_list_error" }, 500);
+
+  const { data: voices, error: voiceError } = await supabase
+    .from("voice_models")
+    .select("id,name,recording_seconds,created_at,deleted_at")
+    .eq("student_id", student.id)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (voiceError) return json({ error: "voice_list_error" }, 500);
+
+  return json({
+    systemVoices: (presets || []).map((row) => ({
+      id: row.id,
+      name: row.name || "系統預置聲音",
+      date: "系統預設",
+      duration: "預置聲音",
+    })),
+    voices: (voices || []).map(formatVoiceModel),
+    student: publicStudent(student),
+  });
+}
+
+async function deleteVoice(supabase: ReturnType<typeof createClient>, student: any, payload: any) {
+  const id = cleanText(payload.voice_id, 120);
+  if (!id) return json({ error: "missing_voice" }, 400);
+  const { error } = await supabase
+    .from("voice_models")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("student_id", student.id)
+    .or(`id.eq.${id},cartesia_voice_id.eq.${id}`);
+  if (error) return json({ error: "voice_delete_error" }, 500);
+  return json({ ok: true });
+}
+
 async function resolveVoiceId(supabase: ReturnType<typeof createClient>, studentId: string, publicVoiceId: string) {
   const id = cleanText(publicVoiceId, 120) || "def-female";
   const { data: preset } = await supabase
@@ -235,7 +287,9 @@ async function handleTts(supabase: ReturnType<typeof createClient>, student: any
   }
 
   const audio = await upstream.arrayBuffer();
-  const seconds = wavDurationSeconds(audio) || estimateSeconds(text);
+  const estimatedSeconds = estimateSeconds(text);
+  const measuredSeconds = wavDurationSeconds(audio);
+  const seconds = measuredSeconds && measuredSeconds <= Math.max(estimatedSeconds * 3, 300) ? measuredSeconds : estimatedSeconds;
   const id = crypto.randomUUID();
   const storagePath = `${student.id}/${id}.wav`;
   const { error: uploadError } = await supabase.storage.from("voice-outputs").upload(storagePath, audio, { contentType: "audio/wav", upsert: false });
@@ -350,9 +404,10 @@ Deno.serve(async (req: Request) => {
 
     const payload = await req.json().catch(() => ({}));
     const action = cleanText(payload.action, 40);
-    if (["list", "delete"].includes(action)) return proxyLegacy(req, token, JSON.stringify(payload));
 
     const student = await getStudent(supabase, token);
+    if (action === "list") return listVoices(supabase, student);
+    if (action === "delete") return deleteVoice(supabase, student, payload);
     if (action === "tts") return handleTts(supabase, student, payload);
     if (action === "list_tts") return listTts(supabase, student);
     if (action === "delete_tts") return deleteTts(supabase, student, payload);
