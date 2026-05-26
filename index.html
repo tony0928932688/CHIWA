@@ -3967,6 +3967,33 @@ async function deleteGenerationHistory(id) {
 let selChip='', scriptTxt='', marketingTxt='', pureOralTxt='', fullScript='', isRec=false, recSec=0, recTmr=null;
 let voiceMediaRecorder = null, voiceRecChunks = [], voiceRecStream = null, recordedVoiceBlob = null;
 const TOPIC_TYPES = ['痛點鏡子','知識降維','迷思破解','客戶故事','選擇指南','行動催化'];
+const TTS_PUNCTUATION_PROMPT = `標點符號規則（給語音朗讀用）：
+
+必須使用的標點：
+， 短暫停頓（句中換氣）
+。 完整停頓（一句話結束）
+…… 拉長停頓（猶豫、思考、情緒醞釀）
+—— 長停頓（強調、轉折）
+？ 語調上揚結尾
+！ 語調加強結尾
+
+使用原則：
+- 每句話結尾必須有標點，不能裸字結尾。
+- 短句（5字以下）用。結尾。
+- 問句一律用？不用。
+- 情緒轉折前用……。
+- 每 2-3 句之間用，分隔呼吸點。
+- 不用：；、雙引號（這些會讓朗讀停頓過久）。
+- 不用！！或？？等重複標點。
+- 不用 - 或 * 或任何英文符號。
+
+範例：
+錯誤：你有沒有遇過那種客人 做完之後說超滿意
+正確：你有沒有遇過那種客人，
+做完之後說超滿意？
+
+錯誤：欸……這就是重點了
+正確：欸……這就是重點了。`;
 const CONTENT_FIRST_PROMPT = `你是專業台灣口播文案撰寫師。
 規則一：先寫完整的商品或服務相關內容，語氣詞（欸/啊/喔/啦）只佔全文 10% 以下。
 規則二：文案必須包含：開場鉤子、痛點、解法、CTA。
@@ -3981,7 +4008,9 @@ const CONTENT_FIRST_PROMPT = `你是專業台灣口播文案撰寫師。
 - 不要用粗體**或任何Markdown符號。
 - 不要用#標題。
 - 句子之間自然連接，像一個人在說話。
-- 適合直接貼入語音合成工具朗讀。`;
+- 適合直接貼入語音合成工具朗讀。
+
+${TTS_PUNCTUATION_PROMPT}`;
 function buildScriptToneSystemPrompt(mode) {
   const profilePrompt = buildProfilePrompt(currentUserData && currentUserData.profile);
   const base = mode === 'professional' ? `你是專業台灣口播文案師。
@@ -4243,6 +4272,14 @@ function cleanScript(text) {
     .replace(/\*\*/g, '')
     .replace(/---/g, '')
     .replace(/===/g, '')
+    .replace(/["“”]/g, '')
+    .replace(/；/g, '，')
+    .replace(/：/g, '，')
+    .replace(/[;:]/g, '，')
+    .replace(/！{2,}/g, '！')
+    .replace(/？{2,}/g, '？')
+    .replace(/!{1,}/g, '！')
+    .replace(/\?{1,}/g, '？')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
@@ -4416,6 +4453,12 @@ function inferTopicTitle(block) {
   return bold ? bold[1].replace(/[「」『』]/g, '').trim() : '';
 }
 
+function applyWritingPromptRules(sys, type) {
+  const base = String(sys || '');
+  if (!['script', 'marketing'].includes(type)) return base;
+  return base.includes('標點符號規則') ? base : [base, TTS_PUNCTUATION_PROMPT].filter(Boolean).join('\n\n');
+}
+
 /* AI Core Connection */
 async function callSecureAI(sys, usr, typeOverride, fmtOverride, toneOverride) {
   let type = typeOverride;
@@ -4439,6 +4482,7 @@ async function callSecureAI(sys, usr, typeOverride, fmtOverride, toneOverride) {
       type = 'script';
     }
   }
+  sys = applyWritingPromptRules(sys, type);
 
   const isSandbox = localStorage.getItem('chiwa_sandbox_mode') === 'true';
   if (isSandbox) {
