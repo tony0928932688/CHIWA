@@ -787,6 +787,45 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
   width: 100%;
   margin-top: 8px;
 }
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.profile-field {
+  background: rgba(255,255,255,.018);
+  border: 1px solid rgba(255,255,255,.055);
+  border-radius: 10px;
+  padding: 12px;
+}
+.profile-field.full {
+  grid-column: 1 / -1;
+}
+.profile-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.profile-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border: 1px solid var(--bdr);
+  border-radius: 999px;
+  color: var(--t2);
+  font-size: 12px;
+  cursor: pointer;
+  background: var(--card2);
+}
+.profile-choice input {
+  accent-color: var(--gold);
+}
+@media(max-width: 760px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
 .avatar-video-card {
   display: block;
 }
@@ -1166,6 +1205,7 @@ const _SB = (window.supabase && typeof supabase.createClient === 'function')
   : null;
 const CHIWA_VOICE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-voice';
 const CHIWA_SECURE_API_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-secure-api';
+const CHIWA_PROFILE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-profile';
 const CHIWA_AVATAR_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-avatar';
 const CHIWA_AVATAR_R2_WORKER_URL = 'https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev';
 let currentUser = '';
@@ -1221,6 +1261,7 @@ async function finishStudentLogin(data, loginId) {
   if (typeof updateVoiceDropdown === 'function') updateVoiceDropdown();
   if (typeof loadTTSHistory === 'function') loadTTSHistory();
   if (typeof loadAvatarLibrary === 'function') loadAvatarLibrary();
+  if (typeof renderProfileForm === 'function') renderProfileForm();
   toast('🔓 登入成功！歡迎回來 ' + (data.name || currentUser));
 }
 
@@ -2241,43 +2282,47 @@ async function decrAvatar(secs) {
     </div>
 
     <div class="sb-nav">
-      <div class="sb-item on" onclick="swP('topic', this)">
+      <div class="sb-item on" data-panel="topic" onclick="swP('topic', this)">
         <span class="sb-icon">🎯</span>
         <span>選題生成</span>
       </div>
-      <div class="sb-item" onclick="swP('script', this)">
+      <div class="sb-item" data-panel="profile" onclick="swP('profile', this)">
+        <span class="sb-icon">🧭</span>
+        <span>帳號定位</span>
+      </div>
+      <div class="sb-item" data-panel="script" onclick="swP('script', this)">
         <span class="sb-icon">🎬</span>
         <span>口播文案</span>
       </div>
-      <div class="sb-item" onclick="swP('marketing', this)">
+      <div class="sb-item" data-panel="marketing" onclick="swP('marketing', this)">
         <span class="sb-icon">✍️</span>
         <span>行銷文案</span>
       </div>
-      <div class="sb-item" onclick="swP('compliance', this)">
+      <div class="sb-item" data-panel="compliance" onclick="swP('compliance', this)">
         <span class="sb-icon">✅</span>
         <span>文案合規</span>
       </div>
-      <div class="sb-item" onclick="swP('voice', this)">
+      <div class="sb-item" data-panel="voice" onclick="swP('voice', this)">
         <span class="sb-icon">🎙️</span>
         <span>語音克隆</span>
       </div>
-      <div class="sb-item" onclick="swP('avatar', this)">
+      <div class="sb-item" data-panel="avatar" onclick="swP('avatar', this)">
         <span class="sb-icon">🧑‍💼</span>
         <span>形象克隆</span>
       </div>
-      <div class="sb-item" onclick="openMaterialGenerator()">
+      <div class="sb-item" data-panel="materials" onclick="openMaterialGenerator()">
         <span class="sb-icon">🎨</span>
         <span>圖片&影片素材生成</span>
       </div>
-      <div class="sb-item" onclick="swP('course', this)">
+      <div class="sb-item" data-panel="course" onclick="swP('course', this)">
         <span class="sb-icon">📚</span>
         <span>課程面板</span>
       </div>
-      <div class="sb-item" id="sb-security-item" onclick="swP('security', this)">
+      <div class="sb-item" id="sb-security-item" data-panel="security" onclick="swP('security', this)">
         <span class="sb-icon">🛡️</span>
         <span>智慧財產權</span>
       </div>
-      <div class="sb-item" id="sb-admin-item" style="border-top: 1px dashed var(--bdr); margin-top: 10px; display: none;" onclick="swP('admin', this)">
+      <div class="sb-item" id="sb-admin-item" data-panel="admin" style="border-top: 1px dashed var(--bdr); margin-top: 10px; display: none;" onclick="swP('admin', this)">
         <span class="sb-icon">⚙️</span>
         <span>帳號授權管理</span>
       </div>
@@ -2326,6 +2371,110 @@ async function decrAvatar(secs) {
     </div>
     <div id="tload" style="display:none" class="loading"><div class="spinner"></div>AI 正在生成選題...</div>
     <div id="tout" style="margin-top:18px"></div>
+  </div>
+
+    <!-- 帳號定位 -->
+  <div class="panel" id="p-profile">
+    <div class="sec-title">🧭 帳號定位</div>
+    <div class="sec-sub">設定你的身份、服務與受眾；之後所有 AI 生成文案都會優先貼合這個定位</div>
+    <div style="background:var(--blue-bg);border:1px solid var(--blue-bdr);border-radius:10px;padding:10px 14px;margin-bottom:14px;color:var(--t2);font-size:12px;line-height:1.7">
+      全部欄位都可以選填，只有「稱呼」和「行業」建議填寫。多選題最多選 3 個，也可以不選。
+    </div>
+    <div class="profile-grid">
+      <div class="profile-field">
+        <div class="label mb14">稱呼（建議）</div>
+        <input id="pf-name" type="text" placeholder="例：王律師" maxlength="80">
+      </div>
+      <div class="profile-field">
+        <div class="label mb14">行業（建議）</div>
+        <input id="pf-industry" type="text" placeholder="例：法律/律師" maxlength="120">
+      </div>
+      <div class="profile-field full">
+        <div class="label mb14">主要服務</div>
+        <input id="pf-service" type="text" placeholder="例：高資產離婚財產分配" maxlength="180">
+      </div>
+      <div class="profile-field">
+        <div class="label mb14">目標性別</div>
+        <select id="pf-target-gender" class="tinput" style="height:42px">
+          <option value="">不指定</option>
+          <option value="男性為主">男性為主</option>
+          <option value="女性為主">女性為主</option>
+          <option value="男女皆可">男女皆可</option>
+        </select>
+      </div>
+      <div class="profile-field">
+        <div class="label mb14">說話風格</div>
+        <select id="pf-style" class="tinput" style="height:42px">
+          <option value="">不指定</option>
+          <option value="專家權威型">專家權威型</option>
+          <option value="溫暖陪伴型">溫暖陪伴型</option>
+          <option value="犀利觀點型">犀利觀點型</option>
+          <option value="素人真實分享型">素人真實分享型</option>
+          <option value="專業顧問型">專業顧問型</option>
+        </select>
+      </div>
+      <div class="profile-field full" data-profile-group="target_age">
+        <div class="label mb14">目標年齡（最多 3 個）</div>
+        <div class="profile-options">
+          <label class="profile-choice"><input type="checkbox" value="18-25歲">18-25歲</label>
+          <label class="profile-choice"><input type="checkbox" value="25-35歲">25-35歲</label>
+          <label class="profile-choice"><input type="checkbox" value="35-45歲">35-45歲</label>
+          <label class="profile-choice"><input type="checkbox" value="45-60歲">45-60歲</label>
+          <label class="profile-choice"><input type="checkbox" value="60歲以上">60歲以上</label>
+        </div>
+      </div>
+      <div class="profile-field full" data-profile-group="target_identity">
+        <div class="label mb14">目標身份（最多 3 個）</div>
+        <div class="profile-options">
+          <label class="profile-choice"><input type="checkbox" value="企業主/老闆">企業主/老闆</label>
+          <label class="profile-choice"><input type="checkbox" value="高階主管">高階主管</label>
+          <label class="profile-choice"><input type="checkbox" value="專業人士">專業人士</label>
+          <label class="profile-choice"><input type="checkbox" value="上班族">上班族</label>
+          <label class="profile-choice"><input type="checkbox" value="家庭主婦/主夫">家庭主婦/主夫</label>
+          <label class="profile-choice"><input type="checkbox" value="自由工作者">自由工作者</label>
+        </div>
+      </div>
+      <div class="profile-field full" data-profile-group="personality">
+        <div class="label mb14">個性特質（最多 3 個）</div>
+        <div class="profile-options">
+          <label class="profile-choice"><input type="checkbox" value="直接、不拐彎抹角">直接、不拐彎抹角</label>
+          <label class="profile-choice"><input type="checkbox" value="勇於表達立場和觀點">勇於表達立場和觀點</label>
+          <label class="profile-choice"><input type="checkbox" value="理性分析">理性分析</label>
+          <label class="profile-choice"><input type="checkbox" value="溫暖有耐心">溫暖有耐心</label>
+          <label class="profile-choice"><input type="checkbox" value="幽默親近">幽默親近</label>
+          <label class="profile-choice"><input type="checkbox" value="重視細節">重視細節</label>
+        </div>
+      </div>
+      <div class="profile-field full" data-profile-group="audience_feeling">
+        <div class="label mb14">希望觀眾感受（最多 3 個）</div>
+        <div class="profile-options">
+          <label class="profile-choice"><input type="checkbox" value="覺得你很專業、值得信任">覺得你很專業、值得信任</label>
+          <label class="profile-choice"><input type="checkbox" value="覺得你懂他的痛點">覺得你懂他的痛點</label>
+          <label class="profile-choice"><input type="checkbox" value="覺得你講話很真實">覺得你講話很真實</label>
+          <label class="profile-choice"><input type="checkbox" value="覺得找你很安心">覺得找你很安心</label>
+          <label class="profile-choice"><input type="checkbox" value="覺得你有清楚解法">覺得你有清楚解法</label>
+        </div>
+      </div>
+      <div class="profile-field full" data-profile-group="differentiation">
+        <div class="label mb14">與同行差異（最多 3 個）</div>
+        <div class="profile-options">
+          <label class="profile-choice"><input type="checkbox" value="專注特定細分領域">專注特定細分領域</label>
+          <label class="profile-choice"><input type="checkbox" value="成功案例多、口碑佳">成功案例多、口碑佳</label>
+          <label class="profile-choice"><input type="checkbox" value="流程清楚透明">流程清楚透明</label>
+          <label class="profile-choice"><input type="checkbox" value="反應速度快">反應速度快</label>
+          <label class="profile-choice"><input type="checkbox" value="能把複雜問題講簡單">能把複雜問題講簡單</label>
+        </div>
+      </div>
+      <div class="profile-field full">
+        <div class="label mb14">補充說明</div>
+        <textarea id="pf-extra-note" rows="3" placeholder="例：台灣少數專做高資產離婚案的律師" maxlength="500"></textarea>
+      </div>
+    </div>
+    <div class="fl mt10" style="gap:8px">
+      <button class="btn-gold" id="profile-save-btn" onclick="saveProfile()">💾 儲存帳號定位</button>
+      <button class="btn-outline" onclick="renderProfileForm()">還原目前設定</button>
+    </div>
+    <div id="profile-save-load" style="display:none" class="loading"><div class="spinner"></div>正在儲存帳號定位...</div>
   </div>
 
     <!-- 口播文案 -->
@@ -2873,19 +3022,22 @@ async function decrAvatar(secs) {
   <div class="mn-item on" id="mn-topic" onclick="swPM('topic',0)">
     <span class="mn-icon">🎯</span><span>選題</span>
   </div>
-  <div class="mn-item" id="mn-script" onclick="swPM('script',1)">
+  <div class="mn-item" id="mn-profile" onclick="swPM('profile',1)">
+    <span class="mn-icon">🧭</span><span>定位</span>
+  </div>
+  <div class="mn-item" id="mn-script" onclick="swPM('script',2)">
     <span class="mn-icon">🎬</span><span>口播</span>
   </div>
-  <div class="mn-item" id="mn-marketing" onclick="swPM('marketing',2)">
+  <div class="mn-item" id="mn-marketing" onclick="swPM('marketing',3)">
     <span class="mn-icon">✍️</span><span>文案</span>
   </div>
-  <div class="mn-item" id="mn-voice" onclick="swPM('voice',3)">
+  <div class="mn-item" id="mn-voice" onclick="swPM('voice',4)">
     <span class="mn-icon">🎙️</span><span>語音</span>
   </div>
-  <div class="mn-item" id="mn-avatar" onclick="swPM('avatar',4)">
+  <div class="mn-item" id="mn-avatar" onclick="swPM('avatar',5)">
     <span class="mn-icon">🧑‍💼</span><span>形象</span>
   </div>
-  <div class="mn-item" id="mn-course" onclick="swPM('course',5)">
+  <div class="mn-item" id="mn-course" onclick="swPM('course',6)">
     <span class="mn-icon">📚</span><span>課程</span>
   </div>
 </div>
@@ -3150,11 +3302,8 @@ function goPage(pageId) {
   const targetPage = document.getElementById('page-' + pageId);
   if (targetPage) {
     targetPage.classList.add('active');
-    if (pageId === 'workspace') {
-      const items = document.querySelectorAll('.sb-item');
-      if (items.length > 0) {
-        swP('topic', items[0]);
-      }
+      if (pageId === 'workspace') {
+      swP('topic', sidebarItemFor('topic'));
     }
   } else {
     toast('🚧 頁面開發中：' + pageId);
@@ -3224,12 +3373,17 @@ function sendReset() {
 }
 
 /* 面板切換 */
+function sidebarItemFor(name) {
+  return document.querySelector(`.sb-item[data-panel="${name}"]`);
+}
+
 function swP(name, el) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('on'));
   const panel = document.getElementById('p-' + name);
   if (panel) panel.classList.add('on');
   if (el) el.classList.add('on');
+  if (name === 'profile' && typeof renderProfileForm === 'function') renderProfileForm();
   // 切換到課程面板時自動重新渲染單元列表
   if (name === 'course') renderUnitGrid();
   // 切換到管理後台時自動刷新影片設定 UI
@@ -3242,14 +3396,14 @@ function openMaterialGenerator() {
 
 /* 手機版導覽切換 */
 function swPM(name, idx) {
-  const items = document.querySelectorAll('.sb-item');
   const mobileNavItems = document.querySelectorAll('.mn-item');
   if (mobileNavItems.length > 0) {
     mobileNavItems.forEach(i => i.classList.remove('on'));
     if (mobileNavItems[idx]) mobileNavItems[idx].classList.add('on');
   }
-  if (items[idx]) {
-    swP(name, items[idx]);
+  const sidebarEl = sidebarItemFor(name);
+  if (sidebarEl) {
+    swP(name, sidebarEl);
   } else {
     swP(name);
   }
@@ -3260,6 +3414,135 @@ function selC(el) {
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
   el.classList.add('on');
   selChip = el.dataset.t;
+}
+
+async function callChiwaProfile(action, payload) {
+  const token = await getVoiceSessionToken();
+  if (!token) throw new Error('請使用 Google 登入後再設定帳號定位。');
+  const res = await fetch(CHIWA_PROFILE_FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(Object.assign({ action: action }, payload || {}))
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || '帳號定位服務暫時無法使用。');
+  return data;
+}
+
+function profileArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function setInputValue(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value || '';
+}
+
+function checkedProfileValues(group) {
+  return Array.from(document.querySelectorAll(`[data-profile-group="${group}"] input[type="checkbox"]:checked`)).map(i => i.value).slice(0, 3);
+}
+
+function setCheckedProfileValues(group, values) {
+  const selected = new Set(profileArray(values));
+  document.querySelectorAll(`[data-profile-group="${group}"] input[type="checkbox"]`).forEach(input => {
+    input.checked = selected.has(input.value);
+  });
+}
+
+function bindProfileChoiceLimits() {
+  document.querySelectorAll('[data-profile-group]').forEach(groupEl => {
+    if (groupEl.dataset.bound === '1') return;
+    groupEl.dataset.bound = '1';
+    groupEl.querySelectorAll('input[type="checkbox"]').forEach(input => {
+      input.addEventListener('change', function() {
+        const checked = groupEl.querySelectorAll('input[type="checkbox"]:checked');
+        if (checked.length > 3) {
+          input.checked = false;
+          toast('這題最多選 3 個');
+        }
+      });
+    });
+  });
+}
+
+function readProfileForm() {
+  return {
+    name: document.getElementById('pf-name')?.value.trim() || '',
+    industry: document.getElementById('pf-industry')?.value.trim() || '',
+    service: document.getElementById('pf-service')?.value.trim() || '',
+    target_gender: document.getElementById('pf-target-gender')?.value || '',
+    target_age: checkedProfileValues('target_age'),
+    target_identity: checkedProfileValues('target_identity'),
+    style: document.getElementById('pf-style')?.value || '',
+    personality: checkedProfileValues('personality'),
+    audience_feeling: checkedProfileValues('audience_feeling'),
+    differentiation: checkedProfileValues('differentiation'),
+    extra_note: document.getElementById('pf-extra-note')?.value.trim() || ''
+  };
+}
+
+function renderProfileForm() {
+  bindProfileChoiceLimits();
+  const profile = currentUserData && currentUserData.profile && typeof currentUserData.profile === 'object' ? currentUserData.profile : {};
+  setInputValue('pf-name', profile.name);
+  setInputValue('pf-industry', profile.industry);
+  setInputValue('pf-service', profile.service);
+  setInputValue('pf-target-gender', profile.target_gender);
+  setInputValue('pf-style', profile.style);
+  setInputValue('pf-extra-note', profile.extra_note);
+  setCheckedProfileValues('target_age', profile.target_age);
+  setCheckedProfileValues('target_identity', profile.target_identity);
+  setCheckedProfileValues('personality', profile.personality);
+  setCheckedProfileValues('audience_feeling', profile.audience_feeling);
+  setCheckedProfileValues('differentiation', profile.differentiation);
+}
+
+async function saveProfile() {
+  const btn = document.getElementById('profile-save-btn');
+  const load = document.getElementById('profile-save-load');
+  if (btn) btn.disabled = true;
+  if (load) load.style.display = 'flex';
+  try {
+    const profile = readProfileForm();
+    const data = await callChiwaProfile('save', { profile });
+    if (data.student) currentUserData = Object.assign(currentUserData || {}, data.student);
+    else if (currentUserData) currentUserData.profile = profile;
+    renderProfileForm();
+    toast('✅ 帳號定位已儲存，之後 AI 生成會自動帶入。');
+  } catch(e) {
+    toast('❌ ' + (e.message || '帳號定位儲存失敗，請稍後再試。'));
+  } finally {
+    if (btn) btn.disabled = false;
+    if (load) load.style.display = 'none';
+  }
+}
+
+function buildProfilePrompt(profile) {
+  if (!profile || typeof profile !== 'object') return '';
+  const arr = value => Array.isArray(value) ? value.filter(Boolean).join('、') : (value || '');
+  const hasValue = [
+    profile.name, profile.industry, profile.service, profile.target_gender, profile.style,
+    profile.extra_note, arr(profile.target_age), arr(profile.target_identity),
+    arr(profile.personality), arr(profile.audience_feeling), arr(profile.differentiation)
+  ].some(Boolean);
+  if (!hasValue) return '';
+  return `學員背景：
+- 身份：${profile.name || '未設定'}，${profile.industry || '未設定'}
+- 主要服務：${profile.service || '未設定'}
+- 目標受眾：${profile.target_gender || '未設定'}，${arr(profile.target_age) || '未設定'}，職業為${arr(profile.target_identity) || '未設定'}
+- 說話風格：${profile.style || '未設定'}
+- 個性特質：${arr(profile.personality) || '未設定'}
+- 希望觀眾感受：${arr(profile.audience_feeling) || '未設定'}
+- 與同行差異：${arr(profile.differentiation) || '未設定'}
+- 補充說明：${profile.extra_note || '未設定'}
+
+生成原則：
+- 語氣和風格必須符合以上描述
+- 選題必須針對目標受眾的痛點
+- 不要生成與以上描述風格相反的內容`;
 }
 
 /* 用量更新（此函式已由 Supabase 版接管，保留為空殼相容） */
@@ -3561,6 +3844,8 @@ async function callSecureAI(sys, usr, typeOverride, fmtOverride, toneOverride) {
   let type = typeOverride;
   let finalFmt = fmtOverride;
   let finalTone = toneOverride;
+  const profilePrompt = buildProfilePrompt(currentUserData && currentUserData.profile);
+  if (profilePrompt) sys = profilePrompt + '\n\n' + (sys || '');
 
   if (!type) {
     if (sys.includes('5L2g5piv5Y+w54Gj55+t5b2x6Z+z6YG46aGM') || sys.includes('選題')) {
@@ -3667,8 +3952,7 @@ async function genTopics(){
 function useScript(t){
   const el=document.getElementById('stopic');
   if(el)el.value=t;
-  const sbItems=document.querySelectorAll('.sb-item');
-  swP('script',sbItems[1]);
+  swP('script', sidebarItemFor('script'));
 }
 
 /* 口播文案（含分鏡格式）*/
@@ -3752,11 +4036,11 @@ async function genScript(){
 
 function sendComp(){
   const el=document.getElementById('cin');if(el)el.value=scriptTxt;
-  const items=document.querySelectorAll('.sb-item');swP('compliance',items[3]);
+  swP('compliance', sidebarItemFor('compliance'));
 }
 function sendMarketing(){
   const el=document.getElementById('mkin');if(el)el.value=scriptTxt;
-  const items=document.querySelectorAll('.sb-item');swP('marketing',items[2]);
+  swP('marketing', sidebarItemFor('marketing'));
 }
 
 /* 行銷文案 */
