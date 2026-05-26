@@ -3764,7 +3764,16 @@ const CONTENT_FIRST_PROMPT = `你是專業台灣口播文案撰寫師。
 規則二：文案必須包含：開場鉤子、痛點、解法、CTA。
 規則三：禁止生成只有語氣詞沒有實質內容的文案。
 規則四：台灣繁體中文，口語化但有內容。
-規則五：每一段都要推進觀點、案例、細節或行動，不可以用語助詞湊字數。`;
+規則五：每一段都要推進觀點、案例、細節或行動，不可以用語助詞湊字數。
+
+格式規定：
+- 以下格式規定優先於「每句一行」等台灣腔排版規則；若有衝突，一律以自然段落為準。
+- 自然段落，每段3-5句，段內句子連在同一行，不要每句換行。
+- 不要用標題或分隔線如---或===。
+- 不要用粗體**或任何Markdown符號。
+- 不要用#標題。
+- 句子之間自然連接，像一個人在說話。
+- 適合直接貼入語音合成工具朗讀。`;
 aiUse = 285; // 設定初始值（已在 head 用 var 宣告）
 // \uD83D\uDEE1\uFE0F UTF-8 Base64
 function generateSandboxMock(sys, usr, type, fmt, tone) {
@@ -3977,6 +3986,16 @@ function textWordCount(text) {
   return String(text || '').replace(/\s+/g, '').length;
 }
 
+function cleanScript(text) {
+  return String(text || '')
+    .replace(/#{1,6}\s/g, '')
+    .replace(/\*\*/g, '')
+    .replace(/---/g, '')
+    .replace(/===/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function targetWordsFromMinutes(minutes) {
   return Math.max(1, Math.round(Number(minutes || 0) * 150));
 }
@@ -4072,11 +4091,16 @@ async function generateLengthVersion(kind, minutes) {
     for (let i = 0; i < chunks; i++) {
       const chunkWords = chunks === 1 ? targetWords : Math.min(300, targetWords - (i * 300));
       if (chunkWords <= 0) break;
-      const prompt = mode === '瘦身'
-        ? `請將以下文案壓縮到約${chunkWords}字（口播約${Math.round((chunkWords / 150) * 60)}秒），保留核心重點，語氣精簡直接，確保仍有完整的商品/服務內容：\n${source}`
-        : `請將以下文案${chunks > 1 ? `延伸為第 ${i + 1} 段，約${chunkWords}字` : `延伸到約${chunkWords}字（口播約${minutes}分鐘）`}，加入更多具體案例、數據、細節和場景描述，保持原有風格語氣，確保內容豐富不空洞：\n${source}`;
+      let prompt = '';
+      if (mode === '瘦身') {
+        prompt = `請將以下文案壓縮到約${chunkWords}字（口播約${Math.round((chunkWords / 150) * 60)}秒），保留核心重點，語氣精簡直接，確保仍有完整的商品/服務內容：\n${source}`;
+      } else if (chunks > 1 && combined) {
+        prompt = `以下是已完成的內容，請直接繼續寫下一段，絕對不要重複開場句，不要重新介紹主題，直接從上文結尾繼續：\n\n${combined}\n\n請繼續寫約${chunkWords}字，風格一致，不要重複。`;
+      } else {
+        prompt = `請將以下文案${chunks > 1 ? `延伸為第 ${i + 1} 段，約${chunkWords}字` : `延伸到約${chunkWords}字（口播約${minutes}分鐘）`}，加入更多具體案例、數據、細節和場景描述，保持原有風格語氣，確保內容豐富不空洞：\n${source}`;
+      }
       const next = await callSecureAI(CONTENT_FIRST_PROMPT, prompt, kind === 'marketing' ? 'marketing' : 'script', 'simple', 'casual');
-      combined += (combined ? '\n\n' : '') + next.trim();
+      combined = cleanScript(combined + (combined ? '\n\n' : '') + next.trim());
       if (textEl) textEl.textContent = combined;
       if (kind === 'marketing') marketingTxt = combined; else pureOralTxt = combined;
       await spendAIForContent(chunks === 1 ? cost : 1);
@@ -4156,7 +4180,7 @@ async function callSecureAI(sys, usr, typeOverride, fmtOverride, toneOverride) {
   const isSandbox = localStorage.getItem('chiwa_sandbox_mode') === 'true';
   if (isSandbox) {
     toast('\u2699\uFE0F \u5DF2\u555F\u52D5\u300C\u672C\u5730 AI \u6C99\u76D2\u6A21\u64EC\u6A21\u5F0F\u300D\uFF01');
-    const sandboxText = await new Promise(resolve => setTimeout(() => resolve(removeEmojis(generateSandboxMock(sys, usr, type, finalFmt, finalTone))), 1000));
+    const sandboxText = cleanScript(await new Promise(resolve => setTimeout(() => resolve(removeEmojis(generateSandboxMock(sys, usr, type, finalFmt, finalTone))), 1000)));
     await saveGenerationHistory({ type, inputText: usr, outputText: sandboxText, meta: { fmt: finalFmt || 'storyboard', tone: finalTone || 'casual', sandbox: true } });
     return sandboxText;
   }
@@ -4190,7 +4214,7 @@ async function callSecureAI(sys, usr, typeOverride, fmtOverride, toneOverride) {
     }
 
     if (d.content && d.content[0] && d.content[0].text) {
-      const aiText = removeEmojis(d.content[0].text);
+      const aiText = cleanScript(removeEmojis(d.content[0].text));
       await saveGenerationHistory({ type, inputText: usr, outputText: aiText, meta: { fmt: finalFmt || 'storyboard', tone: finalTone || 'casual' } });
       return aiText;
     } else {
@@ -4199,7 +4223,7 @@ async function callSecureAI(sys, usr, typeOverride, fmtOverride, toneOverride) {
   } catch (err) {
     console.error('API call failed, falling back to sandbox mode:', err);
     toast('\u2699\uFE0F \u9023\u7DDA\u53D7\u9650\uFF0C\u5DF2\u81EA\u52D5\u555F\u52D5\u300C\u672C\u5730 AI \u667A\u6162\u6C99\u76D2\u6A21\u64EC\u300D\uFF01');
-    const fallbackText = await new Promise(resolve => setTimeout(() => resolve(removeEmojis(generateSandboxMock(sys, usr, type, finalFmt, finalTone))), 1200));
+    const fallbackText = cleanScript(await new Promise(resolve => setTimeout(() => resolve(removeEmojis(generateSandboxMock(sys, usr, type, finalFmt, finalTone))), 1200)));
     await saveGenerationHistory({ type, inputText: usr, outputText: fallbackText, meta: { fmt: finalFmt || 'storyboard', tone: finalTone || 'casual', fallback: true } });
     return fallbackText;
   }
@@ -4321,7 +4345,7 @@ async function genScript(){
       const map={'開場鉤子':['b-red','開場鉤子'],'核心內容':['b-blue','核心內容'],'行動呼籲':['b-green','行動呼籲']};
       const parts=txt.split(/【(開場鉤子|核心內容|行動呼籲)】/);
       let h='';
-      if(parts.length>1){for(let i=1;i<parts.length;i+=2){const lbl=parts[i],cnt=(parts[i+1]||'').trim(),info=map[lbl];if(info)h+=`<div class="out-card"><div class="out-head"><span class="badge ${info[0]}">${info[1]}</span><span class="copy-btn" onclick="copyT(this.closest('.out-card').querySelector('.out-text').innerText)">複製</span></div><div class="out-text">${escapeHtml(cnt)}</div></div>`;} h+=`<div class="fl mt10"><span class="copy-btn" style="padding:8px 16px" onclick="copyT(scriptTxt)">📋 全部複製</span></div>`;}
+      if(parts.length>1){for(let i=1;i<parts.length;i+=2){const lbl=parts[i],cnt=(parts[i+1]||'').trim(),info=map[lbl];const encodedCnt=encodeURIComponent(cnt);if(info)h+=`<div class="out-card"><div class="out-head"><span class="badge ${info[0]}">${info[1]}</span><span class="copy-btn" onclick="copyT(decodeURIComponent('${encodedCnt}'))">複製</span></div><div class="out-text">${escapeHtml(cnt)}</div></div>`;} h+=`<div class="fl mt10"><span class="copy-btn" style="padding:8px 16px" onclick="copyT(scriptTxt)">📋 全部複製</span></div>`;}
       else{h='<div class="out-card"><div class="out-text">'+escapeHtml(txt)+'</div></div>';}
       try {
         const ttsVal = extractTTSCopy(scriptTxt, fmt);
@@ -4404,7 +4428,8 @@ async function genMarketing(){
         
         let bc='b-gold';
         for(const[k,v] of Object.entries(colorMap)){if(lbl.includes(k)){bc=v;break;}}
-        h+=`<div class="out-card"><div class="out-head"><span class="badge ${bc}">${lbl}</span><span class="copy-btn" onclick="copyT(this.closest('.out-card').querySelector('.out-text').innerText)">複製</span></div><div class="out-text">${escapeHtml(cnt)}</div></div>`;
+        const encodedCnt = encodeURIComponent(cnt);
+        h+=`<div class="out-card"><div class="out-head"><span class="badge ${bc}">${lbl}</span><span class="copy-btn" onclick="copyT(decodeURIComponent('${encodedCnt}'))">複製</span></div><div class="out-text">${escapeHtml(cnt)}</div></div>`;
         
         filteredParts.push(`【${lbl}】\n${cnt}`);
       }
@@ -4449,7 +4474,7 @@ async function chkComp(){
     const issues=ps[0].replace(/整體風險等級[：:][^\n]+\n?/,'').trim();
     const fixed=(ps[1]||'').trim();
     let h=`<div class="out-card"><div class="out-head"><span class="badge ${rc}" style="font-size:12px;padding:4px 14px">${re} 整體風險：${risk}</span></div><div class="out-text">${escapeHtml(issues)}</div></div>`;
-    if(fixed)h+=`<div class="out-card"><div class="out-head"><span class="badge b-green">✅ 修正後腳本</span><span class="copy-btn" onclick="copyT(this.closest('.out-card').querySelector('.out-text').innerText)">複製</span></div><div class="out-text">${escapeHtml(fixed)}</div></div>`;
+    if(fixed){const encodedFixed=encodeURIComponent(fixed);h+=`<div class="out-card"><div class="out-head"><span class="badge b-green">✅ 修正後腳本</span><span class="copy-btn" onclick="copyT(decodeURIComponent('${encodedFixed}'))">複製</span></div><div class="out-text">${escapeHtml(fixed)}</div></div>`;}
     out.innerHTML=h;
   }catch(e){if(e.message!='no key')out.innerHTML='<div class="out-card"><div style="color:var(--red);font-size:13px">❌ '+escapeHtml(e.message)+'</div></div>';}
   btn.disabled=false;ld.style.display='none';
