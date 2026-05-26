@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://nsauscojruqjcprvsfsn.supabase.co https://nsauscojruqjcprvsfsn.storage.supabase.co wss://nsauscojruqjcprvsfsn.supabase.co https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev https://chiwa-avatar-r2.tony0928932688.workers.dev https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev; frame-src https://player.vimeo.com https://vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://forms.gle https://p.ecpay.com.tw; upgrade-insecure-requests;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>吉娃AI自媒體變現系統</title>
-<meta name="description" content="AI 自媒體變現系統，讓 AI 替你說話、接單、變現。AI幫你想文案，幫你用你的聲音說話，只需錄一次60秒影片，AI分身替你經營短影音。">
+<meta name="description" content="AI 自媒體變現系統，讓 AI 替你說話、接單、變現。AI 幫你想文案，幫你用你的聲音說話，只需錄一次 60 秒影片，AI 分身替你經營短影音。">
 <meta name="keywords" content="AI短影音,TikTok代操,AI分身,語音克隆,台灣,I人,短影音行銷,吉娃AI">
 <meta name="author" content="吉娃網路行銷 Chiwa Digital Marketing">
 <meta name="robots" content="index, follow">
@@ -13,13 +13,15 @@
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://chiwaai.com">
+<meta property="og:site_name" content="吉娃AI自媒體變現系統">
 <meta property="og:title" content="吉娃AI自媒體變現系統">
-<meta property="og:description" content="AI 自媒體變現系統，讓 AI 替你說話、接單、變現。AI幫你想文案，幫你用你的聲音說話，只需錄一次60秒影片，AI分身替你經營短影音。">
+<meta property="og:description" content="AI 自媒體變現系統，讓 AI 替你說話、接單、變現。AI 幫你想文案，幫你用你的聲音說話，只需錄一次 60 秒影片，AI 分身替你經營短影音。">
 <meta property="og:image" content="https://chiwaai.com/og-image.jpg">
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="吉娃AI自媒體變現系統">
-<meta name="twitter:description" content="AI 自媒體變現系統，讓 AI 替你說話、接單、變現。AI幫你想文案，幫你用你的聲音說話，只需錄一次60秒影片，AI分身替你經營短影音。">
+<meta name="twitter:description" content="AI 自媒體變現系統，讓 AI 替你說話、接單、變現。AI 幫你想文案，幫你用你的聲音說話，只需錄一次 60 秒影片，AI 分身替你經營短影音。">
+<meta name="application-name" content="吉娃AI自媒體變現系統">
 <link rel="icon" type="image/png" href="assets/chiwa-favicon.png">
 <link rel="apple-touch-icon" href="assets/chiwa-favicon.png">
 <!-- CSP 基本安全標頭（meta 版）-->
@@ -27,6 +29,15 @@
 <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
 <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "吉娃AI自媒體變現系統",
+  "url": "https://chiwaai.com/",
+  "description": "AI 自媒體變現系統，讓 AI 替你說話、接單、變現。AI 幫你想文案，幫你用你的聲音說話，只需錄一次 60 秒影片，AI 分身替你經營短影音。"
+}
+</script>
 <style>
 :root {
   --bg:#0a0a0f; --card:#111118; --card2:#1a1a24; --card3:#0d0d18; --bdr:#252535;
@@ -1228,7 +1239,14 @@ const SUPABASE_URL = 'https://nsauscojruqjcprvsfsn.supabase.co';
 const SUPABASE_STORAGE_URL = 'https://nsauscojruqjcprvsfsn.storage.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zYXVzY29qcnVxamNwcnZzZnNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjAzMTksImV4cCI6MjA5NDU5NjMxOX0.gXX7cBcqohoHqvPkZM-FFrnZVDS59g5OBJPBqH73H_w';
 const _SB = (window.supabase && typeof supabase.createClient === 'function')
-  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce'
+      }
+    })
   : null;
 const AVATAR_MINUTES_KEY = ['hey', 'gen_minutes'].join('');
 const CHIWA_VOICE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-voice';
@@ -1239,6 +1257,56 @@ const CHIWA_AVATAR_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/func
 const CHIWA_AVATAR_R2_WORKER_URL = 'https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev';
 let currentUser = '';
 let currentUserData = null;
+const CHIWA_IDLE_LIMIT_MS = 24 * 60 * 60 * 1000;
+const CHIWA_LAST_ACTIVITY_KEY = 'chiwa_last_activity_at';
+const CHIWA_WORKSPACE_RESTORE_KEY = 'chiwa_workspace_restore';
+
+function setChiwaLocal(key, value) {
+  try { localStorage.setItem(key, String(value)); } catch(e) {}
+}
+
+function getChiwaLocal(key) {
+  try { return localStorage.getItem(key); } catch(e) { return null; }
+}
+
+function removeChiwaLocal(key) {
+  try { localStorage.removeItem(key); } catch(e) {}
+}
+
+function rememberActivity() {
+  setChiwaLocal(CHIWA_LAST_ACTIVITY_KEY, Date.now());
+}
+
+function markWorkspaceRestore() {
+  setChiwaLocal(CHIWA_WORKSPACE_RESTORE_KEY, '1');
+  rememberActivity();
+}
+
+function clearWorkspaceRestore() {
+  removeChiwaLocal(CHIWA_WORKSPACE_RESTORE_KEY);
+}
+
+function isIdleExpired() {
+  const last = Number(getChiwaLocal(CHIWA_LAST_ACTIVITY_KEY) || 0);
+  return !!last && Date.now() - last > CHIWA_IDLE_LIMIT_MS;
+}
+
+function shouldRestoreWorkspaceFromUrl() {
+  const hash = String(location.hash || '').replace(/^#\/?/, '').toLowerCase();
+  const search = String(location.search || '');
+  const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+  const isReload = nav && nav.type === 'reload';
+  const isOAuthReturn = search.includes('code=') || search.includes('access_token') || String(location.hash || '').includes('access_token');
+  return hash === 'workspace' || isOAuthReturn || (isReload && getChiwaLocal(CHIWA_WORKSPACE_RESTORE_KEY) === '1');
+}
+
+function setWorkspaceHash(active) {
+  try {
+    const target = active ? '#workspace' : (location.pathname + location.search);
+    if (active && location.hash !== '#workspace') history.replaceState(null, '', target);
+    if (!active && location.hash === '#workspace') history.replaceState(null, '', target || '/');
+  } catch(e) {}
+}
 
 async function callChiwaSecure(action, payload) {
   const token = await getVoiceSessionToken();
@@ -1284,6 +1352,7 @@ async function finishStudentLogin(data, loginId) {
   const mub = document.getElementById('mobile-usage-bar');
   if (mub) mub.style.display = 'none';
 
+  markWorkspaceRestore();
   if (typeof goPage === 'function') goPage('workspace');
   if (typeof buildWM === 'function') buildWM();
   if (typeof loadCourseStructureFromCloud === 'function') await loadCourseStructureFromCloud();
@@ -1424,6 +1493,7 @@ async function doGoogleLogin() {
     return;
   }
   try {
+    markWorkspaceRestore();
     const redirectTo = 'https://chiwaai.com/';
     const { error } = await _SB.auth.signInWithOAuth({
       provider: 'google',
@@ -1442,9 +1512,28 @@ async function doGoogleLogin() {
 async function restoreGoogleLoginSession() {
   if (!_SB || !_SB.auth) return;
   try {
+    if (isIdleExpired()) {
+      await _SB.auth.signOut();
+      clearWorkspaceRestore();
+      removeChiwaLocal(CHIWA_LAST_ACTIVITY_KEY);
+      setWorkspaceHash(false);
+      goPage('home');
+      return;
+    }
+
+    if (!shouldRestoreWorkspaceFromUrl()) {
+      clearWorkspaceRestore();
+      return;
+    }
+
     const { data } = await _SB.auth.getSession();
     const email = data && data.session && data.session.user && data.session.user.email;
-    if (email && !currentUser) await loginWithGoogleEmail(email);
+    if (email && !currentUser) {
+      await loginWithGoogleEmail(email);
+    } else if (!email) {
+      clearWorkspaceRestore();
+      setWorkspaceHash(false);
+    }
   } catch(e) {
     console.warn('google session restore skipped');
   }
@@ -1453,6 +1542,23 @@ async function restoreGoogleLoginSession() {
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(restoreGoogleLoginSession, 300);
 });
+
+let chiwaActivityTimer = 0;
+['click', 'keydown', 'mousemove', 'touchstart', 'scroll'].forEach(function(evt) {
+  document.addEventListener(evt, function() {
+    if (!currentUser && getChiwaLocal(CHIWA_WORKSPACE_RESTORE_KEY) !== '1') return;
+    const now = Date.now();
+    if (now - chiwaActivityTimer < 30000) return;
+    chiwaActivityTimer = now;
+    rememberActivity();
+  }, { passive: true });
+});
+
+setInterval(async function() {
+  if (!currentUser || !isIdleExpired()) return;
+  await doLogout({ silent: true, reason: 'idle' });
+  toast('已超過 24 小時未操作，系統已自動登出。');
+}, 60000);
 
 // Supabase 登入：取代原本的 localStorage 登入
 async function doLogin() {
@@ -2253,7 +2359,7 @@ async function decrAvatar(secs) {
 
 
 <!-- ═══ LOGIN PAGE ═══ -->
-<div class="page" id="page-login">
+<div class="page" id="page-login" data-nosnippet>
   <div class="login-wrap">
     <div class="login-box">
 
@@ -2387,7 +2493,7 @@ async function decrAvatar(secs) {
 </div>
 
 <!-- ═══ WORKSPACE ═══ -->
-<div class="page" id="page-workspace">
+<div class="page" id="page-workspace" data-nosnippet>
   <!-- WATERMARK OVERLAY -->
   <div id="wm" class="watermark-overlay"></div>
 
@@ -3436,6 +3542,13 @@ function goPage(pageId) {
   console.log('goPage called:', pageId);
   window.scrollTo(0, 0);
   document.documentElement.scrollTop = 0;
+  if (pageId === 'workspace') {
+    markWorkspaceRestore();
+    setWorkspaceHash(true);
+  } else if (pageId === 'home') {
+    clearWorkspaceRestore();
+    setWorkspaceHash(false);
+  }
   if (pageId === 'voice-trial') {
     toast('此功能僅開放已授權學員，請先用 Google 帳號登入。');
     goPage('login');
@@ -3456,7 +3569,15 @@ function goPage(pageId) {
 /* 登入與登出系統 */
 // doLogin 已移至 Supabase 版本（見頁面頂部）
 
-function doLogout() {
+async function doLogout(options) {
+  options = options || {};
+  try {
+    if (_SB && _SB.auth && typeof _SB.auth.signOut === 'function') await _SB.auth.signOut();
+  } catch(e) {
+    console.warn('Supabase signOut skipped:', e);
+  }
+  clearWorkspaceRestore();
+  removeChiwaLocal(CHIWA_LAST_ACTIVITY_KEY);
   // 清空全域登入狀態
   currentUser = '';
   currentUserData = null;
@@ -3468,7 +3589,7 @@ function doLogout() {
   const vb = document.getElementById('voice-bar-sidebar');
   if (un) un.innerHTML = '—<span>/300</span>';
   if (uf) uf.style.width = '0%';
-  if (vn) vn.innerHTML = '—<span style="font-size:10px;color:var(--t3);font-weight:400">/60:00</span>';
+  if (vn) vn.innerHTML = '—<span style="font-size:10px;color:var(--t3);font-weight:400">/10,000字</span>';
   if (vb) vb.style.width = '0%';
   // 隱藏手機版用量列
   const mub = document.getElementById('mobile-usage-bar');
@@ -3477,9 +3598,11 @@ function doLogout() {
   const wm = document.getElementById('wm');
   if (wm) { wm.innerHTML = ''; wm.classList.remove('show'); }
   goPage('home');
-  toast('👋 您已安全登出');
-  document.getElementById('lu').value = '';
-  document.getElementById('lp').value = '';
+  if (!options.silent) toast('👋 您已安全登出');
+  const lu = document.getElementById('lu');
+  const lp = document.getElementById('lp');
+  if (lu) lu.value = '';
+  if (lp) lp.value = '';
   const adminTab = document.getElementById('sb-admin-item');
   if (adminTab) adminTab.style.display = 'none';
 }
