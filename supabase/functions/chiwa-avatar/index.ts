@@ -7,10 +7,14 @@ const PROVIDER_SECRET_NAME = ["RUNNING", "HUB_API_KEY"].join("");
 const PROVIDER_RUN_URL = `https://${PROVIDER_HOST}/openapi/v2/run/ai-app/${PROVIDER_APP_ID}`;
 const PROVIDER_QUERY_URL = `https://${PROVIDER_HOST}/openapi/v2/query`;
 const AVATAR_WORKER_URL = "https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev";
-const MAX_AVATAR_SECONDS = 120;
+const MAX_AVATAR_SECONDS = 1800;
 const DEFAULT_AVATAR_SECONDS = 1800;
 const DEFAULT_HEYGEN_MINUTES = 30;
-const OUTPUT_RETENTION_DAYS = 7;
+const OUTPUT_RETENTION_DAYS = 1;
+const MAX_ACTIVE_TASKS_PER_STUDENT = 1;
+const MAX_ACTIVE_TASKS_GLOBAL = 3;
+const ACTIVE_TASK_WINDOW_HOURS = 6;
+const ACTIVE_AVATAR_STATUSES = ["RUNNING", "PENDING", "QUEUED", "PROCESSING"];
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -152,6 +156,37 @@ function assertQuota(student: any, seconds: number) {
   }
 }
 
+async function countActiveAvatarTasks(studentId?: string) {
+  const activeSince = new Date(Date.now() - ACTIVE_TASK_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
+  let query = supabaseAdmin
+    .from("avatar_generation_tasks")
+    .select("id", { count: "exact", head: true })
+    .in("status", ACTIVE_AVATAR_STATUSES)
+    .gte("created_at", activeSince);
+  if (studentId) query = query.eq("student_id", studentId);
+  const { count, error } = await query;
+  if (error) throw new Error(error.message);
+  return count || 0;
+}
+
+async function assertConcurrency(student: any) {
+  const studentActive = await countActiveAvatarTasks(student.id);
+  if (studentActive >= MAX_ACTIVE_TASKS_PER_STUDENT) {
+    throw Object.assign(new Error("avatar_student_task_already_running"), {
+      status: 429,
+      extra: { activeTasks: studentActive, maxActiveTasks: MAX_ACTIVE_TASKS_PER_STUDENT },
+    });
+  }
+
+  const globalActive = await countActiveAvatarTasks();
+  if (globalActive >= MAX_ACTIVE_TASKS_GLOBAL) {
+    throw Object.assign(new Error("avatar_system_busy"), {
+      status: 429,
+      extra: { activeTasks: globalActive, maxActiveTasks: MAX_ACTIVE_TASKS_GLOBAL },
+    });
+  }
+}
+
 async function startProviderTask(apiKey: string, videoValue: string, audioValue: string) {
   const runRes = await fetch(PROVIDER_RUN_URL, {
     method: "POST",
@@ -205,6 +240,7 @@ async function handleSubmitUrls(req: Request, body: any) {
   const requestedSeconds = normalizeSeconds(body.duration_seconds);
   assertDuration(requestedSeconds);
   assertQuota(student, requestedSeconds);
+  await assertConcurrency(student);
 
   const videoUrl = assertUrl(body.video_url, "video_url");
   const audioUrl = assertUrl(body.audio_url, "audio_url");

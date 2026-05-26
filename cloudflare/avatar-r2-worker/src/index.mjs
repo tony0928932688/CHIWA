@@ -1,8 +1,9 @@
-const DEFAULT_MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024;
+const DEFAULT_MAX_VIDEO_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024;
+const DEFAULT_MAX_AUDIO_UPLOAD_BYTES = 500 * 1024 * 1024;
 const DEFAULT_PART_SIZE = 10 * 1024 * 1024;
 const MAX_PART_BYTES = 90 * 1024 * 1024;
 const CLEANUP_AGE_MS = 2 * 24 * 60 * 60 * 1000;
-const OUTPUT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+const OUTPUT_RETENTION_MS = 24 * 60 * 60 * 1000;
 
 function corsHeaders(req, env) {
   const origin = req.headers.get("Origin") || "";
@@ -170,7 +171,11 @@ async function handleCreate(req, env) {
   const body = await req.json().catch(() => ({}));
   const kind = body.kind === "audio" ? "audio" : "video";
   const size = Number(body.size || 0);
-  const maxBytes = Number(env.MAX_UPLOAD_BYTES || DEFAULT_MAX_UPLOAD_BYTES);
+  const maxBytes = Number(
+    kind === "audio"
+      ? (env.MAX_AUDIO_UPLOAD_BYTES || env.MAX_UPLOAD_BYTES || DEFAULT_MAX_AUDIO_UPLOAD_BYTES)
+      : (env.MAX_VIDEO_UPLOAD_BYTES || env.MAX_UPLOAD_BYTES || DEFAULT_MAX_VIDEO_UPLOAD_BYTES)
+  );
   if (!Number.isFinite(size) || size <= 0) throw Object.assign(new Error("invalid_file_size"), { status: 400 });
   if (size > maxBytes) throw Object.assign(new Error("file_exceeds_system_limit"), { status: 413 });
 
