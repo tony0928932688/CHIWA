@@ -3117,7 +3117,15 @@ async function decrAvatar(secs) {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px" class="script-grid">
       <div class="drop-upload" data-drop-kind="avatar-video" onclick="document.getElementById('avatar-video-input').click()" style="background:var(--card);border-radius:12px;padding:16px">
         <div style="font-size:14px;font-weight:800;margin-bottom:8px">步驟 1：上傳形象影片</div>
-        <div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">??????????????????</div>
+        <div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">請上傳正面清楚、光線穩定的形象影片。檔案較大時會使用分段上傳，請保持頁面開啟。</div>
+        <input type="file" id="avatar-video-input" accept="video/*" style="display:none" onchange="handleAvatarFileUpload(event,'video')">
+        <button class="btn-outline" type="button" style="width:100%" onclick="event.stopPropagation();document.getElementById('avatar-video-input').click()">🎬 選擇形象影片</button>
+        <div class="drop-hint">或把影片檔拖曳到這裡</div>
+        <div id="avatar-video-status" style="font-size:11px;color:var(--t3);margin-top:10px">尚未選擇影片</div>
+      </div>
+      <div class="drop-upload" data-drop-kind="avatar-audio" onclick="document.getElementById('avatar-audio-input').click()" style="background:var(--card);border-radius:12px;padding:16px">
+        <div style="font-size:14px;font-weight:800;margin-bottom:8px">步驟 2：上傳人聲音檔</div>
+        <div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">請上傳乾淨人聲音檔。音檔長度會作為本次影像克隆扣點依據。</div>
         <input type="file" id="avatar-audio-input" accept="audio/*" style="display:none" onchange="handleAvatarFileUpload(event,'audio')">
         <button class="btn-outline" type="button" style="width:100%" onclick="event.stopPropagation();document.getElementById('avatar-audio-input').click()">🎧 選擇人聲音檔</button>
         <div class="drop-hint">或把音檔拖曳到這裡</div>
