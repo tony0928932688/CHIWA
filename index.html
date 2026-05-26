@@ -744,6 +744,49 @@ textarea:focus,input:focus,.tinput:focus{border-color:var(--gold-d)}
   justify-content: space-between;
   gap: 16px;
 }
+.tts-library-box {
+  display: block;
+}
+.tts-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tts-history-item {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 12px;
+  align-items: center;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  padding: 12px;
+}
+.tts-history-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--t1);
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tts-history-meta {
+  font-size: 11px;
+  color: var(--t3);
+  margin-top: 3px;
+}
+.tts-history-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.tts-history-item audio {
+  width: 100%;
+  margin-top: 8px;
+}
 .avatar-video-card {
   display: block;
 }
@@ -1176,6 +1219,7 @@ async function finishStudentLogin(data, loginId) {
   if (typeof loadCloudVoices === 'function') await loadCloudVoices();
   if (typeof renderVoiceList === 'function') renderVoiceList();
   if (typeof updateVoiceDropdown === 'function') updateVoiceDropdown();
+  if (typeof loadTTSHistory === 'function') loadTTSHistory();
   if (typeof loadAvatarLibrary === 'function') loadAvatarLibrary();
   toast('🔓 登入成功！歡迎回來 ' + (data.name || currentUser));
 }
@@ -2203,7 +2247,7 @@ async function decrAvatar(secs) {
       </div>
       <div class="sb-item" onclick="swP('script', this)">
         <span class="sb-icon">🎬</span>
-        <span>腳本展開</span>
+        <span>口播文案</span>
       </div>
       <div class="sb-item" onclick="swP('marketing', this)">
         <span class="sb-icon">✍️</span>
@@ -2220,6 +2264,10 @@ async function decrAvatar(secs) {
       <div class="sb-item" onclick="swP('avatar', this)">
         <span class="sb-icon">🧑‍💼</span>
         <span>形象克隆</span>
+      </div>
+      <div class="sb-item" onclick="openMaterialGenerator()">
+        <span class="sb-icon">🎨</span>
+        <span>圖片&影片素材生成</span>
       </div>
       <div class="sb-item" onclick="swP('course', this)">
         <span class="sb-icon">📚</span>
@@ -2280,9 +2328,9 @@ async function decrAvatar(secs) {
     <div id="tout" style="margin-top:18px"></div>
   </div>
 
-    <!-- 腳本展開 -->
+    <!-- 口播文案 -->
     <div class="panel" id="p-script">
-    <div class="sec-title">🎬 腳本展開</div>
+    <div class="sec-title">🎬 口播文案</div>
     <div class="sec-sub">AI 生成完整分鏡腳本，每段同步標注畫面呈現方式與剪輯指示</div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
@@ -2322,7 +2370,7 @@ async function decrAvatar(secs) {
     <div class="sec-title">✍️ 行銷文案</div>
     <div class="sec-sub">根據腳本一鍵生成多種行銷用途文案，複製即可使用</div>
 
-    <div class="label mb14">貼入腳本內容（或從腳本展開直接帶入）</div>
+    <div class="label mb14">貼入口播文案內容（或從口播文案直接帶入）</div>
     <textarea id="mkin" rows="5" placeholder="貼入你的腳本文字..." maxlength="1500"></textarea>
 
 
@@ -2362,7 +2410,7 @@ async function decrAvatar(secs) {
     </div>
     <div id="vt-new" style="display:none">
       <div style="text-align:center;font-size:13px;color:var(--t2);margin-bottom:12px">步驟 1：錄製或上傳 30-60 秒清晰語音</div>
-      <div id="rbtn" class="rec-btn" onclick="togRec()">🎤</div>
+      <div id="rbtn" class="rec-btn" onclick="togRec()">🎙️</div>
       <div class="rec-timer" id="rtimer">00:00</div>
       <div class="rec-hint" id="rhint">點擊開始錄音</div>
       <div class="drop-upload" data-drop-kind="voice" onclick="document.getElementById('voice-file-input').click()">
@@ -2385,14 +2433,39 @@ async function decrAvatar(secs) {
       </div>
       <div style="font-size:11px;color:var(--t3)">本月重置</div>
     </div>
-    <div class="label mb14">選擇發音人</div>
-    <select id="tts-voice-select" class="tinput" style="height:42px;margin-bottom:12px"></select>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:10px;margin-bottom:12px" class="script-grid">
+      <div>
+        <div class="label mb14">選擇發音人</div>
+        <select id="tts-voice-select" class="tinput" style="height:42px"></select>
+      </div>
+      <div>
+        <div class="label mb14">語言</div>
+        <select id="tts-language-select" class="tinput" style="height:42px">
+          <option value="zh">中文</option>
+          <option value="en">英文</option>
+          <option value="ja">日文</option>
+          <option value="ko">韓文</option>
+        </select>
+      </div>
+    </div>
     <textarea id="ttsin" rows="4" placeholder="貼入要朗讀的腳本文字..." maxlength="500"></textarea>
     <div class="fl mt10">
       <button class="btn-gold" id="tts-btn" onclick="generateTTSAudio()">🎵 生成語音</button>
     </div>
     <div id="tts-load" style="display:none" class="loading"><div class="spinner"></div>正在透過吉娃 AI 語音系統生成聲音...</div>
     <div id="tts-audio-container"></div>
+    <div class="audio-player-box tts-library-box">
+      <div class="out-head" style="margin-bottom:12px">
+        <div>
+          <div style="font-size:14px;font-weight:800;color:var(--t1)">我的語音檔</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">可先試聽，下載時才扣除語音秒數</div>
+        </div>
+        <button class="btn-outline" style="padding:8px 12px;font-size:12px" onclick="loadTTSHistory()">刷新</button>
+      </div>
+      <div id="tts-history-list" class="tts-history-list">
+        <div style="font-size:12px;color:var(--t3)">尚未生成語音檔</div>
+      </div>
+    </div>
   </div>
 
     <!-- 形象克隆 -->
@@ -2801,7 +2874,7 @@ async function decrAvatar(secs) {
     <span class="mn-icon">🎯</span><span>選題</span>
   </div>
   <div class="mn-item" id="mn-script" onclick="swPM('script',1)">
-    <span class="mn-icon">🎬</span><span>腳本</span>
+    <span class="mn-icon">🎬</span><span>口播</span>
   </div>
   <div class="mn-item" id="mn-marketing" onclick="swPM('marketing',2)">
     <span class="mn-icon">✍️</span><span>文案</span>
@@ -3163,6 +3236,10 @@ function swP(name, el) {
   if (name === 'admin') { if(typeof renderAdminPanel==='function') renderAdminPanel(); if(typeof updateAdminVSLUI==='function') updateAdminVSLUI(); if(typeof refreshAdminSelects==='function') refreshAdminSelects(); }
 }
 
+function openMaterialGenerator() {
+  window.open('https://www.lovart.ai/zh-TW?sourceId=901132&campaignid=23591476024&utm_medium=cpc&adgroupid=190721275662&adid=797911412538&af_media_type=g&utm_term=lovart&targetid=kwd-338798560740&kwd_type=e&devicemodel=&placement=&device=c&target=&extensionid=&feeditemid=&gad_source=1&gad_campaignid=23591476024&gbraid=0AAAAA_YioAA_AeexeSdl8Jtm_ip8Uu3Qz&gclid=CjwKCAjw5s_QBhAdEiwADD_gBsF6fFC6gRZKEMtB5X6Sj97hE25MWoCGmEnHRHXNyYA4W3lcsq-QPBoCbtwQAvD_BwE', '_blank', 'noopener');
+}
+
 /* 手機版導覽切換 */
 function swPM(name, idx) {
   const items = document.querySelectorAll('.sb-item');
@@ -3193,7 +3270,7 @@ function toggleFaq(el) {
   el.classList.toggle('open');
 }
 
-let selChip='', scriptTxt='', marketingTxt='', isRec=false, recSec=0, recTmr=null;
+let selChip='', scriptTxt='', marketingTxt='', pureOralTxt='', isRec=false, recSec=0, recTmr=null;
 let voiceMediaRecorder = null, voiceRecChunks = [], voiceRecStream = null, recordedVoiceBlob = null;
 aiUse = 285; // 設定初始值（已在 head 用 var 宣告）
 // \uD83D\uDEE1\uFE0F UTF-8 Base64
@@ -3273,27 +3350,27 @@ function generateSandboxMock(sys, usr, type, fmt, tone) {
 
     if (fmt === 'storyboard') {
       return `【開場鉤子】（秒數：0-3秒）
-🎤 口說：${hook_spoken}
+🎙️ 口說：${hook_spoken}
 🎬 畫面：主講人神情專注看著鏡頭，背景是極具質感的溫暖光影背景，手裡拿著筆。
 ✂️ 建議：開場前 1 秒畫面微微拉近，搭配吉娃 AI 語音系統與質感清脆的轉場音效。
 
 【段落一】（秒數：4-20秒）
-🎤 口說：${sec1_spoken}
+🎙️ 口說：${sec1_spoken}
 🎬 畫面：主講人走向質感簡約的寫字檯，白板上列出痛點對比圖表。
 ✂️ 建議：當講到「痛點」時，畫面右側跳出紅色警告標籤，配合最新 AI 影片生成技術與低沉的打擊音效。
 
 【段落二】（秒數：21-40秒）
-🎤 口說：${sec2_spoken}
+🎙️ 口說：${sec2_spoken}
 🎬 畫面：畫面切換到實操電腦，展示精美的分析簡報與思維導圖。
 ✂️ 建議：重要關鍵字「${tp}」以金色漸層大字型浮現，加入微微發光效果。
 
 【段落三】（秒數：41-60秒）
-🎤 口說：${sec3_spoken}
+🎙️ 口說：${sec3_spoken}
 🎬 畫面：展示專家接受諮詢或服務客戶的溫馨真實側拍，營造滿滿的信任感與專業感。
 ✂️ 建議：畫面右下角呈現「專業見證」浮水印，音效切換為輕快柔和的鋼琴音樂。
 
 【行動呼籲】（秒數：61-70秒）
-🎤 口說：${cta_spoken}
+🎙️ 口說：${cta_spoken}
 🎬 畫面：畫面漸隱出現金色邊框的預約卡片，主講人手勢指引下方，出現「立即預約諮詢」字樣。
 ✂️ 建議：背景音樂推向高潮後自然收尾，金色預約卡片加上微光的動態邊框特效。`;
     } else {
@@ -3394,6 +3471,51 @@ function extractTTSCopy(txt, fmt) {
     }
   }
   return extracted.join('\n\n');
+}
+
+function renderPureOralCard(value) {
+  pureOralTxt = value || '';
+  if (!pureOralTxt) return '';
+  const encodedTts = encodeURIComponent(pureOralTxt);
+  return `<div class="out-card" id="pure-oral-card" style="border:1.5px solid var(--gold); background: linear-gradient(135deg, rgba(232,197,90,.05), rgba(232,197,90,.02)); margin-top:20px; border-radius:12px; padding:16px;"><div class="out-head" style="margin-bottom:12px; border-bottom:1px solid rgba(232,197,90,.15); padding-bottom:8px;"><div style="display:flex;align-items:center;gap:8px"><span class="badge b-gold" style="font-weight:700;">🎙️ 純口播文案 (TTS專用)</span></div><span class="copy-btn" onclick="copyT(decodeURIComponent('${encodedTts}'))">📋 複製口播</span></div><div class="out-text" id="pure-oral-text" style="font-size:13.5px; color:var(--t1); line-height:1.6; white-space:pre-wrap;">${escapeHtml(pureOralTxt)}</div><div class="fl mt10" style="gap:8px"><button class="btn-outline" id="oral-short-btn" onclick="refinePureOral('shorten')">精簡文案</button><button class="btn-outline" id="oral-expand-btn" onclick="refinePureOral('expand')">擴展文案</button></div><div id="oral-refine-load" style="display:none;font-size:12px;color:var(--t3);margin-top:10px">正在調整口播文案...</div></div>`;
+}
+
+async function refinePureOral(mode) {
+  if (!pureOralTxt) {
+    toast('請先生成純口播文案');
+    return;
+  }
+  const shortBtn = document.getElementById('oral-short-btn');
+  const expandBtn = document.getElementById('oral-expand-btn');
+  const load = document.getElementById('oral-refine-load');
+  if (shortBtn) shortBtn.disabled = true;
+  if (expandBtn) expandBtn.disabled = true;
+  if (load) load.style.display = 'block';
+  try {
+    const goal = mode === 'shorten' ? '精簡文案' : '擴展文案';
+    const sys = '你是台灣短影音口播文案編輯。請在不改變原意、不改變人物觀點、不刪掉關鍵說服邏輯的前提下調整純口播文案。必須維持台灣素人隨聊感、TikTok 廣告合規、不使用 emoji。只輸出調整後的純口播文案，不要解釋。';
+    const usr = `任務：${goal}
+
+規則：
+1. 精簡文案：保留原本意思、鉤子、痛點、轉折與 CTA，但刪掉重複或拖長的句子。
+2. 擴展文案：保留原本意思與語氣，補更多具體情境、原因、做法或乾貨，但不要變成教科書。
+3. 維持台灣口語，一句一行，每 3 到 4 句空一行。
+4. 避免保證、一定有效、月入、穩賺、最強、唯一、翻倍等違規或絕對化說法。
+
+原始文案：
+${pureOralTxt}`;
+    const next = await callSecureAI(sys, usr, 'script', 'simple', 'casual');
+    pureOralTxt = next.trim();
+    const textEl = document.getElementById('pure-oral-text');
+    if (textEl) textEl.textContent = pureOralTxt;
+    toast(mode === 'shorten' ? '✅ 已精簡口播文案' : '✅ 已擴展口播文案');
+  } catch(e) {
+    toast('❌ ' + (e.message || '文案調整失敗，請稍後再試。'));
+  } finally {
+    if (shortBtn) shortBtn.disabled = false;
+    if (expandBtn) expandBtn.disabled = false;
+    if (load) load.style.display = 'none';
+  }
 }
 
 function cleanAIFieldValue(line, key) {
@@ -3549,7 +3671,7 @@ function useScript(t){
   swP('script',sbItems[1]);
 }
 
-/* 腳本展開（含分鏡格式）*/
+/* 口播文案（含分鏡格式）*/
 async function genScript(){
   const tp=document.getElementById('stopic')?.value.trim();
   if(!tp){toast('請先輸入選題標題');return;}
@@ -3569,7 +3691,7 @@ async function genScript(){
     let sys,prompt;
     if(fmt==='storyboard'){
       sys=dSU('5L2g5piv5Y+w54Gj55+t5b2x6Z+z5YiG6Y+h6IWz5pys5bir77yM54K6QjJC5pyN5YuZ5qWt5bCI5a626KO95L2cVGlrVG9r5Y+j5pKt5b2x54mH44CC6IWz5pys5b+F6aCI5ZCM5pmC5YyF5ZCr5Y+j6Kqq5paH5a2X5ZKM55Wr6Z2i5oyH56S644CC5LiN6IO95pyJ5L+d6K2J5pWI5p6c55qE5a6j56ix44CC5Y+q55So57mB6auU5Lit5paH44CC57WV5bCN5LiN6IO95L2/55So5Lu75L2VIGVtb2ppIOaIluihqOaDheespuiZn+OAggo=');
-      prompt='選題：'+tp+(ex?'\n補充：'+ex:'')+'\n\n請生成完整分鏡腳本，格式：\n\n【開場鉤子】（秒數：0-3秒）\n🎤 口說：（說的話）\n🎬 畫面：（畫面呈現）\n✂️ 剪輯提示：（特效建議）\n\n【段落一】（秒數：4-20秒）\n🎤 口說：（說的話）\n🎬 畫面：（畫面指示）\n✂️ 剪輯提示：（剪輯建議）\n\n【段落二】（秒數：21-40秒）\n🎤 口說：（說的話）\n🎬 畫面：（畫面指示）\n✂️ 剪輯提示：（剪輯建議）\n\n【段落三】（秒數：41-60秒）\n🎤 口說：（說的話）\n🎬 畫面：（畫面指示）\n✂️ 剪輯提示：（剪輯建議）\n\n【行動呼籲】（秒數：61-70秒）\n🎤 口說：（結尾呼籲）\n🎬 畫面：（結尾畫面）\n✂️ 剪輯提示：（結尾特效）\n\n用口語化台灣繁體中文。';
+      prompt='選題：'+tp+(ex?'\n補充：'+ex:'')+'\n\n請生成完整分鏡腳本，格式：\n\n【開場鉤子】（秒數：0-8秒）\n🎙️ 口說：（說的話）\n🎬 畫面：（畫面呈現）\n✂️ 剪輯提示：（特效建議）\n\n【段落一】（秒數：9-35秒）\n🎙️ 口說：（說的話）\n🎬 畫面：（畫面指示）\n✂️ 剪輯提示：（剪輯建議）\n\n【段落二】（秒數：36-70秒）\n🎙️ 口說：（說的話）\n🎬 畫面：（畫面指示）\n✂️ 剪輯提示：（剪輯建議）\n\n【段落三】（秒數：71-105秒）\n🎙️ 口說：（說的話）\n🎬 畫面：（畫面指示）\n✂️ 剪輯提示：（剪輯建議）\n\n【行動呼籲】（秒數：106-120秒）\n🎙️ 口說：（結尾呼籲）\n🎬 畫面：（結尾畫面）\n✂️ 剪輯提示：（結尾特效）\n\n保留這個分鏡格式。所有「口說」加總約 300-500 個中文字，約 1-2 分鐘。用口語化台灣繁體中文。';
     }else{
       sys=dSU('5L2g5piv5Y+w54Gj55+t5b2x6Z+z6IWz5pys5bir77yM54K6QjJC5pyN5YuZ5qWt5bCI5a625a+r5Y+j6Kqe5YyWVGlrVG9r6IWz5pys44CC5LiN6IO95pyJ5L+d6K2J5pWI5p6c55qE5a6j56ix44CC5Y+q55So57mB6auU5Lit5paH44CC57WV5bCN5LiN6IO95L2/55So5Lu75L2VIGVtb2ppIOaIluihqOaDheespuiZn+OAggo=');
       prompt='選題：'+tp+(ex?'\n補充：'+ex:'')+'\n\n請撰寫60-90秒腳本：\n\n【開場鉤子】\n...\n\n【核心內容】\n重點1：...\n重點2：...\n重點3：...\n\n【行動呼籲】\n...\n\n用口語化台灣繁體中文。';
@@ -3597,15 +3719,14 @@ async function genScript(){
           const cleanText = `【${lbl}】${timing ? ' (' + timing + ')' : ''}\n口說：${oral}\n畫面：${visual}\n剪輯提示：${edit}`;
           const encodedText = encodeURIComponent(cleanText);
           const bcolor=bc==='b-red'?'var(--red)':bc==='b-green'?'var(--green)':'var(--blue)';
-          h+=`<div class="out-card" style="border-left:3px solid ${bcolor}"><div class="out-head"><div style="display:flex;align-items:center;gap:8px"><span class="badge ${bc}">${lbl}</span>${timing?`<span style="font-size:10px;color:var(--t3);font-family:'Space Mono',monospace">${escapeHtml(timing)}</span>`:''}</div><span class="copy-btn" onclick="copyT(decodeURIComponent('${encodedText}'))">複製</span></div>${oral?`<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--gold);font-weight:700;margin-bottom:3px">🎤 口說</div><div style="font-size:13px;background:rgba(232,197,90,.05);border-radius:8px;padding:8px 12px;color:var(--t1)">${escapeHtml(oral)}</div></div>`:''}${visual?`<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--blue);font-weight:700;margin-bottom:3px">🎬 畫面</div><div style="font-size:12px;background:var(--blue-bg);border-radius:8px;padding:8px 12px;color:var(--t2)">${escapeHtml(visual)}</div></div>`:''}${edit?`<div><div style="font-size:10px;color:var(--purple);font-weight:700;margin-bottom:3px">✂️ 剪輯提示</div><div style="font-size:12px;background:rgba(167,139,250,.06);border-radius:8px;padding:8px 12px;color:var(--t2)">${escapeHtml(edit)}</div></div>`:''}</div>`;
+          h+=`<div class="out-card" style="border-left:3px solid ${bcolor}"><div class="out-head"><div style="display:flex;align-items:center;gap:8px"><span class="badge ${bc}">${lbl}</span>${timing?`<span style="font-size:10px;color:var(--t3);font-family:'Space Mono',monospace">${escapeHtml(timing)}</span>`:''}</div><span class="copy-btn" onclick="copyT(decodeURIComponent('${encodedText}'))">複製</span></div>${oral?`<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--gold);font-weight:700;margin-bottom:3px">🎙️ 口說</div><div style="font-size:13px;background:rgba(232,197,90,.05);border-radius:8px;padding:8px 12px;color:var(--t1)">${escapeHtml(oral)}</div></div>`:''}${visual?`<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--blue);font-weight:700;margin-bottom:3px">🎬 畫面</div><div style="font-size:12px;background:var(--blue-bg);border-radius:8px;padding:8px 12px;color:var(--t2)">${escapeHtml(visual)}</div></div>`:''}${edit?`<div><div style="font-size:10px;color:var(--purple);font-weight:700;margin-bottom:3px">✂️ 剪輯提示</div><div style="font-size:12px;background:rgba(167,139,250,.06);border-radius:8px;padding:8px 12px;color:var(--t2)">${escapeHtml(edit)}</div></div>`:''}</div>`;
         }
         h+=`<div class="fl mt10"><span class="copy-btn" style="padding:8px 16px" onclick="copyT(scriptTxt)">📋 全部複製</span></div>`;
       }else{h='<div class="out-card"><div class="out-text">'+escapeHtml(txt)+'</div></div>';}
       try {
         const ttsVal = extractTTSCopy(scriptTxt, fmt);
         if (ttsVal) {
-          const encodedTts = encodeURIComponent(ttsVal);
-          h += `<div class="out-card" style="border:1.5px solid var(--gold); background: linear-gradient(135deg, rgba(232,197,90,.05), rgba(232,197,90,.02)); margin-top:20px; border-radius:12px; padding:16px;"><div class="out-head" style="margin-bottom:12px; border-bottom:1px solid rgba(232,197,90,.15); padding-bottom:8px;"><div style="display:flex;align-items:center;gap:8px"><span class="badge b-gold" style="font-weight:700;">\uD83C\uDFA4 \u7D14\u53E3\u8AAA\u6587\u6848 (TTS\u5C08\u7528)</span></div><span class="copy-btn" onclick="copyT(decodeURIComponent('${encodedTts}'))">\uD83D\uDCCB \u8907\u88FD\u53E3\u8AAA</span></div><div class="out-text" style="font-size:13.5px; color:var(--t1); line-height:1.6; white-space:pre-wrap;">${escapeHtml(ttsVal)}</div></div>`;
+          h += renderPureOralCard(ttsVal);
         }
       } catch(e) { console.error(e); }
       out.innerHTML=h;
@@ -3618,8 +3739,7 @@ async function genScript(){
       try {
         const ttsVal = extractTTSCopy(scriptTxt, fmt);
         if (ttsVal) {
-          const encodedTts = encodeURIComponent(ttsVal);
-          h += `<div class="out-card" style="border:1.5px solid var(--gold); background: linear-gradient(135deg, rgba(232,197,90,.05), rgba(232,197,90,.02)); margin-top:20px; border-radius:12px; padding:16px;"><div class="out-head" style="margin-bottom:12px; border-bottom:1px solid rgba(232,197,90,.15); padding-bottom:8px;"><div style="display:flex;align-items:center;gap:8px"><span class="badge b-gold" style="font-weight:700;">\uD83C\uDFA4 \u7D14\u53E3\u8AAA\u6587\u6848 (TTS\u5C08\u7528)</span></div><span class="copy-btn" onclick="copyT(decodeURIComponent('${encodedTts}'))">\uD83D\uDCCB \u8907\u88FD\u53E3\u8AAA</span></div><div class="out-text" style="font-size:13.5px; color:var(--t1); line-height:1.6; white-space:pre-wrap;">${escapeHtml(ttsVal)}</div></div>`;
+          h += renderPureOralCard(ttsVal);
         }
       } catch(e) { console.error(e); }
       out.innerHTML=h;
@@ -3976,7 +4096,7 @@ async function togRec(){
     clearInterval(recTmr);
     if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') voiceMediaRecorder.stop();
     btn.classList.remove('rng');
-    btn.textContent='🎤';
+    btn.textContent='🎙️';
     if(hint)hint.textContent='錄音完成 ('+recSec+' 秒) - 格式已就緒';
   }
 }
@@ -4126,6 +4246,97 @@ function updateVoiceDropdown() {
 }
 
 let lastGeneratedAudioUrl = '';
+let ttsHistory = [];
+
+function ttsLanguageName(code) {
+  const map = { zh: '中文', en: '英文', ja: '日文', ko: '韓文' };
+  return map[code] || '中文';
+}
+
+function updateStudentQuotaFromVoice(data) {
+  if (data && data.student) {
+    currentUserData = Object.assign(currentUserData || {}, data.student);
+    updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
+  }
+}
+
+function renderTTSHistory(items) {
+  const list = document.getElementById('tts-history-list');
+  if (!list) return;
+  ttsHistory = Array.isArray(items) ? items : [];
+  if (!ttsHistory.length) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--t3)">尚未生成語音檔</div>';
+    return;
+  }
+  list.innerHTML = ttsHistory.map(item => {
+    const text = String(item.text || '').trim();
+    const title = text.slice(0, 42) + (text.length > 42 ? '...' : '');
+    const seconds = Number(item.audioSeconds || item.audio_seconds || 0);
+    const meta = `${escapeHtml(item.voiceName || item.voice_name || '發音人')} · ${ttsLanguageName(item.language)} · ${_fmtSec(seconds)}${item.downloadedAt || item.downloaded_at ? ' · 已下載' : ' · 未扣秒'}`;
+    return `<div class="tts-history-item">
+      <div>
+        <div class="tts-history-title">${escapeHtml(title || '語音檔')}</div>
+        <div class="tts-history-meta">${meta}</div>
+        ${item.playUrl ? `<audio controls preload="metadata" src="${escapeHtml(item.playUrl)}"></audio>` : ''}
+      </div>
+      <div class="tts-history-actions">
+        <button class="btn-outline" onclick="downloadTTS('${escapeHtml(item.id)}')">下載</button>
+        <button class="voice-del-btn" onclick="deleteTTS('${escapeHtml(item.id)}')">刪除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadTTSHistory() {
+  if (!currentUser) return;
+  try {
+    const data = await callChiwaVoiceJson('list_tts', {});
+    renderTTSHistory(data.items || []);
+  } catch(e) {
+    console.warn('tts history sync skipped:', e.message || e);
+  }
+}
+
+async function downloadTTS(id) {
+  if (!id) return;
+  try {
+    const data = await callChiwaVoiceJson('download_tts', { generation_id: id });
+    updateStudentQuotaFromVoice(data);
+    if (!data.downloadUrl) throw new Error('下載連結建立失敗，請稍後再試。');
+    const a = document.createElement('a');
+    let objectUrl = '';
+    try {
+      const fileRes = await fetch(data.downloadUrl);
+      if (fileRes.ok) {
+        const blob = await fileRes.blob();
+        objectUrl = URL.createObjectURL(blob);
+      }
+    } catch(e) {
+      console.warn('voice file direct download fallback:', e.message || e);
+    }
+    a.href = objectUrl || data.downloadUrl;
+    a.download = data.fileName || `chiwa-voice-${Date.now()}.wav`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    if (objectUrl) setTimeout(() => URL.revokeObjectURL(objectUrl), 3000);
+    toast(data.deductedSeconds ? `✅ 已開始下載，扣除 ${data.deductedSeconds} 秒語音額度` : '✅ 已開始下載');
+    loadTTSHistory();
+  } catch(e) {
+    toast('❌ ' + (e.message || '語音下載失敗，請稍後再試。'));
+  }
+}
+
+async function deleteTTS(id) {
+  if (!id || !confirm('確定要刪除此語音檔嗎？')) return;
+  try {
+    await callChiwaVoiceJson('delete_tts', { generation_id: id });
+    toast('🗑️ 語音檔已刪除');
+    loadTTSHistory();
+  } catch(e) {
+    toast('❌ ' + (e.message || '語音檔刪除失敗，請稍後再試。'));
+  }
+}
 
 async function generateTTSAudio() {
   const text = document.getElementById('ttsin').value.trim();
@@ -4133,22 +4344,11 @@ async function generateTTSAudio() {
   const load = document.getElementById('tts-load');
   const btn = document.getElementById('tts-btn');
   const select = document.getElementById('tts-voice-select');
+  const langSelect = document.getElementById('tts-language-select');
   
   if (!text) {
     toast('❌ 請先輸入要生成的腳本文案！');
     return;
-  }
-
-  // 計算本次語音預計長度（秒）
-  const estimatedSecs = Math.max(1, Math.min(120, Math.ceil(text.length / 5)));
-
-  // 語音秒數額度檢查（管理員跳過）
-  if (currentUserData && !currentUserData.is_admin) {
-    const remSecs = currentUserData.voice_seconds || 0;
-    if (remSecs < estimatedSecs) {
-      toast(`❌ 語音剩餘秒數不足！本次預估需 ${estimatedSecs} 秒，目前剩餘 ${_fmtSec(remSecs)}。`);
-      return;
-    }
   }
   
   btn.disabled = true;
@@ -4173,48 +4373,31 @@ async function generateTTSAudio() {
       body: JSON.stringify({
         action: 'tts',
         voice_id: select ? select.value : 'def-female',
-        text
+        text,
+        language: langSelect ? langSelect.value : 'zh'
       })
     });
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(voiceServiceErrorMessage(data.detail || data.error, '語音生成失敗，請稍後再試。'));
-    }
-
-    const audioBlob = await res.blob();
-    lastGeneratedAudioUrl = URL.createObjectURL(audioBlob);
-    const fallbackSecs = parseInt(res.headers.get('X-Estimated-Seconds') || String(estimatedSecs), 10) || estimatedSecs;
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(voiceServiceErrorMessage(data.detail || data.error, '語音生成失敗，請稍後再試。'));
 
     load.style.display = 'none';
     btn.disabled = false;
 
     container.innerHTML = `
       <div class="audio-player-box">
-        <audio id="tts-audio-player" controls src="${lastGeneratedAudioUrl}" style="width:100%"></audio>
+        <div style="width:100%">
+          <audio id="tts-audio-player" controls src="${escapeHtml(data.item && data.item.playUrl || '')}" style="width:100%"></audio>
+          <div style="font-size:11px;color:var(--t3);margin-top:8px">已生成，可先試聽；按下載時才扣除語音秒數。</div>
+        </div>
+        ${data.item ? `<button class="btn-outline" onclick="downloadTTS('${escapeHtml(data.item.id)}')">下載</button>` : ''}
       </div>
       <div style="font-size: 11px; color: var(--t3); margin-top: 6px; text-align: left; padding-left: 8px;">
-        🔊 已生成真實語音：「${escapeHtml(text.slice(0, 18))}${text.length > 18 ? '...' : ''}」
+        🔊 已生成語音：「${escapeHtml(text.slice(0, 18))}${text.length > 18 ? '...' : ''}」
       </div>
     `;
-
-    const audio = document.getElementById('tts-audio-player');
-    let deducted = false;
-    const deductOnce = function(seconds) {
-      if (deducted) return;
-      deducted = true;
-      const used = Math.max(1, Math.ceil(seconds || fallbackSecs));
-      decrVoice(used);
-      toast(`🎵 AI 語音合成成功！已扣除 ${used} 秒語音額度`);
-    };
-    if (audio) {
-      audio.addEventListener('loadedmetadata', function() {
-        deductOnce(Number.isFinite(audio.duration) ? audio.duration : fallbackSecs);
-      }, { once: true });
-      setTimeout(function() { deductOnce(fallbackSecs); }, 2500);
-    } else {
-      deductOnce(fallbackSecs);
-    }
+    if (data.item) renderTTSHistory([data.item].concat(ttsHistory.filter(i => i.id !== data.item.id)));
+    toast('🎵 語音已生成，下載時才會扣除秒數');
   } catch(e) {
     load.style.display = 'none';
     btn.disabled = false;

@@ -142,18 +142,20 @@ function shouldApplyCompliance(type) {
 
 function buildSystemPrompt({ type, fmt, tone, systemPrompt }) {
   const normalized = normalizeType(type);
+  const providedSystem = cleanText(systemPrompt);
   const parts = [
-    basePromptFor(normalized),
-    cleanText(systemPrompt)
+    providedSystem || basePromptFor(normalized)
   ].filter(Boolean);
 
   if (shouldApplyCompliance(normalized)) {
+    parts.push('以下規則是附加安全與語氣規則，不可以覆蓋前面指定的功能邏輯、輸出格式、欄位名稱或使用者要求。');
     parts.push(TIKTOK_COMPLIANCE_RULES);
     parts.push(TAIWAN_CASUAL_TONE_RULES);
   }
 
   if (normalized === 'script') {
     parts.push(`本次腳本格式：${fmt === 'simple' ? '純口播格式' : '分鏡腳本格式'}。本次語氣：${tone || 'casual'}。`);
+    parts.push('如果是分鏡腳本，必須保留【開場鉤子】【段落一】【段落二】【段落三】【行動呼籲】以及「秒數、口說、畫面、剪輯提示」等原本結構。所有口說文案加總約 300-500 個中文字，適合 1-2 分鐘口播。台灣口語規則只套用在「口說」文案，不要讓畫面與剪輯欄位變得鬆散。');
   }
   if (normalized === 'marketing') {
     parts.push('行銷文案要保留說服力與平台感；若輸出 hashtag，數量最多 5 個，且不可套用與腳本行業無關的品牌或分類標籤。');
@@ -215,7 +217,7 @@ export default {
 
     try {
       const data = await callAnthropic(env, {
-        max_tokens: type === 'topics' ? 1600 : 2400,
+        max_tokens: type === 'topics' ? 1600 : (type === 'script' ? 3200 : 2400),
         temperature: type === 'compliance' ? 0.2 : 0.75,
         system,
         messages: [{ role: 'user', content: userPrompt }]
