@@ -7,10 +7,9 @@ const PROVIDER_SECRET_NAME = ["RUNNING", "HUB_API_KEY"].join("");
 const PROVIDER_RUN_URL = `https://${PROVIDER_HOST}/openapi/v2/run/ai-app/${PROVIDER_APP_ID}`;
 const PROVIDER_QUERY_URL = `https://${PROVIDER_HOST}/openapi/v2/query`;
 const AVATAR_WORKER_URL = "https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev";
-const MAX_AVATAR_SECONDS = 1800;
 const DEFAULT_AVATAR_SECONDS = 1800;
 const DEFAULT_HEYGEN_MINUTES = 30;
-const OUTPUT_RETENTION_DAYS = 1;
+const OUTPUT_RETENTION_DAYS = 7;
 const MAX_ACTIVE_TASKS_PER_STUDENT = 1;
 const MAX_ACTIVE_TASKS_GLOBAL = 3;
 const ACTIVE_TASK_WINDOW_HOURS = 6;
@@ -94,7 +93,7 @@ async function getAuthorizedStudent(req: Request) {
       .limit(1);
     if (error) continue;
     if (Array.isArray(data) && data[0]) {
-      if (data[0].status && data[0].status !== "正常") throw Object.assign(new Error("student_inactive"), { status: 403 });
+      if (isInactiveStatus(data[0].status)) throw Object.assign(new Error("student_inactive"), { status: 403 });
       return data[0];
     }
   }
@@ -141,10 +140,9 @@ function normalizeSeconds(value: unknown) {
   return Math.max(1, Number.parseInt(String(value || "0"), 10) || 0);
 }
 
-function assertDuration(seconds: number) {
-  if (seconds > MAX_AVATAR_SECONDS) {
-    throw Object.assign(new Error("avatar_duration_too_long"), { status: 400 });
-  }
+function isInactiveStatus(value: unknown) {
+  const status = String(value || "").trim().toLowerCase();
+  return ["disabled", "inactive", "blocked"].includes(status);
 }
 
 function assertQuota(student: any, seconds: number) {
@@ -239,7 +237,6 @@ async function handleSubmitUrls(req: Request, body: any) {
 
   const student = await getAuthorizedStudent(req);
   const requestedSeconds = normalizeSeconds(body.duration_seconds);
-  assertDuration(requestedSeconds);
   assertQuota(student, requestedSeconds);
   await assertConcurrency(student);
 

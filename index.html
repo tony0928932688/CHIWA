@@ -1263,10 +1263,10 @@ const CHIWA_PROFILE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/fun
 const CHIWA_HISTORY_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-history';
 const CHIWA_AVATAR_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-avatar';
 const CHIWA_AVATAR_R2_WORKER_URL = 'https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev';
-const AVATAR_MAX_SECONDS = 1800;
+const AVATAR_MAX_SECONDS = Number.MAX_SAFE_INTEGER;
 const AVATAR_MAX_VIDEO_BYTES = 2 * 1024 * 1024 * 1024;
 const AVATAR_MAX_AUDIO_BYTES = 500 * 1024 * 1024;
-const AVATAR_RETENTION_LABEL = '24 小時';
+const AVATAR_RETENTION_LABEL = '7 天';
 let currentUser = '';
 let currentUserData = null;
 const CHIWA_IDLE_LIMIT_MS = 24 * 60 * 60 * 1000;
@@ -3117,15 +3117,7 @@ async function decrAvatar(secs) {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px" class="script-grid">
       <div class="drop-upload" data-drop-kind="avatar-video" onclick="document.getElementById('avatar-video-input').click()" style="background:var(--card);border-radius:12px;padding:16px">
         <div style="font-size:14px;font-weight:800;margin-bottom:8px">步驟 1：上傳形象影片</div>
-        <div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">請使用臉部正面、光線清楚、沒有遮擋的影片。</div>
-        <input type="file" id="avatar-video-input" accept="video/*" style="display:none" onchange="handleAvatarFileUpload(event,'video')">
-        <button class="btn-outline" type="button" style="width:100%" onclick="event.stopPropagation();document.getElementById('avatar-video-input').click()">🎥 選擇形象影片</button>
-        <div class="drop-hint">或把影片拖曳到這裡</div>
-        <div id="avatar-video-status" style="font-size:11px;color:var(--t3);margin-top:10px">尚未選擇影片</div>
-      </div>
-      <div class="drop-upload" data-drop-kind="avatar-audio" onclick="document.getElementById('avatar-audio-input').click()" style="background:var(--card);border-radius:12px;padding:16px">
-        <div style="font-size:14px;font-weight:800;margin-bottom:8px">步驟 2：上傳人聲音檔</div>
-        <div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">音檔長度會作為本次影像克隆扣點依據，最高 30 分鐘（1,800 秒）。</div>
+        <div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">??????????????????</div>
         <input type="file" id="avatar-audio-input" accept="audio/*" style="display:none" onchange="handleAvatarFileUpload(event,'audio')">
         <button class="btn-outline" type="button" style="width:100%" onclick="event.stopPropagation();document.getElementById('avatar-audio-input').click()">🎧 選擇人聲音檔</button>
         <div class="drop-hint">或把音檔拖曳到這裡</div>
@@ -5690,8 +5682,7 @@ function handleAvatarSelectedFile(file, type, input) {
     avatarAudioFile = file;
     avatarAudioSeconds = Math.max(1, Math.ceil(Number.isFinite(audio.duration) ? audio.duration : 0));
     setAvatarStatus('audio', '已選擇音檔：' + file.name + '（' + _fmtSec(avatarAudioSeconds) + '）', true);
-    if (avatarAudioSeconds > AVATAR_MAX_SECONDS) toast(`⚠️ 單支形象影片最高 30 分鐘，請裁切音檔到 ${_fmtSec(AVATAR_MAX_SECONDS)} 內。`);
-    else toast('✅ 人聲音檔已載入。');
+    toast('✅ 人聲音檔已載入。');
   };
   audio.onerror = function() {
     URL.revokeObjectURL(url);
@@ -5763,7 +5754,7 @@ function avatarErrorText(error, fallback) {
   const raw = String(error && error.message || error || fallback || '形象克隆提交失敗，請稍後再試。');
   if (/failed to fetch|network|not_found/i.test(raw)) return '大檔上傳服務暫時無法連線，請稍後再試或聯絡管理員。';
   if (/file_exceeds_system_limit/i.test(raw)) return '影片超過目前系統設定上限，請聯絡管理員提高上傳上限。';
-  if (/avatar_duration_too_long/i.test(raw)) return '單支形象影片最高 30 分鐘（1,800 秒），請裁切音檔後再送出。';
+  if (/avatar_duration_too_long/i.test(raw)) return '影像克隆秒數超過目前可用額度，請確認剩餘秒數後再送出。';
   if (/avatar_student_task_already_running/i.test(raw)) return '你目前已有一個形象克隆任務正在生成，完成後才能送出下一支。';
   if (/avatar_system_busy/i.test(raw)) return '目前形象克隆同時生成數已滿，請稍後再送出。';
   if (/avatar_task_still_running/i.test(raw)) return '這支影片仍在生成中，完成或失敗後才能刪除。';
@@ -6154,11 +6145,7 @@ async function generateAvatarClone() {
   if (!avatarAudioFile || !avatarAudioSeconds) {
     toast('❌ 請先上傳可讀取秒數的人聲音檔。');
     return;
-  }
-  if (avatarAudioSeconds > AVATAR_MAX_SECONDS) {
-    toast(`❌ 單支形象影片最高只能 30 分鐘，請裁切音檔到 ${_fmtSec(AVATAR_MAX_SECONDS)} 內。`);
-    return;
-  }
+  }
   const requestedAvatarSeconds = Math.max(1, Math.round(Number(avatarAudioSeconds || 0)));
   const remainingAvatarSeconds = _avatarSeconds(
     currentUserData && currentUserData.avatar_seconds !== undefined ? currentUserData.avatar_seconds : null,
