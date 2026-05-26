@@ -1230,6 +1230,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const _SB = (window.supabase && typeof supabase.createClient === 'function')
   ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
+const AVATAR_MINUTES_KEY = ['hey', 'gen_minutes'].join('');
 const CHIWA_VOICE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-voice';
 const CHIWA_SECURE_API_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-secure-api';
 const CHIWA_PROFILE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-profile';
@@ -1272,10 +1273,12 @@ async function finishStudentLogin(data, loginId) {
   if (avEl) avEl.textContent = (data.name || currentUser).substring(0,2).toUpperCase();
 
   if (data.ai_usage === null || data.ai_usage === undefined) data.ai_usage = 300;
-  if (data.voice_seconds === null || data.voice_seconds === undefined) data.voice_seconds = 3600;
-  if (data.avatar_seconds === null || data.avatar_seconds === undefined) data.avatar_seconds = 1800;
+  if (data.voice_minutes === null || data.voice_minutes === undefined) data.voice_minutes = data.voice_seconds !== undefined && data.voice_seconds !== null ? Math.round((Number(data.voice_seconds) / 60) * 10) / 10 : 60;
+  if (data[AVATAR_MINUTES_KEY] === null || data[AVATAR_MINUTES_KEY] === undefined) data[AVATAR_MINUTES_KEY] = data.avatar_seconds !== undefined && data.avatar_seconds !== null ? Math.round((Number(data.avatar_seconds) / 60) * 10) / 10 : 30;
+  data.voice_seconds = Math.round(Number(data.voice_minutes || 0) * 60);
+  data.avatar_seconds = Math.round(Number(data[AVATAR_MINUTES_KEY] || 0) * 60);
 
-  updateUsageUI(data.ai_usage, data.voice_seconds, data.avatar_seconds);
+  updateUsageUI(data.ai_usage, data.voice_minutes, data[AVATAR_MINUTES_KEY]);
 
   const mub = document.getElementById('mobile-usage-bar');
   if (mub) mub.style.display = 'none';
@@ -1345,7 +1348,7 @@ async function loginWithGoogleEmail(email) {
     if (!student) throw new Error('此 Google 帳號尚未開通學員權限。');
     if (err) err.style.display = 'none';
     await finishStudentLogin(student, email);
-    if (secure.reset) toast('新月份開始，AI 次數與語音秒數已自動重置。');
+    if (secure.reset) toast('新週期開始，AI 次數、語音分鐘與影像克隆分鐘已自動重置。');
   } catch(e) {
     console.error('Google login profile error:', e);
     if (err) {
@@ -1467,11 +1470,42 @@ function _fmtSec(secs) {
   return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
 }
 
-// 次數與語音秒數顯示全站同步更新
-function updateUsageUI(aiUsage, voiceSec, avatarSec) {
-  avatarSec = avatarSec === null || avatarSec === undefined
-    ? (currentUserData && currentUserData.avatar_seconds !== undefined ? currentUserData.avatar_seconds : 1800)
-    : avatarSec;
+function _num(value, fallback) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function _quotaMinutes(primary, secondsValue, fallbackMinutes) {
+  if (primary !== null && primary !== undefined) return Math.max(0, _num(primary, fallbackMinutes));
+  if (secondsValue !== null && secondsValue !== undefined) return Math.max(0, Math.round((_num(secondsValue, fallbackMinutes * 60) / 60) * 10) / 10);
+  return fallbackMinutes;
+}
+
+function _fmtMin(mins) {
+  const n = Math.max(0, Math.round(_num(mins, 0) * 10) / 10);
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
+// 次數與語音/影像分鐘數顯示全站同步更新
+function updateUsageUI(aiUsage, voiceValue, avatarValue) {
+  aiUsage = Math.max(0, Math.round(_num(aiUsage, 0)));
+  const voiceMin = _quotaMinutes(
+    currentUserData && currentUserData.voice_minutes !== undefined ? currentUserData.voice_minutes : voiceValue,
+    currentUserData && currentUserData.voice_seconds !== undefined ? currentUserData.voice_seconds : null,
+    60
+  );
+  const avatarMin = _quotaMinutes(
+    currentUserData && currentUserData[AVATAR_MINUTES_KEY] !== undefined ? currentUserData[AVATAR_MINUTES_KEY] : avatarValue,
+    currentUserData && currentUserData.avatar_seconds !== undefined ? currentUserData.avatar_seconds : null,
+    30
+  );
+  if (currentUserData) {
+    currentUserData.ai_usage = aiUsage;
+    currentUserData.voice_minutes = voiceMin;
+    currentUserData[AVATAR_MINUTES_KEY] = avatarMin;
+    currentUserData.voice_seconds = Math.round(voiceMin * 60);
+    currentUserData.avatar_seconds = Math.round(avatarMin * 60);
+  }
   // --- PC 側邊欄 AI 次數 ---
   const un = document.getElementById('unum');
   const uf = document.getElementById('ufill');
@@ -1490,38 +1524,51 @@ function updateUsageUI(aiUsage, voiceSec, avatarSec) {
   const mun = document.getElementById('m-ai-num');
   if (mun) mun.textContent = aiUsage;
 
-  // --- PC 側邊欄語音秒數 ---
+  // --- PC 側邊欄語音分鐘 ---
   const vnSb = document.getElementById('voice-num-sidebar');
   const vbSb = document.getElementById('voice-bar-sidebar');
-  const vfmt = _fmtSec(voiceSec);
-  if (vnSb) vnSb.innerHTML = vfmt + '<span style="font-size:10px;color:var(--t3);font-weight:400">/60:00</span>';
-  if (vbSb) vbSb.style.width = Math.round((voiceSec / 3600) * 100) + '%';
+  const vfmt = _fmtMin(voiceMin);
+  const voiceColor = voiceMin < 10 ? 'var(--red)' : 'var(--blue)';
+  if (vnSb) {
+    vnSb.innerHTML = vfmt + '<span style="font-size:10px;color:var(--t3);font-weight:400">/60分</span>';
+    vnSb.style.color = voiceColor;
+  }
+  if (vbSb) {
+    vbSb.style.width = Math.max(0, Math.min(100, Math.round((voiceMin / 60) * 100))) + '%';
+    vbSb.style.background = voiceColor;
+  }
   // 相容舊 ID
   const vsOld = document.getElementById('voice-sec');
   if (vsOld) vsOld.textContent = vfmt;
 
-  // --- 語音克隆面板剩餘秒數 ---
+  // --- 語音克隆面板剩餘分鐘 ---
   const vrem = document.getElementById('voice-rem-seconds');
-  if (vrem) vrem.innerHTML = vfmt + '<span style="font-size:11px;color:var(--t3);font-weight:400">/60:00</span>';
+  if (vrem) {
+    vrem.innerHTML = vfmt + '<span style="font-size:11px;color:var(--t3);font-weight:400">/60分</span>';
+    vrem.style.color = voiceColor;
+  }
 
   // --- 手機版頂部列語音 ---
   const mvn = document.getElementById('m-voice-num');
-  if (mvn) mvn.textContent = vfmt;
+  if (mvn) {
+    mvn.textContent = vfmt + '分';
+    mvn.style.color = voiceColor;
+  }
 
-  // --- PC 側邊欄形象秒數 ---
+  // --- PC 側邊欄影像克隆分鐘 ---
   const avnSb = document.getElementById('avatar-num-sidebar');
   const avbSb = document.getElementById('avatar-bar-sidebar');
-  const avfmt = _fmtSec(avatarSec);
-  if (avnSb) avnSb.innerHTML = avfmt + '<span style="font-size:10px;color:var(--t3);font-weight:400">/30:00</span>';
-  if (avbSb) avbSb.style.width = Math.max(0, Math.min(100, Math.round((avatarSec / 1800) * 100))) + '%';
+  const avfmt = _fmtMin(avatarMin);
+  if (avnSb) avnSb.innerHTML = avfmt + '<span style="font-size:10px;color:var(--t3);font-weight:400">/30分</span>';
+  if (avbSb) avbSb.style.width = Math.max(0, Math.min(100, Math.round((avatarMin / 30) * 100))) + '%';
 
-  // --- 形象克隆面板剩餘秒數 ---
+  // --- 形象克隆面板剩餘分鐘 ---
   const arem = document.getElementById('avatar-rem-seconds');
-  if (arem) arem.innerHTML = avfmt + '<span style="font-size:11px;color:var(--t3);font-weight:400">/30:00</span>';
+  if (arem) arem.innerHTML = avfmt + '<span style="font-size:11px;color:var(--t3);font-weight:400">/30分</span>';
 
   // --- 手機版頂部列形象 ---
   const mavn = document.getElementById('m-avatar-num');
-  if (mavn) mavn.textContent = avfmt;
+  if (mavn) mavn.textContent = avfmt + '分';
 
   // --- 下次重置日期 ---
   const now = new Date();
@@ -1541,45 +1588,61 @@ function updateUsageUI(aiUsage, voiceSec, avatarSec) {
 // 扣 AI 次數（寫回 Supabase，並即時更新畫面）
 async function decrAI(amount) {
   if (!currentUserData) return;
-  if (currentUserData.is_admin) return;
   const used = Math.max(1, Number(amount || 1));
   currentUserData.ai_usage = Math.max(0, (currentUserData.ai_usage || 0) - used);
-  updateUsageUI(currentUserData.ai_usage, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
+  updateUsageUI(currentUserData.ai_usage, currentUserData.voice_minutes, currentUserData[AVATAR_MINUTES_KEY]);
+  if (currentUserData.is_admin) {
+    console.log('[quota] admin AI UI decremented only', { used, ai_usage: currentUserData.ai_usage });
+    return;
+  }
   try {
     const secure = await callChiwaSecure('usage', { type: 'ai', amount: used });
     if (secure && secure.student) {
       currentUserData = Object.assign(currentUserData, secure.student);
-      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_minutes, currentUserData[AVATAR_MINUTES_KEY]);
+      console.log('[quota] AI usage saved to Supabase', { used, ai_usage: currentUserData.ai_usage });
     }
   } catch(e) { console.error('decrAI error:', e); }
   aiUse = currentUserData.ai_usage;
 }
 
-// 扣語音秒數（寫回 Supabase，並即時更新畫面）
-async function decrVoice(secs) {
+// 扣語音分鐘（寫回 Supabase，並即時更新畫面）
+async function decrVoice(minutes) {
   if (!currentUserData) return;
-  if (currentUserData.is_admin) return;
-  currentUserData.voice_seconds = Math.max(0, (currentUserData.voice_seconds || 0) - secs);
-  updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds, currentUserData.avatar_seconds || 0);
+  const used = Math.max(0.1, Math.round(Number(minutes || 0) * 10) / 10);
+  currentUserData.voice_minutes = Math.max(0, Math.round((Number(currentUserData.voice_minutes ?? 60) - used) * 10) / 10);
+  currentUserData.voice_seconds = Math.round(currentUserData.voice_minutes * 60);
+  updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_minutes, currentUserData[AVATAR_MINUTES_KEY]);
+  if (currentUserData.is_admin) {
+    console.log('[quota] admin voice UI decremented only', { used, voice_minutes: currentUserData.voice_minutes });
+    return;
+  }
   try {
-    const secure = await callChiwaSecure('usage', { type: 'voice', amount: secs });
+    const secure = await callChiwaSecure('usage', { type: 'voice', amount: used });
     if (secure && secure.student) {
       currentUserData = Object.assign(currentUserData, secure.student);
-      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_minutes, currentUserData[AVATAR_MINUTES_KEY]);
+      console.log('[quota] voice minutes saved to Supabase', { used, voice_minutes: currentUserData.voice_minutes });
     }
   } catch(e) { console.error('decrVoice error:', e); }
 }
 
 async function decrAvatar(secs) {
   if (!currentUserData) return;
-  if (currentUserData.is_admin) return;
-  currentUserData.avatar_seconds = Math.max(0, (currentUserData.avatar_seconds || 0) - secs);
-  updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds);
+  const used = Math.max(0.1, Math.ceil(Number(secs || 0) / 6) / 10);
+  currentUserData[AVATAR_MINUTES_KEY] = Math.max(0, Math.round((Number(currentUserData[AVATAR_MINUTES_KEY] ?? 30) - used) * 10) / 10);
+  currentUserData.avatar_seconds = Math.round(currentUserData[AVATAR_MINUTES_KEY] * 60);
+  updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_minutes, currentUserData[AVATAR_MINUTES_KEY]);
+  if (currentUserData.is_admin) {
+    console.log('[quota] admin image clone UI decremented only', { used, avatar_minutes: currentUserData[AVATAR_MINUTES_KEY] });
+    return;
+  }
   try {
-    const secure = await callChiwaSecure('usage', { type: 'avatar', amount: secs });
+    const secure = await callChiwaSecure('usage', { type: 'avatar', amount: used });
     if (secure && secure.student) {
       currentUserData = Object.assign(currentUserData, secure.student);
-      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_minutes, currentUserData[AVATAR_MINUTES_KEY]);
+      console.log('[quota] image clone minutes saved to Supabase', { used, avatar_minutes: currentUserData[AVATAR_MINUTES_KEY] });
     }
   } catch(e) { console.error('decrAvatar error:', e); }
 }
@@ -2127,7 +2190,7 @@ async function decrAvatar(secs) {
         <ul>
           <li>您須提供真實且正確的個人資料以申請服務</li>
           <li>帳號及密碼請妥善保管，不得轉讓或分享給他人使用</li>
-          <li>AI 工作台每月使用次數及語音秒數依方案規定，超出限額需另行購買</li>
+          <li>AI 工作台每月使用次數、語音分鐘及影像克隆分鐘依方案規定，超出限額需另行購買</li>
           <li>禁止使用本服務生成違法、侵權、誤導性或有害內容</li>
         </ul>
 
@@ -2368,12 +2431,12 @@ async function decrAvatar(secs) {
       <div class="sb-un" id="unum">—<span>/300</span></div>
       <div class="sb-ubar"><div class="sb-ufill" id="ufill" style="width:0%"></div></div>
       <div style="height:1px;background:var(--bdr);margin:8px 0"></div>
-      <div class="sb-ul" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase">語音剩餘秒數</div>
-      <div style="font-size:15px;font-weight:900;color:var(--blue);font-family:'Space Mono',monospace" id="voice-num-sidebar">—<span style="font-size:10px;color:var(--t3);font-weight:400">/60:00</span></div>
+      <div class="sb-ul" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase">語音剩餘分鐘</div>
+      <div style="font-size:15px;font-weight:900;color:var(--blue);font-family:'Space Mono',monospace" id="voice-num-sidebar">—<span style="font-size:10px;color:var(--t3);font-weight:400">/60分</span></div>
       <div class="sb-ubar"><div id="voice-bar-sidebar" style="height:100%;background:var(--blue);border-radius:2px;width:0%;transition:width .3s"></div></div>
       <div style="height:1px;background:var(--bdr);margin:8px 0"></div>
-      <div class="sb-ul" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase">形象剩餘秒數</div>
-      <div style="font-size:15px;font-weight:900;color:var(--purple);font-family:'Space Mono',monospace" id="avatar-num-sidebar">—<span style="font-size:10px;color:var(--t3);font-weight:400">/30:00</span></div>
+      <div class="sb-ul" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase">影像克隆剩餘分鐘</div>
+      <div style="font-size:15px;font-weight:900;color:var(--purple);font-family:'Space Mono',monospace" id="avatar-num-sidebar">—<span style="font-size:10px;color:var(--t3);font-weight:400">/30分</span></div>
       <div class="sb-ubar"><div id="avatar-bar-sidebar" style="height:100%;background:var(--purple);border-radius:2px;width:0%;transition:width .3s"></div></div>
       <div style="height:1px;background:var(--bdr);margin:8px 0"></div>
       <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace">下次重置：<span id="reset-date">—</span></div>
@@ -2632,8 +2695,8 @@ async function decrAvatar(secs) {
     <div style="font-size:14px;font-weight:700;margin-bottom:12px">文字轉語音</div>
     <div style="background:var(--blue-bg);border:1px solid var(--blue-bdr);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
       <div>
-        <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace;text-transform:uppercase">語音剩餘秒數</div>
-        <div style="font-size:15px;font-weight:900;color:var(--blue);font-family:'Space Mono',monospace" id="voice-rem-seconds">58:30<span style="font-size:11px;color:var(--t3);font-weight:400">/60:00</span></div>
+        <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace;text-transform:uppercase">語音剩餘分鐘</div>
+        <div style="font-size:15px;font-weight:900;color:var(--blue);font-family:'Space Mono',monospace" id="voice-rem-seconds">60<span style="font-size:11px;color:var(--t3);font-weight:400">/60分</span></div>
       </div>
       <div style="font-size:11px;color:var(--t3)">本月重置</div>
     </div>
@@ -2662,7 +2725,7 @@ async function decrAvatar(secs) {
       <div class="out-head" style="margin-bottom:12px">
         <div>
           <div style="font-size:14px;font-weight:800;color:var(--t1)">我的語音檔</div>
-          <div style="font-size:11px;color:var(--t3);margin-top:3px">可先試聽，下載時才扣除語音秒數</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">生成成功後即扣除語音分鐘，可保留回放與下載</div>
         </div>
         <button class="btn-outline" style="padding:8px 12px;font-size:12px" onclick="loadTTSHistory()">刷新</button>
       </div>
@@ -2678,8 +2741,8 @@ async function decrAvatar(secs) {
     <div class="sec-sub">上傳正面形象影片與乾淨人聲，生成 AI 口播形象影片</div>
     <div style="background:var(--purple-bg);border:1px solid rgba(167,139,250,.25);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
       <div>
-        <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace;text-transform:uppercase">形象剩餘秒數</div>
-        <div style="font-size:15px;font-weight:900;color:var(--purple);font-family:'Space Mono',monospace" id="avatar-rem-seconds">30:00<span style="font-size:11px;color:var(--t3);font-weight:400">/30:00</span></div>
+        <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace;text-transform:uppercase">影像克隆剩餘分鐘</div>
+        <div style="font-size:15px;font-weight:900;color:var(--purple);font-family:'Space Mono',monospace" id="avatar-rem-seconds">30<span style="font-size:11px;color:var(--t3);font-weight:400">/30分</span></div>
       </div>
       <div style="font-size:11px;color:var(--t3)">單支最高 02:00，依生成影片秒數扣除</div>
     </div>
@@ -2694,7 +2757,7 @@ async function decrAvatar(secs) {
       </div>
       <div class="drop-upload" data-drop-kind="avatar-audio" onclick="document.getElementById('avatar-audio-input').click()" style="background:var(--card);border:1px dashed rgba(212,175,55,.28);border-radius:12px;padding:16px">
         <div style="font-size:14px;font-weight:800;margin-bottom:8px">步驟 2：上傳人聲音檔</div>
-        <div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">音檔長度會作為本次形象影片扣秒依據，最高 120 秒。</div>
+        <div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px">音檔長度會作為本次影像克隆扣點依據，最高 2 分鐘。</div>
         <input type="file" id="avatar-audio-input" accept="audio/*" style="display:none" onchange="handleAvatarFileUpload(event,'audio')">
         <button class="btn-outline" type="button" style="width:100%" onclick="event.stopPropagation();document.getElementById('avatar-audio-input').click()">🎧 選擇人聲音檔</button>
         <div class="drop-hint">或把音檔拖曳到這裡</div>
@@ -2871,10 +2934,10 @@ async function decrAvatar(secs) {
           <input type="text" id="adm-new-ai" value="300" placeholder="AI 次數" class="tinput" style="background: var(--card2)">
         </div>
         <div style="width: 140px;">
-          <input type="text" id="adm-new-voice" value="3600" placeholder="語音秒數" class="tinput" style="background: var(--card2)">
+          <input type="text" id="adm-new-voice" value="60" placeholder="語音分鐘" class="tinput" style="background: var(--card2)">
         </div>
         <div style="width: 140px;">
-          <input type="text" id="adm-new-avatar" value="1800" placeholder="形象秒數" class="tinput" style="background: var(--card2)">
+          <input type="text" id="adm-new-avatar" value="30" placeholder="影像克隆分鐘" class="tinput" style="background: var(--card2)">
         </div>
         <button class="btn-gold" onclick="addNewStudentFromAdmin()" style="border-radius: 10px; padding: 10px 20px;">開通 / 更新</button>
       </div>
@@ -2895,8 +2958,8 @@ async function decrAvatar(secs) {
               <th>目前狀態</th>
               <th>方案 / 備註</th>
               <th>AI 次數</th>
-              <th>語音秒數</th>
-              <th>形象秒數</th>
+              <th>語音分鐘</th>
+              <th>影像克隆分鐘</th>
               <th style="text-align: right;">權限操作</th>
             </tr>
           </thead>
@@ -3756,7 +3819,7 @@ async function deleteGenerationHistory(id) {
   }
 }
 
-let selChip='', scriptTxt='', marketingTxt='', pureOralTxt='', isRec=false, recSec=0, recTmr=null;
+let selChip='', scriptTxt='', marketingTxt='', pureOralTxt='', fullScript='', isRec=false, recSec=0, recTmr=null;
 let voiceMediaRecorder = null, voiceRecChunks = [], voiceRecStream = null, recordedVoiceBlob = null;
 const TOPIC_TYPES = ['痛點鏡子','知識降維','迷思破解','客戶故事','選擇指南','行動催化'];
 const CONTENT_FIRST_PROMPT = `你是專業台灣口播文案撰寫師。
@@ -3774,6 +3837,49 @@ const CONTENT_FIRST_PROMPT = `你是專業台灣口播文案撰寫師。
 - 不要用#標題。
 - 句子之間自然連接，像一個人在說話。
 - 適合直接貼入語音合成工具朗讀。`;
+function buildScriptToneSystemPrompt(mode) {
+  const profilePrompt = buildProfilePrompt(currentUserData && currentUserData.profile);
+  const base = mode === 'professional' ? `你是專業台灣口播文案師。
+
+內容規則：
+- 先寫完整的商品/服務實質內容。
+- 語氣詞只佔全文 10% 以下。
+- 禁止只有語氣詞沒有實質內容。
+
+格式規則（博主專業版）：
+- 自然段落，每段 3-5 句，不要每句換行。
+- 語氣權威自信，有觀點有立場。
+- 不用口語語助詞（欸/啊/喔/啦）。
+- 句型清晰，邏輯感強。
+- 適合知識型、專業型、教學型內容。
+- 禁止：書面八股、過於正式的公文語氣、emoji、Markdown 符號。
+- 目標：像一個有乾貨的博主在分享專業知識。
+- 不得使用任何 emoji 或表情符號。` : `你是專業台灣口播文案師。
+
+內容規則：
+- 先寫完整的商品/服務實質內容。
+- 語氣詞只佔全文 10% 以下，是點綴不是主體。
+- 禁止只有語氣詞沒有實質內容。
+
+格式規則（素人隨聊版）：
+- 每句不超過 8 字，一句一行。
+- 每 3-4 句空一行。
+- 語助詞平均每 3-5 句出現一次：欸/啊/喔/而已/蠻/就是。
+- 「啦」只用在情緒張力句：否認（不是啦）、妥協（好啦好啦）、放棄（算了啦），禁止放在平靜陳述句尾。
+- 每篇隨機插入 2-4 次停頓元素：「欸……」「就是那種……」「怎麼說呢……」「然後……」「對，就是這樣。」。
+- 停頓放在情緒轉折點前，不放在開場句和 CTA 句。
+- 句型多用自問自答、第三人稱帶入故事、結尾反問句。
+- 禁止：書面語、emoji、每句都有語助詞、Markdown 符號。
+- 目標：從頭到尾像台灣人在自然說話。
+
+Sonic 樂譜邏輯（給語音朗讀用）：
+句短=語速放慢；句長=穩定有重量。
+「——」=長停頓；「，」=短停頓。
+「欸」=音調上揚；「啊」=音調放鬆。
+「……」=自動拉長放慢。
+- 不得使用任何 emoji 或表情符號。`;
+  return [profilePrompt, base].filter(Boolean).join('\n\n');
+}
 aiUse = 285; // 設定初始值（已在 head 用 var 宣告）
 // \uD83D\uDEE1\uFE0F UTF-8 Base64
 function generateSandboxMock(sys, usr, type, fmt, tone) {
@@ -3977,9 +4083,9 @@ function extractTTSCopy(txt, fmt) {
 
 function renderPureOralCard(value) {
   pureOralTxt = value || '';
+  fullScript = cleanScript(pureOralTxt);
   if (!pureOralTxt) return '';
-  const encodedTts = encodeURIComponent(pureOralTxt);
-  return `<div class="out-card" id="pure-oral-card" style="border:1.5px solid var(--gold); background: linear-gradient(135deg, rgba(232,197,90,.05), rgba(232,197,90,.02)); margin-top:20px; border-radius:12px; padding:16px;"><div class="out-head" style="margin-bottom:12px; border-bottom:1px solid rgba(232,197,90,.15); padding-bottom:8px;"><div style="display:flex;align-items:center;gap:8px"><span class="badge b-gold" style="font-weight:700;">🎙️ 純口播文案 (TTS專用)</span></div><span class="copy-btn" onclick="copyT(decodeURIComponent('${encodedTts}'))">📋 複製口播</span></div><div class="out-text" id="pure-oral-text" style="font-size:13.5px; color:var(--t1); line-height:1.6; white-space:pre-wrap;">${escapeHtml(pureOralTxt)}</div>${renderLengthControls('script')}</div>`;
+  return `<div class="out-card" id="pure-oral-card" style="border:1.5px solid var(--gold); background: linear-gradient(135deg, rgba(232,197,90,.05), rgba(232,197,90,.02)); margin-top:20px; border-radius:12px; padding:16px;"><div class="out-head" style="margin-bottom:12px; border-bottom:1px solid rgba(232,197,90,.15); padding-bottom:8px;"><div style="display:flex;align-items:center;gap:8px"><span class="badge b-gold" style="font-weight:700;">🎙️ 純口播文案 (TTS專用)</span></div><span class="copy-btn" onclick="copyT(cleanScript(fullScript || pureOralTxt))">📋 複製口播</span></div><div class="out-text" id="pure-oral-text" style="font-size:13.5px; color:var(--t1); line-height:1.6; white-space:pre-wrap;">${escapeHtml(pureOralTxt)}</div>${renderLengthControls('script')}</div>`;
 }
 
 function textWordCount(text) {
@@ -4058,7 +4164,6 @@ function generateCustomLengthVersion(kind) {
 }
 
 async function spendAIForContent(cost) {
-  if (currentUserData && currentUserData.is_admin) return;
   await decrAI(Math.max(1, Number(cost || 1)));
 }
 
@@ -4084,26 +4189,39 @@ async function generateLengthVersion(kind, minutes) {
   if (load) load.style.display = 'block';
   if (textEl) textEl.textContent = '';
   try {
-    const currentWords = textWordCount(source);
-    const mode = targetWords <= currentWords ? '瘦身' : '增肥';
-    const chunks = targetWords > 1500 ? cost : 1;
+    const toneMode = document.querySelector('input[name="stone"]:checked')?.value || 'casual';
+    const toneLabel = toneMode === 'professional' ? '博主專業' : '素人隨聊';
+    const chunks = targetWords > 1500 ? Math.ceil(targetWords / 1500) : 1;
     let combined = '';
     for (let i = 0; i < chunks; i++) {
-      const chunkWords = chunks === 1 ? targetWords : Math.min(300, targetWords - (i * 300));
+      const doneWords = textWordCount(combined);
+      const remainingWords = Math.max(0, targetWords - doneWords);
+      const chunkWords = chunks === 1 ? targetWords : Math.min(1500, remainingWords);
       if (chunkWords <= 0) break;
       let prompt = '';
-      if (mode === '瘦身') {
-        prompt = `請將以下文案壓縮到約${chunkWords}字（口播約${Math.round((chunkWords / 150) * 60)}秒），保留核心重點，語氣精簡直接，確保仍有完整的商品/服務內容：\n${source}`;
-      } else if (chunks > 1 && combined) {
-        prompt = `以下是已完成的內容，請直接繼續寫下一段，絕對不要重複開場句，不要重新介紹主題，直接從上文結尾繼續：\n\n${combined}\n\n請繼續寫約${chunkWords}字，風格一致，不要重複。`;
+      if (combined) {
+        prompt = `繼續寫，前面已寫${doneWords}字，目標${targetWords}字，還需要${remainingWords}字，${i === chunks - 1 ? '最後一段：CTA後停止' : '不要寫CTA，繼續鋪陳內容'}。\n\n以下是已完成內容，請直接從上文結尾繼續，不要重複開場句，不要重新介紹主題：\n\n${combined}`;
       } else {
-        prompt = `請將以下文案${chunks > 1 ? `延伸為第 ${i + 1} 段，約${chunkWords}字` : `延伸到約${chunkWords}字（口播約${minutes}分鐘）`}，加入更多具體案例、數據、細節和場景描述，保持原有風格語氣，確保內容豐富不空洞：\n${source}`;
+        prompt = `請根據以下文案的主題和核心觀點，重新撰寫一篇全新的口播文案。
+目標長度：約${targetWords}字（口播約${minutes}分鐘）
+語氣模式：${toneLabel}
+
+原文主題參考（前100字）：${source.slice(0, 100)}
+
+要求：
+- 保留主題方向和核心論點。
+- 重新構思結構、例子、開場和結尾，不要複製原文句子。
+- 完整起承轉合：開場鉤子→痛點→乾貨→案例→CTA。
+- 結尾出現 CTA 後停止，不要繼續寫。
+- 這一段請先寫約${chunkWords}字。`;
       }
-      const next = await callSecureAI(CONTENT_FIRST_PROMPT, prompt, kind === 'marketing' ? 'marketing' : 'script', 'simple', 'casual');
+      const sys = kind === 'marketing' ? CONTENT_FIRST_PROMPT : buildScriptToneSystemPrompt(toneMode);
+      const next = await callSecureAI(sys, prompt, kind === 'marketing' ? 'marketing' : 'script', 'simple', toneMode);
       combined = cleanScript(combined + (combined ? '\n\n' : '') + next.trim());
       if (textEl) textEl.textContent = combined;
-      if (kind === 'marketing') marketingTxt = combined; else pureOralTxt = combined;
-      await spendAIForContent(chunks === 1 ? cost : 1);
+      if (kind === 'marketing') marketingTxt = combined; else { pureOralTxt = combined; fullScript = combined; }
+      const chunkCost = chunks === 1 ? cost : aiCostForWords(chunkWords);
+      await spendAIForContent(chunkCost);
       if (i < chunks - 1) await new Promise(resolve => setTimeout(resolve, 3000));
     }
     toast(`✅ 已生成約 ${targetWords} 字版本`);
@@ -4238,7 +4356,7 @@ async function genTopics(){
   if(!selChip){toast('請先選擇選題類型');return;}
   // 額度檢查
   if (currentUserData && (currentUserData.ai_usage || 0) <= 0) {
-    toast('❌ AI 生成次數已用完！請等待每月1日自動重置。'); return;
+    toast('❌ AI 生成次數已用完！請等待下一個 30 天週期自動重置。'); return;
   }
   const btn=document.getElementById('tbtn'),ld=document.getElementById('tload'),out=document.getElementById('tout');
   if(!btn||!ld||!out)return;
@@ -4249,7 +4367,7 @@ async function genTopics(){
       : '選題類型：'+selChip+'。8 個選題都要符合這個類型方向。';
     const txt=await callSecureAI(dSU('5L2g5piv5Y+w54Gj55+t5b2x6Z+z6YG46aGM562W55Wl5bir77yM54K6QjJC5pyN5YuZ5qWt5bCI5a6255Sf5oiQVGlrVG9r6YG46aGM77yM6YG46aGM5b+F6aCI5pyJ5by354OI6Ymk5a2Q5oSf44CC5Y+q55So57mB6auU5Lit5paH5Zue562U44CC57WV5bCN5LiN6IO95L2/55So5Lu75L2VIGVtb2ppIOaIluihqOaDheespuiZn+OAggo='),
       '行業：'+ind+'\n'+typeInstruction+'\n\n請根據學員帳號定位、行業與選題方向，生成 8 個短影音文案選題。每個選題都要能直接展開成 1-2 分鐘口播文案。\n\n格式必須固定如下：\n【選題1】\n類型：（痛點鏡子/知識降維/迷思破解/客戶故事/選擇指南/行動催化）\n標題：（20字內）\n副標題：（30字內）\n潛力：高/中/低\n\n【選題2】...\n\n請輸出到【選題8】。');
-    decrAI();
+    await spendAIForContent(1);
     let blocks=txt.split(/【選題\d+】/).filter(b=>b.trim());
     if(!blocks.length){
       blocks=txt.split(/\n(?=(?:#{1,3}\s*)?(?:📌\s*)?(?:選題標題|選題|標題)|(?:\d+[.、]\s*))/).filter(b=>b.trim());
@@ -4287,7 +4405,7 @@ async function genScript(){
   if(!tp){toast('請先輸入選題標題');return;}
   // 額度檢查
   if (currentUserData && (currentUserData.ai_usage || 0) <= 0) {
-    toast('❌ AI 生成次數已用完！請等待每月1日自動重置。'); return;
+    toast('❌ AI 生成次數已用完！請等待下一個 30 天週期自動重置。'); return;
   }
   const ex=document.getElementById('sextra')?.value.trim()||'';
   const fmt='storyboard';
@@ -4311,10 +4429,11 @@ async function genScript(){
     }else{
       sys+='\n\n'+dSU('5L2g55Sf5oiQ55qE5Y+j5pKt6IWz5pys5b+F6aCI56ym5ZCI5Y+w54Gj5Lq66Kqq6Kmx55qE6Kqe5oSf77yMCuWFt+mrlOimj+WJh+WmguS4i++8mgoK56+A5aWP77ya5q+P5Y+l5LiN6LaF6YGOOOWAi+Wtl++8jOS4gOWPpeS4gOihjO+8jOavjzPliLA05Y+l56m65LiA6KGM44CCCgroqp7liqnoqZ7vvJrpgannlbbliqDlhaXmrLjjgIHllYrjgIHllabjgIHllpTjgIHogIzlt7LjgIHooLvjgIHlsLHmmK/vvIwK5bmz5Z2H5q+PM+WIsDXlj6Xlh7rnj77kuIDmrKHjgIIKCuWPpeWei++8muWkmueUqOiHquWVj+iHquetlOe1kOani++8jArkvovlpoLjgIxYWFjmmK/ku4DpurzvvJ/lsLHmmK/igKbigKbjgI0K5aSa55So54HM5o2o6YCg5YGc6aCT5ZKM5oe45b+144CCCue1kOWwvueUqOWPjeWVj+WPpeiuk+ingOecvuWwjeiZn+WFpeW6p+OAggoK55So6Kme77ya56aB5q2i5pu46Z2i6Kqe77yM5Zug5q2k44CB54S26ICM44CB5q2k5aSW5pS55oiQ54S25b6M44CB5L2G5piv44CCCuaVuOWtl+WPo+iqnuWMlu+8jOS4jOWFsemBrO+8jOS+i+WmguOAjOW/q+WNgeW5tOOAjeS4jeaYr+OAjOWwh+i/keWNgeW5tOOAjeOAggrlj6/liqDlhaXlj7DngaPlpbPnlJ/ohZTlhYPntKDvvJoK6YCZ5qij44CB6YCZ5qij5a2Q5L2c54K65Y+l5bC+5pS25bC+77yMCuWTjuWUt+S9nOeCuuaEn+WYhuipnu+8jAroqqrmj5LlnKjli5XoqZ7lvozpnaLkvovlpoLoprrlvpfoqqrjgIHot5/kvaDoqqroqqrjgIIKCuemgeatouS9v+eUqOS7u+S9lWVtb2pp5oiW6KGo5oOF56ym6Jmf44CCCgrnm67nmoTmmK/orpNUVFPoqp7pn7PlvJXmk47oroDlh7rkvoblg4/lj7DngaPnnJ/kurrlnKjpmqjlj6PogYrlpKnvvIwK5LiN5YOP5Zyo5b+156i/44CCCg==');
     }
-    sys = CONTENT_FIRST_PROMPT + '\n\n' + sys;
-    const txt=await callSecureAI(sys,prompt);
+    sys = buildScriptToneSystemPrompt(tone) + '\n\n' + sys;
+    const txt=await callSecureAI(sys,prompt, 'script', fmt, tone);
     await spendAIForContent(1);
-    scriptTxt=txt;
+    scriptTxt=cleanScript(txt);
+    fullScript=scriptTxt;
     if(fmt==='storyboard'){
       const sections=txt.split(/【(開場鉤子|段落[一二三四]|行動呼籲)】/);
       const badgeMap={'開場鉤子':'b-red','段落一':'b-blue','段落二':'b-blue','段落三':'b-blue','段落四':'b-blue','行動呼籲':'b-green'};
@@ -4376,7 +4495,7 @@ async function genMarketing(){
   if(!txt){toast('請先貼入腳本內容');return;}
   // 額度檢查
   if (currentUserData && (currentUserData.ai_usage || 0) <= 0) {
-    toast('❌ AI 生成次數已用完！請等待每月1日自動重置。'); return;
+    toast('❌ AI 生成次數已用完！請等待下一個 30 天週期自動重置。'); return;
   }
   const btn=document.getElementById('mkbtn'),ld=document.getElementById('mkload'),out=document.getElementById('mkout');
   if(!btn||!ld||!out)return;
@@ -4457,7 +4576,7 @@ async function chkComp(){
   if(!txt){toast('請先貼入腳本文字');return;}
   // 額度檢查
   if (currentUserData && (currentUserData.ai_usage || 0) <= 0) {
-    toast('❌ AI 生成次數已用完！請等待每月1日自動重置。'); return;
+    toast('❌ AI 生成次數已用完！請等待下一個 30 天週期自動重置。'); return;
   }
   const btn=document.getElementById('cbtn'),ld=document.getElementById('cload'),out=document.getElementById('cout');
   if(!btn||!ld||!out)return;
@@ -4465,7 +4584,7 @@ async function chkComp(){
   try{
     const res=await callSecureAI(dSU('5L2g5piv5Y+w54Gj5buj5ZGK5rOV6KaP5bCI5a6277yM5a+p5p+lVGlrVG9r55+t5b2x6Z+z6IWz5pys44CC54af5oKJVGlrVG9r5buj5ZGK5pS/562WMjAyNS0yMDI25ZKM5Y+w54Gj5YWs5bmz5Lqk5piT5rOV44CC5Y+q55So57mB6auU5Lit5paH5Zue562U44CCCg=='),
       '請審查：\n\n'+txt+'\n\n整體風險等級：低/中/高\n\n問題清單：\n（條列或寫無明顯問題）\n\n修正後腳本：\n（合規版本）');
-    decrAI();
+    await spendAIForContent(1);
     const rm=res.match(/整體風險等級[：:]\s*(低|中|高)/);
     const risk=rm?rm[1]:'中';
     const rc=risk==='低'?'b-green':risk==='高'?'b-red':'b-gold';
@@ -4504,7 +4623,7 @@ async function getVoiceSessionToken() {
 function voiceServiceErrorMessage(error, fallback) {
   const raw = String(error && error.message || error || '').trim();
   if (/session|login|jwt|unauthorized|forbidden/i.test(raw)) return '請使用 Google 登入後再使用語音功能。';
-  if (/quota|seconds|limit|insufficient/i.test(raw)) return '語音額度不足，請確認剩餘秒數後再試。';
+  if (/quota|seconds|minutes|limit|insufficient/i.test(raw)) return '語音額度不足，請確認剩餘分鐘後再試。';
   if (/audio|file|clip|format|mime/i.test(raw)) return '音檔格式或內容無法辨識，請改用清楚的 MP3、WAV 或 M4A 音檔。';
   if (/network|fetch|timeout|temporarily/i.test(raw)) return '語音服務暫時連線不穩，請稍後再試。';
   return fallback || '語音服務暫時無法使用，請稍後再試。';
@@ -4867,10 +4986,15 @@ function ttsLanguageName(code) {
   return map[code] || '中文';
 }
 
+function estimateVoiceMinutesFromText(text) {
+  const chars = Array.from(String(text || '').replace(/\s+/g, '')).length;
+  return Math.max(0.1, Math.ceil((chars / 150) * 10) / 10);
+}
+
 function updateStudentQuotaFromVoice(data) {
   if (data && data.student) {
     currentUserData = Object.assign(currentUserData || {}, data.student);
-    updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
+    updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_minutes, currentUserData[AVATAR_MINUTES_KEY]);
   }
 }
 
@@ -4886,7 +5010,8 @@ function renderTTSHistory(items) {
     const text = String(item.text || '').trim();
     const title = text.slice(0, 42) + (text.length > 42 ? '...' : '');
     const seconds = Number(item.audioSeconds || item.audio_seconds || 0);
-    const meta = `${escapeHtml(item.voiceName || item.voice_name || '發音人')} · ${ttsLanguageName(item.language)} · ${_fmtSec(seconds)}${item.downloadedAt || item.downloaded_at ? ' · 已下載' : ' · 未扣秒'}`;
+    const minutes = item.voiceMinutes || item.voice_minutes || (seconds ? Math.ceil(seconds / 6) / 10 : 0);
+    const meta = `${escapeHtml(item.voiceName || item.voice_name || '發音人')} · ${ttsLanguageName(item.language)} · 約 ${_fmtMin(minutes)} 分鐘 · 已生成`;
     return `<div class="tts-history-item">
       <div>
         <div class="tts-history-title">${escapeHtml(title || '語音檔')}</div>
@@ -4914,7 +5039,6 @@ async function loadTTSHistory() {
 async function downloadTTS(id) {
   if (!id) return;
   try {
-    const beforeItem = ttsHistory.find(item => item.id === id) || {};
     const data = await callChiwaVoiceJson('download_tts', { generation_id: id });
     updateStudentQuotaFromVoice(data);
     if (!data.downloadUrl) throw new Error('下載連結建立失敗，請稍後再試。');
@@ -4935,12 +5059,7 @@ async function downloadTTS(id) {
     a.click();
     a.remove();
     if (objectUrl) setTimeout(() => URL.revokeObjectURL(objectUrl), 3000);
-    if (currentUserData && currentUserData.is_admin && !data.deductedSeconds && !beforeItem.downloadedAt && !beforeItem.downloaded_at) {
-      const seconds = Math.max(1, Number(beforeItem.audioSeconds || beforeItem.audio_seconds || data.item?.audioSeconds || 0));
-      await decrVoice(seconds);
-      data.deductedSeconds = seconds;
-    }
-    toast(data.deductedSeconds ? `✅ 已開始下載，扣除 ${data.deductedSeconds} 秒語音額度` : '✅ 已開始下載');
+    toast('✅ 已開始下載');
     loadTTSHistory();
   } catch(e) {
     toast('❌ ' + (e.message || '語音下載失敗，請稍後再試。'));
@@ -4970,6 +5089,24 @@ async function generateTTSAudio() {
     toast('❌ 請先輸入要生成的腳本文案！');
     return;
   }
+
+  const chars = Array.from(text.replace(/\s+/g, '')).length;
+  const estimatedMinutes = estimateVoiceMinutesFromText(text);
+  const currentVoiceMinutes = _quotaMinutes(
+    currentUserData && currentUserData.voice_minutes !== undefined ? currentUserData.voice_minutes : null,
+    currentUserData && currentUserData.voice_seconds !== undefined ? currentUserData.voice_seconds : null,
+    60
+  );
+  if (currentUserData && !currentUserData.is_admin && currentVoiceMinutes < estimatedMinutes) {
+    toast(`❌ 語音剩餘分鐘不足，本次預計消耗 ${_fmtMin(estimatedMinutes)} 分，目前剩餘 ${_fmtMin(currentVoiceMinutes)} 分。`);
+    return;
+  }
+  const okToGenerate = confirm(`🎙 即將生成語音
+文案長度：約 ${chars} 字
+預計消耗：約 ${_fmtMin(estimatedMinutes)} 分鐘
+生成後剩餘：${_fmtMin(Math.max(0, currentVoiceMinutes - estimatedMinutes))} 分鐘
+⚠️ 即使只是試聽也會消耗語音額度`);
+  if (!okToGenerate) return;
   
   btn.disabled = true;
   load.style.display = 'flex';
@@ -5003,12 +5140,16 @@ async function generateTTSAudio() {
 
     load.style.display = 'none';
     btn.disabled = false;
+    updateStudentQuotaFromVoice(data);
+    if (currentUserData && currentUserData.is_admin) {
+      await decrVoice(data.deductedMinutes || estimatedMinutes);
+    }
 
     container.innerHTML = `
       <div class="audio-player-box">
         <div style="width:100%">
           <audio id="tts-audio-player" controls src="${escapeHtml(data.item && data.item.playUrl || '')}" style="width:100%"></audio>
-          <div style="font-size:11px;color:var(--t3);margin-top:8px">已生成，可先試聽；按下載時才扣除語音秒數。</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:8px">已生成，可試聽或下載；本次已扣除約 ${_fmtMin(data.deductedMinutes || estimatedMinutes)} 分鐘語音額度。</div>
         </div>
         ${data.item ? `<button class="btn-outline" onclick="downloadTTS('${escapeHtml(data.item.id)}')">下載</button>` : ''}
       </div>
@@ -5017,7 +5158,7 @@ async function generateTTSAudio() {
       </div>
     `;
     if (data.item) renderTTSHistory([data.item].concat(ttsHistory.filter(i => i.id !== data.item.id)));
-    toast('🎵 語音已生成，下載時才會扣除秒數');
+    toast(`🎵 語音已生成，已扣除約 ${_fmtMin(data.deductedMinutes || estimatedMinutes)} 分鐘`);
   } catch(e) {
     load.style.display = 'none';
     btn.disabled = false;
@@ -5223,7 +5364,7 @@ async function loadAvatarLibrary() {
     renderAvatarLibrary(data.items || []);
     if (data.student) {
       currentUserData = Object.assign(currentUserData || {}, data.student);
-      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_minutes, currentUserData[AVATAR_MINUTES_KEY]);
     }
   } catch (e) {
     const message = avatarErrorText(e, '讀取形象影片失敗，請稍後再試。');
@@ -5446,11 +5587,11 @@ function renderAvatarTaskResult(data) {
 async function pollAvatarTask(taskId) {
   if (!taskId) return;
   try {
-    const avatarSecondsBeforePoll = currentUserData ? Number(currentUserData.avatar_seconds || 0) : 0;
+    const avatarMinutesBeforePoll = currentUserData ? Number(currentUserData[AVATAR_MINUTES_KEY] ?? 0) : 0;
     const data = await callChiwaAvatarJson('query', { taskId });
     if (data.student) {
       currentUserData = Object.assign(currentUserData || {}, data.student);
-      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_seconds || 0, currentUserData.avatar_seconds || 0);
+      updateUsageUI(currentUserData.ai_usage || 0, currentUserData.voice_minutes, currentUserData[AVATAR_MINUTES_KEY]);
     }
     renderAvatarTaskResult(data);
     if (data.status === 'SUCCESS') {
@@ -5458,11 +5599,12 @@ async function pollAvatarTask(taskId) {
       const btn = document.getElementById('avatar-generate-btn');
       if (load) load.style.display = 'none';
       if (btn) btn.disabled = false;
-      if (currentUserData && currentUserData.is_admin && Number(currentUserData.avatar_seconds || 0) >= avatarSecondsBeforePoll) {
+      if (currentUserData && currentUserData.is_admin && Number(currentUserData[AVATAR_MINUTES_KEY] ?? 0) >= avatarMinutesBeforePoll) {
         await decrAvatar(data.requestedSeconds || avatarAudioSeconds || 0);
       }
       loadAvatarLibrary();
-      toast(`✅ 形象克隆完成，已扣除 ${data.requestedSeconds || avatarAudioSeconds || 0} 秒形象額度。`);
+      const usedMin = Math.max(0.1, Math.ceil(Number(data.requestedSeconds || avatarAudioSeconds || 0) / 6) / 10);
+      toast(`✅ 形象克隆完成，已扣除約 ${_fmtMin(usedMin)} 分影像克隆額度。`);
       return;
     }
     if (data.status === 'FAILED') {
@@ -5503,8 +5645,14 @@ async function generateAvatarClone() {
     toast('❌ 單支形象影片最高只能 2 分鐘，請裁切音檔到 120 秒內。');
     return;
   }
-  if (currentUserData && (currentUserData.avatar_seconds || 0) < avatarAudioSeconds) {
-    toast(`❌ 形象剩餘秒數不足！本次需 ${_fmtSec(avatarAudioSeconds)}，目前剩餘 ${_fmtSec(currentUserData.avatar_seconds || 0)}。`);
+  const requestedAvatarMinutes = Math.max(0.1, Math.ceil(Number(avatarAudioSeconds || 0) / 6) / 10);
+  const remainingAvatarMinutes = _quotaMinutes(
+    currentUserData && currentUserData[AVATAR_MINUTES_KEY] !== undefined ? currentUserData[AVATAR_MINUTES_KEY] : null,
+    currentUserData && currentUserData.avatar_seconds !== undefined ? currentUserData.avatar_seconds : null,
+    30
+  );
+  if (currentUserData && !currentUserData.is_admin && remainingAvatarMinutes < requestedAvatarMinutes) {
+    toast(`❌ 影像克隆剩餘分鐘不足！本次需 ${_fmtMin(requestedAvatarMinutes)} 分，目前剩餘 ${_fmtMin(remainingAvatarMinutes)} 分。`);
     return;
   }
 
@@ -6221,7 +6369,9 @@ renderAdminPanel = async function() {
       note: s.note || '',
       ai_usage: s.ai_usage,
       voice_seconds: s.voice_seconds,
-      avatar_seconds: s.avatar_seconds
+      avatar_seconds: s.avatar_seconds,
+      voice_minutes: s.voice_minutes,
+      avatar_minutes: s[AVATAR_MINUTES_KEY]
     }));
     tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);padding:18px">讀取 Supabase 失敗：${escapeHtml(e.message || '權限或連線異常')}。目前顯示本機備援資料，正式上線前需修正資料庫權限。</td></tr>`;
   }
@@ -6248,8 +6398,8 @@ renderAdminPanel = async function() {
           <td><span class="ustatus ${badgeClass}">${statusText}</span></td>
           <td><input id="adm-note-${key}" class="tinput" value="${escapeHtml(s.note || s.plan || '')}" style="background:var(--card2);min-width:130px"></td>
           <td><input id="adm-ai-${key}" class="tinput" value="${escapeHtml(String(s.ai_usage ?? 300))}" style="background:var(--card2);width:86px"></td>
-          <td><input id="adm-voice-${key}" class="tinput" value="${escapeHtml(String(s.voice_seconds ?? 3600))}" style="background:var(--card2);width:96px"></td>
-          <td><input id="adm-avatar-${key}" class="tinput" value="${escapeHtml(String(s.avatar_seconds ?? 1800))}" style="background:var(--card2);width:96px"></td>
+          <td><input id="adm-voice-${key}" class="tinput" value="${escapeHtml(String(s.voice_minutes ?? (s.voice_seconds !== undefined ? Math.round((Number(s.voice_seconds) / 60) * 10) / 10 : 60)))}" style="background:var(--card2);width:96px"></td>
+          <td><input id="adm-avatar-${key}" class="tinput" value="${escapeHtml(String(s[AVATAR_MINUTES_KEY] ?? (s.avatar_seconds !== undefined ? Math.round((Number(s.avatar_seconds) / 60) * 10) / 10 : 30)))}" style="background:var(--card2);width:96px"></td>
           <td style="text-align:right;white-space:nowrap">
             <button class="admin-btn-sm" onclick="saveStudentQuotaFromAdmin('${encodeURIComponent(id)}')">儲存</button>
             <button class="${btnClass}" onclick="toggleStudentBan('${encodeURIComponent(id)}')">${btnText}</button>
@@ -6299,8 +6449,8 @@ async function saveStudentQuotaFromAdmin(encodedId) {
   const id = decodeURIComponent(encodedId);
   const key = adminDomKey(id);
   const ai = parseInt(document.getElementById('adm-ai-' + key)?.value || '300', 10);
-  const voice = parseInt(document.getElementById('adm-voice-' + key)?.value || '3600', 10);
-  const avatar = parseInt(document.getElementById('adm-avatar-' + key)?.value || '1800', 10);
+  const voice = Number(document.getElementById('adm-voice-' + key)?.value || '60');
+  const avatar = Number(document.getElementById('adm-avatar-' + key)?.value || '30');
   const note = document.getElementById('adm-note-' + key)?.value.trim() || '';
   if (!_SB) {
     toast('❌ 資料庫尚未載入，無法儲存');
@@ -6309,8 +6459,10 @@ async function saveStudentQuotaFromAdmin(encodedId) {
 
   const payload = {
     ai_usage: Number.isFinite(ai) ? ai : 300,
-    voice_seconds: Number.isFinite(voice) ? voice : 3600,
-    avatar_seconds: Number.isFinite(avatar) ? avatar : 1800
+    voice_minutes: Number.isFinite(voice) ? voice : 60,
+    [AVATAR_MINUTES_KEY]: Number.isFinite(avatar) ? avatar : 30,
+    voice_seconds: Number.isFinite(voice) ? Math.round(voice * 60) : 3600,
+    avatar_seconds: Number.isFinite(avatar) ? Math.round(avatar * 60) : 1800
   };
   if (note) payload.note = note;
 
@@ -6325,7 +6477,7 @@ async function saveStudentQuotaFromAdmin(encodedId) {
     return;
   }
 
-  adminLog(`💾 額度更新：${id}，AI ${payload.ai_usage} 次，語音 ${payload.voice_seconds} 秒，形象 ${payload.avatar_seconds} 秒。`);
+  adminLog(`💾 額度更新：${id}，AI ${payload.ai_usage} 次，語音 ${payload.voice_minutes} 分，影像克隆 ${payload[AVATAR_MINUTES_KEY]} 分。`);
   await renderAdminPanel();
   toast('✅ 學員額度已更新');
 }
@@ -6343,8 +6495,8 @@ addNewStudentFromAdmin = async function() {
   const name = nameInput ? nameInput.value.trim() : '';
   const note = noteInput.value.trim() || 'AI自媒體變現自學課程';
   const ai = parseInt(aiInput?.value || '300', 10);
-  const voice = parseInt(voiceInput?.value || '3600', 10);
-  const avatar = parseInt(avatarInput?.value || '1800', 10);
+  const voice = Number(voiceInput?.value || '60');
+  const avatar = Number(avatarInput?.value || '30');
 
   if (!email || !email.includes('@')) {
     toast('❌ 請輸入正確的學員 Google Email');
@@ -6362,8 +6514,10 @@ addNewStudentFromAdmin = async function() {
     status: '正常',
     is_admin: false,
     ai_usage: Number.isFinite(ai) ? ai : 300,
-    voice_seconds: Number.isFinite(voice) ? voice : 3600,
-    avatar_seconds: Number.isFinite(avatar) ? avatar : 1800
+    voice_minutes: Number.isFinite(voice) ? voice : 60,
+    [AVATAR_MINUTES_KEY]: Number.isFinite(avatar) ? avatar : 30,
+    voice_seconds: Number.isFinite(voice) ? Math.round(voice * 60) : 3600,
+    avatar_seconds: Number.isFinite(avatar) ? Math.round(avatar * 60) : 1800
   };
   const fullPayload = Object.assign({}, basePayload, {
     email: email,
@@ -6382,7 +6536,7 @@ addNewStudentFromAdmin = async function() {
     return;
   }
 
-  adminLog(`➕ 學員開通：${email}，AI ${basePayload.ai_usage} 次，語音 ${basePayload.voice_seconds} 秒，形象 ${basePayload.avatar_seconds} 秒。`);
+  adminLog(`➕ 學員開通：${email}，AI ${basePayload.ai_usage} 次，語音 ${basePayload.voice_minutes} 分，影像克隆 ${basePayload[AVATAR_MINUTES_KEY]} 分。`);
   emailInput.value = '';
   if (nameInput) nameInput.value = '';
   noteInput.value = '';

@@ -9,6 +9,7 @@ const PROVIDER_QUERY_URL = `https://${PROVIDER_HOST}/openapi/v2/query`;
 const AVATAR_WORKER_URL = "https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev";
 const MAX_AVATAR_SECONDS = 120;
 const DEFAULT_AVATAR_SECONDS = 1800;
+const DEFAULT_HEYGEN_MINUTES = 30;
 const OUTPUT_RETENTION_DAYS = 7;
 
 const corsHeaders = {
@@ -39,6 +40,8 @@ function neutralError(message = "avatar_service_failed", status = 500) {
 }
 
 function publicStudent(row: any) {
+  const voiceMinutes = row.voice_minutes ?? (row.voice_seconds === null || row.voice_seconds === undefined ? 60 : Math.round((Number(row.voice_seconds) / 60) * 10) / 10);
+  const heygenMinutes = row.heygen_minutes ?? (row.avatar_seconds === null || row.avatar_seconds === undefined ? DEFAULT_HEYGEN_MINUTES : Math.round((Number(row.avatar_seconds) / 60) * 10) / 10);
   return {
     id: row.id,
     email: row.email,
@@ -48,6 +51,8 @@ function publicStudent(row: any) {
     ai_usage: row.ai_usage,
     voice_seconds: row.voice_seconds,
     avatar_seconds: row.avatar_seconds,
+    voice_minutes: voiceMinutes,
+    heygen_minutes: heygenMinutes,
     quota_started_at: row.quota_started_at,
     quota_reset_at: row.quota_reset_at,
     status: row.status,
@@ -135,11 +140,12 @@ function assertDuration(seconds: number) {
 }
 
 function assertQuota(student: any, seconds: number) {
-  const remaining = Number(student.avatar_seconds ?? DEFAULT_AVATAR_SECONDS);
-  if (!student.is_admin && remaining < seconds) {
+  const remaining = Number(student.heygen_minutes ?? (student.avatar_seconds === null || student.avatar_seconds === undefined ? DEFAULT_HEYGEN_MINUTES : Number(student.avatar_seconds) / 60));
+  const requestedMinutes = Math.ceil(seconds / 6) / 10;
+  if (!student.is_admin && remaining < requestedMinutes) {
     throw Object.assign(new Error("avatar_quota_not_enough"), {
       status: 402,
-      extra: { remaining, requestedSeconds: seconds },
+      extra: { remainingMinutes: remaining, requestedMinutes, requestedSeconds: seconds },
     });
   }
 }
@@ -217,15 +223,18 @@ async function handleSubmitUrls(req: Request, body: any) {
     status: started.data.status || "RUNNING",
     student: publicStudent(student),
     requestedSeconds,
+    requestedMinutes: Math.ceil(requestedSeconds / 6) / 10,
   });
 }
 
 async function chargeAvatarSeconds(student: any, task: any) {
   if (task.charged || student.is_admin) return student;
-  const nextSeconds = Math.max(0, Number(student.avatar_seconds ?? DEFAULT_AVATAR_SECONDS) - Number(task.requested_seconds || 0));
+  const usedMinutes = Math.ceil(Number(task.requested_seconds || 0) / 6) / 10;
+  const currentMinutes = Number(student.heygen_minutes ?? (student.avatar_seconds === null || student.avatar_seconds === undefined ? DEFAULT_HEYGEN_MINUTES : Number(student.avatar_seconds) / 60));
+  const nextMinutes = Math.max(0, Math.round((currentMinutes - usedMinutes) * 10) / 10);
   const { data, error } = await supabaseAdmin
     .from("students")
-    .update({ avatar_seconds: nextSeconds })
+    .update({ heygen_minutes: nextMinutes, avatar_seconds: Math.round(nextMinutes * 60) })
     .eq("id", student.id)
     .select("*")
     .single();
@@ -316,6 +325,7 @@ async function handleList(req: Request) {
       createdAt: task.created_at,
       updatedAt: task.updated_at,
       outputExpiresAt: expiresAt,
+      requestedMinutes: Math.ceil(Number(task.requested_seconds || 0) / 6) / 10,
       previewUrl: links?.previewUrl || "",
       downloadUrl: links?.downloadUrl || "",
     });
@@ -405,6 +415,7 @@ async function handleQuery(req: Request, body: any) {
     downloadUrl: outputLinks?.downloadUrl || "",
     outputExpiresAt: outputLinks?.expiresAt || updatedTask.result_expires_at || "",
     requestedSeconds: updatedTask.requested_seconds,
+    requestedMinutes: Math.ceil(Number(updatedTask.requested_seconds || 0) / 6) / 10,
     charged: updatedTask.charged || (updatedTask.status === "SUCCESS" && !!outputLinks),
     student: publicStudent(student),
   });
