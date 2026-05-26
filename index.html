@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://nsauscojruqjcprvsfsn.supabase.co https://nsauscojruqjcprvsfsn.storage.supabase.co wss://nsauscojruqjcprvsfsn.supabase.co https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev https://chiwa-avatar-r2.tony0928932688.workers.dev https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev; frame-src https://player.vimeo.com https://vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://calendar.app.google https://p.ecpay.com.tw; upgrade-insecure-requests;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com https://player.vimeo.com https://www.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://nsauscojruqjcprvsfsn.supabase.co https://nsauscojruqjcprvsfsn.storage.supabase.co wss://nsauscojruqjcprvsfsn.supabase.co https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev https://chiwa-avatar-r2.tony0928932688.workers.dev https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://*.clarity.ms; frame-src https://player.vimeo.com https://vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://calendar.app.google https://p.ecpay.com.tw; upgrade-insecure-requests;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>吉娃AI自媒體變現系統</title>
 <meta name="description" content="AI 自媒體變現系統，讓 AI 替你說話、接單、變現。AI 幫你想文案，幫你用你的聲音說話，只需錄一次 60 秒影片，AI 分身替你經營短影音。">
@@ -1272,6 +1272,221 @@ let currentUserData = null;
 const CHIWA_IDLE_LIMIT_MS = 24 * 60 * 60 * 1000;
 const CHIWA_LAST_ACTIVITY_KEY = 'chiwa_last_activity_at';
 const CHIWA_WORKSPACE_RESTORE_KEY = 'chiwa_workspace_restore';
+const CHIWA_BOOKING_URL = 'https://calendar.app.google/BFEdtf1wx658dbK19';
+const CHIWA_LINE_URL = 'https://line.me/R/ti/p/@543xxzvk';
+const CHIWA_ECPAY_URL = 'https://p.ecpay.com.tw/20FFCB5';
+const CHIWA_GA4_MEASUREMENT_ID = '';
+const CHIWA_GTM_CONTAINER_ID = 'GTM-N9XQS54H';
+const CHIWA_CLARITY_PROJECT_ID = '';
+let chiwaAnalyticsReady = false;
+let chiwaVimeoSdkPromise = null;
+const chiwaVideoSessions = {};
+const chiwaScrollMarks = {};
+
+function loadChiwaScript(src, id) {
+  if (id && document.getElementById(id)) return Promise.resolve();
+  return new Promise(function(resolve, reject) {
+    const s = document.createElement('script');
+    if (id) s.id = id;
+    s.async = true;
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+function initChiwaAnalytics() {
+  if (chiwaAnalyticsReady) return;
+  chiwaAnalyticsReady = true;
+  window.dataLayer = window.dataLayer || [];
+
+  if (CHIWA_GTM_CONTAINER_ID) {
+    window.dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' });
+    loadChiwaScript('https://www.googletagmanager.com/gtm.js?id=' + encodeURIComponent(CHIWA_GTM_CONTAINER_ID), 'chiwa-gtm').catch(function(e) {
+      console.warn('GTM load skipped:', e && e.message ? e.message : e);
+    });
+  }
+
+  if (CHIWA_GA4_MEASUREMENT_ID) {
+    window.gtag = window.gtag || function(){ window.dataLayer.push(arguments); };
+    loadChiwaScript('https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(CHIWA_GA4_MEASUREMENT_ID), 'chiwa-gtag').then(function() {
+      window.gtag('js', new Date());
+      window.gtag('config', CHIWA_GA4_MEASUREMENT_ID, { send_page_view: true });
+    }).catch(function(e) {
+      console.warn('GA4 load skipped:', e && e.message ? e.message : e);
+    });
+  }
+
+  if (CHIWA_CLARITY_PROJECT_ID) {
+    (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src='https://www.clarity.ms/tag/'+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, 'clarity', 'script', CHIWA_CLARITY_PROJECT_ID);
+  }
+}
+
+function chiwaTrack(eventName, params) {
+  const payload = Object.assign({
+    page_location: location.href,
+    page_title: document.title,
+    logged_in: !!currentUser
+  }, params || {});
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push(Object.assign({ event: eventName }, payload));
+  if (typeof window.gtag === 'function' && CHIWA_GA4_MEASUREMENT_ID) {
+    window.gtag('event', eventName, payload);
+  }
+}
+
+function openBooking(source) {
+  chiwaTrack('cta_click_booking', { cta_source: source || 'unknown', destination: 'google_calendar' });
+  chiwaTrack('generate_lead', { lead_type: 'booking_click', cta_source: source || 'unknown' });
+  window.open(CHIWA_BOOKING_URL, '_blank', 'noopener');
+}
+
+function openLineConsult(source) {
+  chiwaTrack('cta_click_line', { cta_source: source || 'unknown', destination: 'line' });
+  window.open(CHIWA_LINE_URL, '_blank', 'noopener');
+}
+
+function openCheckout(source) {
+  chiwaTrack('begin_checkout', { cta_source: source || 'unknown', destination: 'ecpay' });
+  window.open(CHIWA_ECPAY_URL, '_blank', 'noopener');
+}
+
+function ensureVimeoSdk() {
+  if (window.Vimeo && window.Vimeo.Player) return Promise.resolve();
+  if (!chiwaVimeoSdkPromise) {
+    chiwaVimeoSdkPromise = loadChiwaScript('https://player.vimeo.com/api/player.js', 'vimeo-player-sdk');
+  }
+  return chiwaVimeoSdkPromise;
+}
+
+function attachVimeoTracking(iframe, options) {
+  if (!iframe) return;
+  options = options || {};
+  const videoId = String(options.videoId || '').trim();
+  const placement = options.placement || 'vsl';
+  const sessionKey = placement + ':' + videoId + ':' + Date.now();
+  const state = {
+    videoId: videoId,
+    placement: placement,
+    title: options.title || placement,
+    duration: 0,
+    maxSeconds: 0,
+    lastReportedSeconds: 0,
+    started: false,
+    milestones: {}
+  };
+  chiwaVideoSessions[sessionKey] = state;
+
+  ensureVimeoSdk().then(function() {
+    if (!window.Vimeo || !window.Vimeo.Player) return;
+    const player = new window.Vimeo.Player(iframe);
+    player.getDuration().then(function(duration) {
+      state.duration = Math.round(Number(duration || 0));
+    }).catch(function(){});
+
+    player.on('play', function() {
+      if (!state.started) {
+        state.started = true;
+        chiwaTrack('vsl_start', {
+          video_id: state.videoId,
+          video_title: state.title,
+          video_placement: state.placement,
+          video_duration: state.duration
+        });
+      } else {
+        chiwaTrack('vsl_resume', {
+          video_id: state.videoId,
+          video_placement: state.placement,
+          video_current_time: Math.round(state.maxSeconds)
+        });
+      }
+    });
+
+    player.on('timeupdate', function(data) {
+      const seconds = Math.round(Number(data && data.seconds || 0));
+      const duration = Math.round(Number(data && data.duration || state.duration || 0));
+      state.duration = duration || state.duration;
+      state.maxSeconds = Math.max(state.maxSeconds, seconds);
+      if (!duration) return;
+      [25, 50, 75, 90].forEach(function(pct) {
+        if (!state.milestones[pct] && seconds / duration * 100 >= pct) {
+          state.milestones[pct] = true;
+          chiwaTrack('vsl_progress_' + pct, {
+            video_id: state.videoId,
+            video_title: state.title,
+            video_placement: state.placement,
+            video_percent: pct,
+            video_current_time: seconds,
+            video_duration: duration
+          });
+        }
+      });
+    });
+
+    player.on('pause', function() {
+      flushVideoAnalytics('pause', sessionKey);
+    });
+
+    player.on('ended', function() {
+      flushVideoAnalytics('complete', sessionKey);
+      chiwaTrack('vsl_complete', {
+        video_id: state.videoId,
+        video_title: state.title,
+        video_placement: state.placement,
+        video_watch_seconds: Math.round(state.maxSeconds),
+        video_duration: state.duration
+      });
+    });
+  }).catch(function(e) {
+    console.warn('Vimeo tracking skipped:', e && e.message ? e.message : e);
+  });
+}
+
+function flushVideoAnalytics(reason, onlyKey) {
+  Object.keys(chiwaVideoSessions).forEach(function(key) {
+    if (onlyKey && key !== onlyKey) return;
+    const state = chiwaVideoSessions[key];
+    if (!state || !state.started) return;
+    const watchSeconds = Math.round(state.maxSeconds || 0);
+    if (watchSeconds <= 0 || watchSeconds - state.lastReportedSeconds < 3) return;
+    state.lastReportedSeconds = watchSeconds;
+    chiwaTrack('vsl_watch_seconds', {
+      video_id: state.videoId,
+      video_title: state.title,
+      video_placement: state.placement,
+      video_watch_seconds: watchSeconds,
+      video_duration: state.duration,
+      report_reason: reason || 'update'
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initChiwaAnalytics);
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden') flushVideoAnalytics('visibility_hidden');
+});
+window.addEventListener('pagehide', function() {
+  flushVideoAnalytics('pagehide');
+});
+window.addEventListener('scroll', function() {
+  const doc = document.documentElement;
+  const maxScroll = Math.max(1, doc.scrollHeight - window.innerHeight);
+  const pct = Math.round((window.scrollY || doc.scrollTop || 0) / maxScroll * 100);
+  [25, 50, 75, 90].forEach(function(mark) {
+    if (!chiwaScrollMarks[mark] && pct >= mark) {
+      chiwaScrollMarks[mark] = true;
+      chiwaTrack('scroll_depth', {
+        scroll_percent: mark,
+        page_id: document.querySelector('.page.active')?.id || 'unknown'
+      });
+    }
+  });
+}, { passive: true });
 
 function setChiwaLocal(key, value) {
   try { localStorage.setItem(key, String(value)); } catch(e) {}
@@ -1339,6 +1554,11 @@ async function callChiwaSecure(action, payload) {
 async function finishStudentLogin(data, loginId) {
   currentUser = data.id || loginId;
   currentUserData = data;
+  chiwaTrack('login_success', {
+    login_method: 'google',
+    student_id: currentUser,
+    is_admin: !!data.is_admin
+  });
 
   const adminTab = document.getElementById('sb-admin-item');
   if (data.is_admin) {
@@ -1498,7 +1718,9 @@ function showSafeBrowserNotice(appName) {
 async function doGoogleLogin() {
   const err = document.getElementById('lerr');
   const blockedBrowser = getBlockedOAuthUserAgentName();
+  chiwaTrack('login_click', { login_method: 'google' });
   if (blockedBrowser) {
+    chiwaTrack('login_blocked_browser', { browser_name: blockedBrowser });
     showSafeBrowserNotice(blockedBrowser);
     return;
   }
@@ -1804,7 +2026,7 @@ async function decrAvatar(secs) {
     <div class="nav-links">
       <span class="nav-link" onclick="var el=document.getElementById('solutions-anchor');if(el)el.scrollIntoView({behavior:'smooth'})">服務方案</span>
       <span class="nav-link" onclick="var el=document.getElementById('faq-anchor');if(el)el.scrollIntoView({behavior:'smooth'})">常見問題</span>
-      <span class="nav-link" onclick="window.open('https://calendar.app.google/BFEdtf1wx658dbK19','_blank')">預約諮詢</span>
+      <span class="nav-link" onclick="openBooking('nav')">預約諮詢</span>
     </div>
     <div class="nav-btns">
       <button class="nav-btn-ghost nav-login-btn" onclick="goPage('login')">學員登入</button>
@@ -1965,7 +2187,7 @@ async function decrAvatar(secs) {
     
       <!-- 方案A CTA 按鈕 -->
       <div style="text-align:center; margin-top:32px;">
-        <button class="btn-gold" style="font-size:15px;padding:13px 36px;min-width:220px;justify-content:center;" onclick="window.open('https://calendar.app.google/BFEdtf1wx658dbK19','_blank')">預約免費諮詢 →</button>
+        <button class="btn-gold" style="font-size:15px;padding:13px 36px;min-width:220px;justify-content:center;" onclick="openBooking('solution_a')">預約免費諮詢 →</button>
       </div>
     </div>
     
@@ -2063,8 +2285,8 @@ async function decrAvatar(secs) {
 
       <!-- 方案B 按鈕 -->
       <div style="display:flex;gap:10px;margin-top:20px;">
-        <button style="flex:1;font-size:12px;padding:9px 0;border-radius:8px;border:none;background:linear-gradient(135deg,#e8c55a,#c8993a);color:#1a1205;font-weight:700;cursor:pointer;" onclick="window.open('https://calendar.app.google/BFEdtf1wx658dbK19','_blank')">預約免費諮詢</button>
-        <button style="flex:1;font-size:12px;padding:9px 0;border-radius:8px;border:1px solid rgba(232,197,90,.4);background:rgba(232,197,90,.08);color:#e8c55a;font-weight:700;cursor:pointer;" onclick="window.open('https://p.ecpay.com.tw/20FFCB5','_blank')">購買課程</button>
+        <button style="flex:1;font-size:12px;padding:9px 0;border-radius:8px;border:none;background:linear-gradient(135deg,#e8c55a,#c8993a);color:#1a1205;font-weight:700;cursor:pointer;" onclick="openBooking('solution_b')">預約免費諮詢</button>
+        <button style="flex:1;font-size:12px;padding:9px 0;border-radius:8px;border:1px solid rgba(232,197,90,.4);background:rgba(232,197,90,.08);color:#e8c55a;font-weight:700;cursor:pointer;" onclick="openCheckout('solution_b')">購買課程</button>
       </div>
 
     </div>
@@ -2242,8 +2464,8 @@ async function decrAvatar(secs) {
     <div class="cta-title">現在就開始，讓 AI 替你說話</div>
     <div class="cta-sub">限額 8 個名額，法務審查創始免費優惠有效期間內</div>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button class="btn-gold" style="font-size:15px;padding:14px 30px" onclick="window.open('https://calendar.app.google/BFEdtf1wx658dbK19','_blank')">預約免費諮詢</button>
-      <button class="btn-line" onclick="window.open('https://line.me/R/ti/p/@543xxzvk','_blank')">
+      <button class="btn-gold" style="font-size:15px;padding:14px 30px" onclick="openBooking('bottom_cta')">預約免費諮詢</button>
+      <button class="btn-line" onclick="openLineConsult('bottom_cta')">
         <svg viewBox="0 0 24 24" fill="white" width="18" height="18"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
         LINE 諮詢
       </button>
@@ -2890,7 +3112,7 @@ async function decrAvatar(secs) {
         <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace;text-transform:uppercase">影像克隆剩餘秒數</div>
         <div style="font-size:15px;font-weight:900;color:var(--purple);font-family:'Space Mono',monospace" id="avatar-rem-seconds">1,800<span style="font-size:11px;color:var(--t3);font-weight:400">/1,800秒</span></div>
       </div>
-      <div style="font-size:11px;color:var(--t3)">單支最高 02:00，依生成影片秒數扣除</div>
+      <div style="font-size:11px;color:var(--t3)">依生成影片秒數扣除</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px" class="script-grid">
       <div class="drop-upload" data-drop-kind="avatar-video" onclick="document.getElementById('avatar-video-input').click()" style="background:var(--card);border-radius:12px;padding:16px">
@@ -3273,8 +3495,8 @@ async function decrAvatar(secs) {
 
 
 <!-- LINE FLOAT -->
-<a class="consult-float" href="https://calendar.app.google/BFEdtf1wx658dbK19" target="_blank" title="預約免費諮詢">預約<br>諮詢</a>
-<a class="line-float" href="https://line.me/R/ti/p/@543xxzvk" target="_blank" title="聯絡我們">
+<a class="consult-float" href="https://calendar.app.google/BFEdtf1wx658dbK19" target="_blank" rel="noopener" title="預約免費諮詢" onclick="chiwaTrack('cta_click_booking',{cta_source:'floating_button',destination:'google_calendar'});chiwaTrack('generate_lead',{lead_type:'booking_click',cta_source:'floating_button'});">預約<br>諮詢</a>
+<a class="line-float" href="https://line.me/R/ti/p/@543xxzvk" target="_blank" rel="noopener" title="聯絡我們" onclick="chiwaTrack('cta_click_line',{cta_source:'floating_button',destination:'line'});">
   <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
     <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
   </svg>
@@ -3558,6 +3780,10 @@ document.addEventListener('keydown', function(e) {
 /* 頁面路由與導覽系統 */
 function goPage(pageId) {
   console.log('goPage called:', pageId);
+  chiwaTrack('virtual_page_view', {
+    page_id: pageId,
+    virtual_page_path: '/' + String(pageId || 'home')
+  });
   window.scrollTo(0, 0);
   document.documentElement.scrollTop = 0;
   if (pageId === 'workspace') {
@@ -4522,6 +4748,7 @@ async function callSecureAI(sys, usr, typeOverride, fmtOverride, toneOverride) {
     const r = await _sf('https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev/', {
       method: 'POST',
       headers: {
+        'Authorization': 'Bearer ' + (await getVoiceSessionToken()),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
@@ -5539,6 +5766,8 @@ function avatarErrorText(error, fallback) {
   if (/avatar_duration_too_long/i.test(raw)) return '單支形象影片最高 30 分鐘（1,800 秒），請裁切音檔後再送出。';
   if (/avatar_student_task_already_running/i.test(raw)) return '你目前已有一個形象克隆任務正在生成，完成後才能送出下一支。';
   if (/avatar_system_busy/i.test(raw)) return '目前形象克隆同時生成數已滿，請稍後再送出。';
+  if (/avatar_task_still_running/i.test(raw)) return '這支影片仍在生成中，完成或失敗後才能刪除。';
+  if (/avatar_output_delete_failed/i.test(raw)) return '影片刪除暫時失敗，請稍後再試或聯絡管理員。';
   if (/part_too_large/i.test(raw)) return '單一上傳分片超過系統限制，請重新送出後系統會自動調整。';
   if (/413|payload too large|request entity too large/i.test(raw)) return '目前大檔上傳服務暫時無法接收這個檔案，請稍後再試或聯絡管理員。';
   if (/mime|type/i.test(raw)) return '檔案格式被儲存空間拒絕，請改用 MP4 影片與 WAV/MP3 音檔後再試。';
@@ -5584,6 +5813,7 @@ function renderAvatarLibrary(items) {
     const created = avatarDateText(item.createdAt);
     const expires = avatarDateText(item.outputExpiresAt);
     const statusColor = ready ? 'var(--green)' : (failed || expired ? 'var(--red)' : 'var(--gold)');
+    const canDelete = !!item.taskId && (ready || failed || expired);
     const meta = [
       created ? `建立：${escapeHtml(created)}` : '',
       expires && ready ? `保存至：${escapeHtml(expires)}` : '',
@@ -5604,13 +5834,20 @@ function renderAvatarLibrary(items) {
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
             <a class="btn-outline" href="${escapeHtml(item.downloadUrl || item.previewUrl)}" download style="display:inline-flex;align-items:center;justify-content:center">下載影片</a>
+            ${canDelete ? `<button class="btn-outline" type="button" data-avatar-delete="${escapeHtml(item.taskId)}" style="border-color:rgba(255,107,107,.48);color:#ff9a9a">刪除</button>` : ''}
           </div>
         ` : `
           <div style="font-size:12px;color:var(--t3);margin-top:8px">${expired ? '此影片已超過保存期限。' : (failed ? '此影片生成失敗，請重新送出。' : '系統正在處理，完成後會顯示下載按鈕。')}</div>
+          ${canDelete ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px"><button class="btn-outline" type="button" data-avatar-delete="${escapeHtml(item.taskId)}" style="border-color:rgba(255,107,107,.48);color:#ff9a9a">刪除</button></div>` : ''}
         `}
       </div>
     `;
   }).join('');
+  box.querySelectorAll('[data-avatar-delete]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      deleteAvatarVideo(btn.getAttribute('data-avatar-delete') || '');
+    });
+  });
 }
 
 async function loadAvatarLibrary() {
@@ -5626,6 +5863,26 @@ async function loadAvatarLibrary() {
   } catch (e) {
     const message = avatarErrorText(e, '讀取形象影片失敗，請稍後再試。');
     if (box) box.innerHTML = `<div style="font-size:12px;color:var(--red)">❌ ${escapeHtml(message)}</div>`;
+  }
+}
+
+async function deleteAvatarVideo(taskId) {
+  taskId = String(taskId || '').trim();
+  if (!taskId) return;
+  const ok = confirm('確定要刪除這支形象影片嗎？刪除後暫存庫不會再顯示，也不能再下載；已使用的影像克隆秒數不會退回。');
+  if (!ok) return;
+
+  try {
+    await callChiwaAvatarJson('delete', { taskId: taskId });
+    toast('已刪除形象影片。');
+    const currentDelete = document.getElementById('avatar-current-delete');
+    if (currentDelete && currentDelete.getAttribute('data-task-id') === taskId) {
+      avatarRenderBox('這支形象影片已刪除。', 'ok');
+    }
+    await loadAvatarLibrary();
+  } catch (e) {
+    const message = avatarErrorText(e, '刪除形象影片失敗，請稍後再試。');
+    toast('❌ ' + message);
   }
 }
 
@@ -5813,6 +6070,7 @@ function renderAvatarTaskResult(data) {
   if (status === 'SUCCESS' && (data.previewUrl || data.downloadUrl)) {
     const previewUrl = data.previewUrl || data.downloadUrl;
     const downloadUrl = data.downloadUrl || data.previewUrl;
+    const taskId = String(data.taskId || '').trim();
     result.innerHTML = `
       <div class="audio-player-box avatar-video-card">
         <div style="font-size:14px;font-weight:800;margin-bottom:10px;color:var(--green)">✅ 形象克隆影片已生成</div>
@@ -5821,10 +6079,13 @@ function renderAvatarTaskResult(data) {
         </div>
         <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
           <a class="btn-outline" href="${escapeHtml(downloadUrl)}" download style="display:inline-flex;align-items:center;justify-content:center">下載影片</a>
+          ${taskId ? `<button class="btn-outline" type="button" id="avatar-current-delete" data-task-id="${escapeHtml(taskId)}" style="border-color:rgba(255,107,107,.48);color:#ff9a9a">刪除</button>` : ''}
         </div>
         <div style="font-size:11px;color:var(--t3);margin-top:8px">影片下載連結會保留 ${AVATAR_RETENTION_LABEL}，請盡快下載保存。</div>
       </div>
     `;
+    const delBtn = document.getElementById('avatar-current-delete');
+    if (delBtn) delBtn.onclick = function() { deleteAvatarVideo(taskId); };
     return;
   }
   if (status === 'FAILED') {
@@ -7359,8 +7620,14 @@ function playVSLVideo(vimeoId) {
   var box = document.getElementById('vsl-box-element');
   if (!box) return;
   // 安全地嵌入 Vimeo 播放器
-  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'homepage_vsl' });
+  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
   box.removeAttribute('onclick');
+  attachVimeoTracking(box.querySelector('iframe'), {
+    videoId: vimeoId,
+    title: '首頁 VSL 銷講影片',
+    placement: 'homepage_vsl'
+  });
 }
 
 function updateAdminVSLUI() {
@@ -7445,15 +7712,27 @@ function renderVSLFeatureVideo() {
 function playVSLFeatureVideo2(vimeoId) {
   var box = document.getElementById('vsl-feature-box-element-2');
   if (!box) return;
-  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'feature_right' });
+  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
   box.removeAttribute('onclick');
+  attachVimeoTracking(box.querySelector('iframe'), {
+    videoId: vimeoId,
+    title: '特色介紹影片右側',
+    placement: 'feature_right'
+  });
 }
 
 function playVSLFeatureVideo(vimeoId) {
   var box = document.getElementById('vsl-feature-box-element');
   if (!box) return;
-  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'feature_left' });
+  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
   box.removeAttribute('onclick');
+  attachVimeoTracking(box.querySelector('iframe'), {
+    videoId: vimeoId,
+    title: '特色介紹影片左側',
+    placement: 'feature_left'
+  });
 }
 
 function updateAdminVSLFeatureUI() {

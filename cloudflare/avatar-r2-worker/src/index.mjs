@@ -359,6 +359,15 @@ async function handleOutputSign(req, env) {
   });
 }
 
+async function handleOutputDelete(req, env) {
+  await verifyInternalRequest(req, env);
+  const body = await req.json().catch(() => ({}));
+  const key = String(body.key || "");
+  if (!key.startsWith("avatar-outputs/")) throw Object.assign(new Error("invalid_output_key"), { status: 400 });
+  await env.AVATAR_INPUTS.delete(key);
+  return json(req, env, { ok: true, key });
+}
+
 async function handleOutputImport(req, env) {
   await verifyInternalRequest(req, env);
   const body = await req.json().catch(() => ({}));
@@ -452,6 +461,7 @@ export default {
       }
       if (req.method === "POST" && url.pathname === "/avatar/output/import") return await handleOutputImport(req, env);
       if (req.method === "POST" && url.pathname === "/avatar/output/sign") return await handleOutputSign(req, env);
+      if (req.method === "POST" && url.pathname === "/avatar/output/delete") return await handleOutputDelete(req, env);
       if (req.method === "POST" && url.pathname === "/avatar/multipart/create") return await handleCreate(req, env);
       if (req.method === "PUT" && url.pathname === "/avatar/multipart/part") return await handleUploadPart(req, env, url);
       if (req.method === "POST" && url.pathname === "/avatar/multipart/complete") return await handleComplete(req, env);

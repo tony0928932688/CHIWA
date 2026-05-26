@@ -7,9 +7,10 @@ const HEYGEN_MINUTES = 30;
 const AVATAR_SECONDS = 1800;
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://chiwaai.com",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Vary": "Origin",
 };
 
 const supabaseAdmin = createClient(
@@ -57,6 +58,7 @@ function publicStudent(row: any) {
     note: row.note,
     reg_date: row.reg_date,
     is_admin: !!row.is_admin,
+    profile: row.profile || {},
     created_at: row.created_at,
   };
 }

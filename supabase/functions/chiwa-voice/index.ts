@@ -3,10 +3,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 const VOICE_CREDITS = 10000;
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://chiwaai.com",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Max-Age": "86400",
+  "Vary": "Origin",
 };
 
 function json(data: unknown, status = 200) {
@@ -100,7 +101,7 @@ function publicStudent(row: any) {
   };
 }
 
-async function getStudent(supabase: ReturnType<typeof createClient>, token: string) {
+async function getStudent(supabase: any, token: string) {
   const { data: userData, error } = await supabase.auth.getUser(token);
   if (error || !userData?.user) throw new Error("unauthorized");
   const email = String(userData.user.email || "").trim().toLowerCase();
@@ -136,7 +137,7 @@ function formatVoiceModel(row: any) {
   };
 }
 
-async function listVoices(supabase: ReturnType<typeof createClient>, student: any) {
+async function listVoices(supabase: any, student: any) {
   const { data: presets, error: presetError } = await supabase
     .from("system_voice_presets")
     .select("id,name,enabled")
@@ -154,7 +155,7 @@ async function listVoices(supabase: ReturnType<typeof createClient>, student: an
   if (voiceError) return json({ error: "voice_list_error" }, 500);
 
   return json({
-    systemVoices: (presets || []).map((row) => ({
+    systemVoices: (presets || []).map((row: any) => ({
       id: row.id,
       name: row.name || "系統預置聲音",
       date: "系統預設",
@@ -165,7 +166,7 @@ async function listVoices(supabase: ReturnType<typeof createClient>, student: an
   });
 }
 
-async function deleteVoice(supabase: ReturnType<typeof createClient>, student: any, payload: any) {
+async function deleteVoice(supabase: any, student: any, payload: any) {
   const id = cleanText(payload.voice_id, 120);
   if (!id) return json({ error: "missing_voice" }, 400);
   const { error } = await supabase
@@ -222,7 +223,7 @@ function formatItem(row: any, playUrl = "") {
   };
 }
 
-async function signItem(supabase: ReturnType<typeof createClient>, row: any) {
+async function signItem(supabase: any, row: any) {
   let playUrl = "";
   if (row.storage_path) {
     const { data } = await supabase.storage.from("voice-outputs").createSignedUrl(row.storage_path, 3600);
@@ -255,7 +256,7 @@ async function debitVoiceCredits(supabase: ReturnType<typeof createClient>, stud
   return data;
 }
 
-async function handleTts(supabase: ReturnType<typeof createClient>, student: any, payload: any) {
+async function handleTts(supabase: any, student: any, payload: any) {
   const text = cleanText(payload.text, 10000);
   if (!text) return json({ error: "missing_text" }, 400);
   const credits = estimateVoiceCredits(text);
@@ -340,7 +341,7 @@ async function handleTts(supabase: ReturnType<typeof createClient>, student: any
   return json({ item: await signItem(supabase, row), deductedCredits: credits, student: publicStudent(studentNext) });
 }
 
-async function listTts(supabase: ReturnType<typeof createClient>, student: any) {
+async function listTts(supabase: any, student: any) {
   const { data, error } = await supabase
     .from("voice_generations")
     .select("*")
@@ -351,7 +352,7 @@ async function listTts(supabase: ReturnType<typeof createClient>, student: any) 
   if (error) return json({ error: "voice_list_error" }, 500);
 
   const rows = data || [];
-  const invalidIds = rows.filter((row) => !isValidTtsRow(row)).map((row) => row.id).filter(Boolean);
+  const invalidIds = rows.filter((row: any) => !isValidTtsRow(row)).map((row: any) => row.id).filter(Boolean);
   if (invalidIds.length) {
     const { error: cleanupError } = await supabase
       .from("voice_generations")
@@ -369,7 +370,7 @@ async function listTts(supabase: ReturnType<typeof createClient>, student: any) 
   return json({ items, student: publicStudent(student) });
 }
 
-async function deleteTts(supabase: ReturnType<typeof createClient>, student: any, payload: any) {
+async function deleteTts(supabase: any, student: any, payload: any) {
   const id = cleanText(payload.generation_id, 80);
   if (!id) return json({ error: "missing_generation" }, 400);
   const { data: row } = await supabase
@@ -386,14 +387,15 @@ async function deleteTts(supabase: ReturnType<typeof createClient>, student: any
     .eq("id", id)
     .eq("student_id", student.id);
   if (deleteError) return json({ error: "voice_delete_error" }, 500);
-  if (row.storage_path) {
-    const { error: storageError } = await supabase.storage.from("voice-outputs").remove([row.storage_path]);
+  const storagePath = cleanText((row as any).storage_path, 600);
+  if (storagePath) {
+    const { error: storageError } = await supabase.storage.from("voice-outputs").remove([storagePath]);
     if (storageError) console.error("voice storage delete error", storageError.message);
   }
   return json({ ok: true });
 }
 
-async function downloadTts(supabase: ReturnType<typeof createClient>, student: any, payload: any) {
+async function downloadTts(supabase: any, student: any, payload: any) {
   const id = cleanText(payload.generation_id, 80);
   if (!id) return json({ error: "missing_generation" }, 400);
   const { data: row, error } = await supabase
@@ -407,16 +409,17 @@ async function downloadTts(supabase: ReturnType<typeof createClient>, student: a
     if (row?.id) await supabase.from("voice_generations").update({ deleted_at: new Date().toISOString(), status: "invalid" }).eq("id", id).eq("student_id", student.id);
     return json({ error: "voice_file_not_found" }, 404);
   }
-  if (!row.downloaded_at) {
+  const ttsRow = row as any;
+  if (!ttsRow.downloaded_at) {
     await supabase.from("voice_generations").update({ downloaded_at: new Date().toISOString() }).eq("id", id).eq("student_id", student.id);
   }
-  const { data } = await supabase.storage.from("voice-outputs").createSignedUrl(row.storage_path, 300);
+  const { data } = await supabase.storage.from("voice-outputs").createSignedUrl(String(ttsRow.storage_path), 300);
   return json({
     downloadUrl: data?.signedUrl || "",
     fileName: `chiwa-voice-${new Date().toISOString().slice(0, 10)}.wav`,
     deductedCredits: 0,
     student: publicStudent(student),
-    item: await signItem(supabase, { ...row, downloaded_at: row.downloaded_at || new Date().toISOString() }),
+    item: await signItem(supabase, { ...ttsRow, downloaded_at: ttsRow.downloaded_at || new Date().toISOString() }),
   });
 }
 

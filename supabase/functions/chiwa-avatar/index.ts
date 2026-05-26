@@ -17,9 +17,10 @@ const ACTIVE_TASK_WINDOW_HOURS = 6;
 const ACTIVE_AVATAR_STATUSES = ["RUNNING", "PENDING", "QUEUED", "PROCESSING"];
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://chiwaai.com",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Vary": "Origin",
 };
 
 const supabaseAdmin = createClient(
@@ -329,6 +330,20 @@ async function signAvatarOutput(apiKey: string, task: any) {
   return data;
 }
 
+async function deleteAvatarOutput(apiKey: string, key: string) {
+  if (!key) return;
+  const res = await fetch(`${AVATAR_WORKER_URL}/avatar/output/delete`, {
+    method: "POST",
+    headers: internalWorkerHeaders(apiKey),
+    body: JSON.stringify({ key }),
+  });
+  const data = await readJsonOrText(res);
+  if (!res.ok) {
+    console.error("avatar_output_delete_failed", JSON.stringify(data));
+    throw new Error("avatar_output_delete_failed");
+  }
+}
+
 function taskTitle(task: any, index = 0) {
   const created = task.created_at ? new Date(task.created_at) : new Date();
   const stamp = Number.isFinite(created.getTime()) ? created.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
@@ -344,6 +359,7 @@ async function handleList(req: Request) {
     .from("avatar_generation_tasks")
     .select("task_id,status,requested_seconds,charged,result_file,result_expires_at,output_type,created_at,updated_at")
     .eq("student_id", student.id)
+    .neq("status", "DELETED")
     .order("created_at", { ascending: false })
     .limit(20);
   if (error) throw new Error(error.message);
@@ -371,6 +387,46 @@ async function handleList(req: Request) {
   }
 
   return jsonResponse({ items, retentionDays: OUTPUT_RETENTION_DAYS, student: publicStudent(student) });
+}
+
+async function handleDelete(req: Request, body: any) {
+  const apiKey = Deno.env.get(PROVIDER_SECRET_NAME) || "";
+  if (!apiKey) return neutralError("avatar_service_not_configured", 500);
+
+  const student = await getAuthorizedStudent(req);
+  const taskId = String(body.taskId || body.task_id || "").trim();
+  if (!taskId) return neutralError("missing_task_id", 400);
+
+  const { data: task, error: taskError } = await supabaseAdmin
+    .from("avatar_generation_tasks")
+    .select("task_id,status,result_file")
+    .eq("task_id", taskId)
+    .eq("student_id", student.id)
+    .maybeSingle();
+  if (taskError) throw new Error(taskError.message);
+  if (!task) return neutralError("task_not_found", 404);
+
+  const status = String(task.status || "").toUpperCase();
+  if (ACTIVE_AVATAR_STATUSES.includes(status)) {
+    return neutralError("avatar_task_still_running", 409);
+  }
+
+  if (task.result_file) await deleteAvatarOutput(apiKey, task.result_file);
+
+  const { error: updateError } = await supabaseAdmin
+    .from("avatar_generation_tasks")
+    .update({
+      status: "DELETED",
+      result_file: null,
+      result_url: null,
+      result_expires_at: null,
+      error_message: "",
+    })
+    .eq("task_id", taskId)
+    .eq("student_id", student.id);
+  if (updateError) throw new Error(updateError.message);
+
+  return jsonResponse({ ok: true, taskId, student: publicStudent(student) });
 }
 
 async function handleQuery(req: Request, body: any) {
@@ -470,6 +526,7 @@ Deno.serve(async (req: Request) => {
     if (action === "submit_urls") return await handleSubmitUrls(req, body);
     if (action === "query") return await handleQuery(req, body);
     if (action === "list") return await handleList(req);
+    if (action === "delete") return await handleDelete(req, body);
     return neutralError("unknown_action", 400);
   } catch (error) {
     console.error(error);

@@ -1,12 +1,15 @@
-# 吉娃 AI 自媒體變現系統 - 排除清單
+# CHIWA AI transfer-safe ignores
 
-# 排除內部測試版本，不讓其上傳至 GitHub 生產環境
-吉娃AI_完整測試版 (3).html
-*.ps1
-*.py
-*.js
-cloudflare/avatar-r2-worker/node_modules/
-cloudflare/avatar-r2-worker/package.json
-cloudflare/avatar-r2-worker/package-lock.json
+# Local caches and build/runtime output
 .wrangler/
 .wrangler-config/
+.tools/
+**/node_modules/
+dist/
+*.log
+*.zip
+
+# Old local test/backup HTML files should not be published.
+index.backup-before-dedupe-*.html
+*.backup*.html
+吉娃AI_完整測試版(3).html

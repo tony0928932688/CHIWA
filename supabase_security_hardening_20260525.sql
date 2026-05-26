@@ -128,9 +128,69 @@ create policy course_progress_owner_write on public.course_progress
     or student_id = private.current_student_id()
   );
 
+create table if not exists public.system_voice_presets (
+  id text primary key,
+  name text not null default '',
+  cartesia_voice_id text,
+  enabled boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.voice_models (
+  id uuid primary key default gen_random_uuid(),
+  student_id text not null,
+  name text not null default '',
+  cartesia_voice_id text,
+  recording_seconds integer default 0,
+  storage_path text,
+  raw_response jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+
+create table if not exists public.voice_generations (
+  id uuid primary key default gen_random_uuid(),
+  student_id text not null,
+  voice_model_id uuid,
+  voice_id text,
+  voice_name text,
+  transcript text,
+  transcript_length integer default 0,
+  audio_seconds integer default 0,
+  language text default 'zh',
+  storage_path text,
+  status text default 'ready',
+  downloaded_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+
+create table if not exists public.ai_generation_history (
+  id uuid primary key default gen_random_uuid(),
+  student_id text not null,
+  type text not null default 'other',
+  title text default '',
+  input_text text default '',
+  output_text text default '',
+  meta jsonb not null default '{}'::jsonb,
+  profile_snapshot jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+
+alter table public.system_voice_presets enable row level security;
+alter table public.voice_models enable row level security;
+alter table public.voice_generations enable row level security;
+alter table public.ai_generation_history enable row level security;
+
 drop policy if exists system_voice_presets_service_only on public.system_voice_presets;
 drop policy if exists voice_generations_service_only on public.voice_generations;
 drop policy if exists voice_models_service_only on public.voice_models;
+drop policy if exists ai_generation_history_service_only on public.ai_generation_history;
 
 create policy system_voice_presets_service_only on public.system_voice_presets
   for all to authenticated
@@ -147,9 +207,15 @@ create policy voice_models_service_only on public.voice_models
   using (false)
   with check (false);
 
+create policy ai_generation_history_service_only on public.ai_generation_history
+  for all to authenticated
+  using (false)
+  with check (false);
+
 revoke all on table public.system_voice_presets from anon, authenticated;
 revoke all on table public.voice_generations from anon, authenticated;
 revoke all on table public.voice_models from anon, authenticated;
+revoke all on table public.ai_generation_history from anon, authenticated;
 
 update public.students
 set password = 'GOOGLE_LOGIN_ONLY'
@@ -159,14 +225,38 @@ alter table public.students alter column password set default 'GOOGLE_LOGIN_ONLY
 
 -- AI quota expansion for avatar clone.
 alter table public.students
+  add column if not exists profile jsonb not null default '{}'::jsonb,
+  add column if not exists voice_credits integer default 10000,
   add column if not exists avatar_seconds integer default 1800,
   add column if not exists quota_started_at timestamptz default now(),
   add column if not exists quota_reset_at timestamptz default (now() + interval '30 days');
 
 update public.students
-set avatar_seconds = coalesce(avatar_seconds, 1800),
+set profile = coalesce(profile, '{}'::jsonb),
+    voice_credits = coalesce(voice_credits, 10000),
+    avatar_seconds = coalesce(avatar_seconds, 1800),
     quota_started_at = coalesce(quota_started_at, created_at::timestamptz, now()),
     quota_reset_at = coalesce(quota_reset_at, coalesce(quota_started_at, created_at::timestamptz, now()) + interval '30 days');
+
+drop trigger if exists set_system_voice_presets_updated_at on public.system_voice_presets;
+create trigger set_system_voice_presets_updated_at
+before update on public.system_voice_presets
+for each row execute function public.set_updated_at();
+
+drop trigger if exists set_voice_models_updated_at on public.voice_models;
+create trigger set_voice_models_updated_at
+before update on public.voice_models
+for each row execute function public.set_updated_at();
+
+drop trigger if exists set_voice_generations_updated_at on public.voice_generations;
+create trigger set_voice_generations_updated_at
+before update on public.voice_generations
+for each row execute function public.set_updated_at();
+
+drop trigger if exists set_ai_generation_history_updated_at on public.ai_generation_history;
+create trigger set_ai_generation_history_updated_at
+before update on public.ai_generation_history
+for each row execute function public.set_updated_at();
 
 create table if not exists public.avatar_generation_tasks (
   id uuid primary key default gen_random_uuid(),
@@ -215,6 +305,20 @@ values (
   'avatar-inputs',
   false,
   2147483648,
+  null
+)
+on conflict (id) do update
+set public = excluded.public,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+-- Private storage bucket for generated voice files.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'voice-outputs',
+  'voice-outputs',
+  false,
+  524288000,
   null
 )
 on conflict (id) do update

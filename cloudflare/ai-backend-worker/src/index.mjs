@@ -1,9 +1,15 @@
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Max-Age': '86400'
-};
+function corsHeaders(request, env) {
+  const origin = request.headers.get('Origin') || '';
+  const allowed = String(env.ALLOWED_ORIGIN || 'https://chiwaai.com').split(',').map((item) => item.trim()).filter(Boolean);
+  const allowOrigin = allowed.includes(origin) ? origin : allowed[0];
+  return {
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin'
+  };
+}
 
 const ANTHROPIC_VERSION = '2023-06-01';
 const DEFAULT_MODELS = [
@@ -121,11 +127,11 @@ const CONTENT_FIRST_COPY_RULES = `
 - 句子之間自然連接，像一個人在說話。
 - 適合直接貼入語音合成工具朗讀。`;
 
-function jsonResponse(body, status = 200) {
+function jsonResponse(request, env, body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
-      ...CORS_HEADERS,
+      ...corsHeaders(request, env),
       'Content-Type': 'application/json; charset=utf-8'
     }
   });
@@ -213,21 +219,68 @@ async function callAnthropic(env, body) {
   throw err;
 }
 
+async function verifyAuthorizedStudent(request, env) {
+  const token = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '').trim();
+  if (!token) throw Object.assign(new Error('missing_session'), { status: 401 });
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw Object.assign(new Error('auth_not_configured'), { status: 500 });
+
+  const userRes = await fetch(`${String(env.SUPABASE_URL).replace(/\/+$/, '')}/auth/v1/user`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'apikey': env.SUPABASE_ANON_KEY
+    }
+  });
+  if (!userRes.ok) throw Object.assign(new Error('invalid_session'), { status: 401 });
+  const user = await userRes.json();
+  const email = String(user.email || '').trim().toLowerCase();
+  if (!email) throw Object.assign(new Error('missing_user_email'), { status: 401 });
+
+  const baseUrl = String(env.SUPABASE_URL).replace(/\/+$/, '');
+  async function fetchStudent(column) {
+    const url = `${baseUrl}/rest/v1/students?select=id,status,google_enabled,is_admin&${column}=eq.${encodeURIComponent(email)}&limit=1`;
+    const rowRes = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': env.SUPABASE_ANON_KEY,
+        'Accept': 'application/json'
+      }
+    });
+    if (!rowRes.ok) return null;
+    const rows = await rowRes.json().catch(() => []);
+    return Array.isArray(rows) ? rows[0] : null;
+  }
+
+  const student = await fetchStudent('google_email') || await fetchStudent('email') || await fetchStudent('id');
+  if (!student) throw Object.assign(new Error('student_not_found'), { status: 403 });
+  const status = String(student.status || '').trim().toLowerCase();
+  if (['disabled', 'inactive', 'blocked', '已停權', '停權'].includes(status)) {
+    throw Object.assign(new Error('student_inactive'), { status: 403 });
+  }
+  return student;
+}
+
 export default {
   async fetch(request, env) {
-    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
-    if (request.method !== 'POST') return jsonResponse({ error: 'method_not_allowed' }, 405);
-    if (!env.ANTHROPIC_API_KEY) return jsonResponse({ error: 'service_not_configured' }, 500);
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(request, env) });
+    if (request.method !== 'POST') return jsonResponse(request, env, { error: 'method_not_allowed' }, 405);
+    if (!env.ANTHROPIC_API_KEY) return jsonResponse(request, env, { error: 'service_not_configured' }, 500);
+
+    try {
+      await verifyAuthorizedStudent(request, env);
+    } catch (error) {
+      const status = error && error.status ? error.status : 401;
+      return jsonResponse(request, env, { error: error && error.message ? error.message : 'unauthorized' }, status);
+    }
 
     let payload;
     try {
       payload = await request.json();
     } catch(e) {
-      return jsonResponse({ error: 'invalid_json' }, 400);
+      return jsonResponse(request, env, { error: 'invalid_json' }, 400);
     }
 
     const userPrompt = cleanText(payload.userPrompt);
-    if (!userPrompt) return jsonResponse({ error: 'missing_user_prompt' }, 400);
+    if (!userPrompt) return jsonResponse(request, env, { error: 'missing_user_prompt' }, 400);
 
     const type = normalizeType(payload.type);
     const system = buildSystemPrompt({
@@ -244,10 +297,10 @@ export default {
         system,
         messages: [{ role: 'user', content: userPrompt }]
       });
-      return jsonResponse(data);
+      return jsonResponse(request, env, data);
     } catch(e) {
       console.error('ai backend error', JSON.stringify(e.detail || e.message || e));
-      return jsonResponse({ error: 'ai_service_error' }, 502);
+      return jsonResponse(request, env, { error: 'ai_service_error' }, 502);
     }
   }
 };
