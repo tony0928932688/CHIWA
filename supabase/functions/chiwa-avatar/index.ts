@@ -376,7 +376,9 @@ async function handleList(req: Request) {
     const expiresAt = task.result_expires_at || "";
     const isReady = task.status === "SUCCESS" && task.result_file && (!expiresAt || Date.parse(expiresAt) > now);
     const isExpired = task.status === "SUCCESS" && task.result_file && expiresAt && Date.parse(expiresAt) <= now;
+    if (!isReady) continue;
     const links = isReady ? await signAvatarOutput(apiKey, task) : null;
+    if (!links?.previewUrl && !links?.downloadUrl) continue;
     items.push({
       taskId: task.task_id,
       title: taskTitle(task, items.length),
