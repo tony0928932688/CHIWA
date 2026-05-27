@@ -1266,7 +1266,7 @@ const CHIWA_AVATAR_R2_WORKER_URL = 'https://rapid-grass-589dchiwa-avatar-r2.tony
 const AVATAR_MAX_SECONDS = Number.MAX_SAFE_INTEGER;
 const AVATAR_MAX_VIDEO_BYTES = 2 * 1024 * 1024 * 1024;
 const AVATAR_MAX_AUDIO_BYTES = 500 * 1024 * 1024;
-const AVATAR_RETENTION_LABEL = '7 天';
+const AVATAR_RETENTION_LABEL = '24 小時';
 let currentUser = '';
 let currentUserData = null;
 const CHIWA_IDLE_LIMIT_MS = 24 * 60 * 60 * 1000;
@@ -3119,6 +3119,9 @@ async function decrAvatar(secs) {
     <div class="panel" id="p-avatar">
     <div class="sec-title">🧑‍💼 形象克隆</div>
     <div class="sec-sub">上傳正面形象影片與乾淨人聲，生成 AI 口播形象影片</div>
+    <div style="background:rgba(255,193,7,.10);border:1.5px solid rgba(232,197,90,.52);border-radius:12px;padding:12px 14px;margin:12px 0 14px;color:var(--gold);font-size:13px;font-weight:900;line-height:1.7">
+      ⚠️ 生成的克隆影片只會暫存 24 小時，24 小時後會自動刪除並從暫存影片欄消失。生成完成後請及時下載保存。
+    </div>
     <div style="background:var(--purple-bg);border:1px solid rgba(167,139,250,.25);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
       <div>
         <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace;text-transform:uppercase">影像克隆剩餘秒數</div>
