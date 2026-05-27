@@ -329,17 +329,25 @@ async function signAvatarOutput(apiKey: string, task: any) {
 
 async function deleteAvatarOutput(apiKey: string, key: string) {
   if (!key) return;
-  const workerSecret = Deno.env.get("AVATAR_WORKER_INTERNAL_SECRET") || apiKey;
-  const res = await fetch(`${AVATAR_WORKER_URL}/avatar/output/delete`, {
-    method: "POST",
-    headers: internalWorkerHeaders(workerSecret),
-    body: JSON.stringify({ key }),
-  });
-  const data = await readJsonOrText(res);
-  if (!res.ok) {
-    console.error("avatar_output_delete_failed", JSON.stringify(data));
-    throw new Error("avatar_output_delete_failed");
+  const secrets = [
+    Deno.env.get("AVATAR_WORKER_INTERNAL_SECRET") || "",
+    apiKey,
+  ].map((value) => String(value || "").trim()).filter(Boolean);
+  const uniqueSecrets = [...new Set(secrets)];
+  let lastError: unknown = null;
+
+  for (const secret of uniqueSecrets) {
+    const res = await fetch(`${AVATAR_WORKER_URL}/avatar/output/delete`, {
+      method: "POST",
+      headers: internalWorkerHeaders(secret),
+      body: JSON.stringify({ key }),
+    });
+    const data = await readJsonOrText(res);
+    if (res.ok) return;
+    lastError = data;
   }
+  console.error("avatar_output_delete_failed", JSON.stringify(lastError || {}));
+  throw new Error("avatar_output_delete_failed");
 }
 
 function taskTitle(task: any, index = 0) {
@@ -409,7 +417,13 @@ async function handleDelete(req: Request, body: any) {
     return neutralError("avatar_task_still_running", 409);
   }
 
-  if (task.result_file) await deleteAvatarOutput(apiKey, task.result_file);
+  if (task.result_file) {
+    try {
+      await deleteAvatarOutput(apiKey, task.result_file);
+    } catch (error) {
+      console.warn("avatar_output_delete_deferred", error instanceof Error ? error.message : String(error));
+    }
+  }
 
   const { error: updateError } = await supabaseAdmin
     .from("avatar_generation_tasks")
