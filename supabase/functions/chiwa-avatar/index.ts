@@ -329,9 +329,10 @@ async function signAvatarOutput(apiKey: string, task: any) {
 
 async function deleteAvatarOutput(apiKey: string, key: string) {
   if (!key) return;
+  const workerSecret = Deno.env.get("AVATAR_WORKER_INTERNAL_SECRET") || apiKey;
   const res = await fetch(`${AVATAR_WORKER_URL}/avatar/output/delete`, {
     method: "POST",
-    headers: internalWorkerHeaders(apiKey),
+    headers: internalWorkerHeaders(workerSecret),
     body: JSON.stringify({ key }),
   });
   const data = await readJsonOrText(res);
