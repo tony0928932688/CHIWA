@@ -1523,8 +1523,13 @@ function shouldRestoreWorkspaceFromUrl() {
   const search = String(location.search || '');
   const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
   const isReload = nav && nav.type === 'reload';
+  const isLoginReturn = new URLSearchParams(search).get('auth_return') === 'google';
   const isOAuthReturn = search.includes('code=') || search.includes('access_token') || String(location.hash || '').includes('access_token');
-  return hash === 'workspace' || isOAuthReturn || (isReload && getChiwaLocal(CHIWA_WORKSPACE_RESTORE_KEY) === '1');
+  return hash === 'workspace' || isLoginReturn || isOAuthReturn || (isReload && getChiwaLocal(CHIWA_WORKSPACE_RESTORE_KEY) === '1');
+}
+
+function getGoogleOAuthRedirectUrl() {
+  return location.origin + location.pathname + '?auth_return=google';
 }
 
 function setWorkspaceHash(active) {
@@ -1730,7 +1735,7 @@ async function doGoogleLogin() {
   }
   try {
     markWorkspaceRestore();
-    const redirectTo = 'https://chiwaai.com/';
+    const redirectTo = getGoogleOAuthRedirectUrl();
     const { error } = await _SB.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -1760,6 +1765,13 @@ async function restoreGoogleLoginSession() {
     if (!shouldRestoreWorkspaceFromUrl()) {
       clearWorkspaceRestore();
       return;
+    }
+
+    const code = new URLSearchParams(location.search || '').get('code');
+    if (code && typeof _SB.auth.exchangeCodeForSession === 'function') {
+      await _SB.auth.exchangeCodeForSession(code).catch(function(e) {
+        console.warn('google code exchange skipped:', e && e.message ? e.message : e);
+      });
     }
 
     const { data } = await _SB.auth.getSession();
