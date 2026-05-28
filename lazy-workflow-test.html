@@ -381,6 +381,7 @@ async function init(){
   $('auth-box').style.display = 'none';
   await refreshProfile();
   await loadVoices();
+  runRenderSelfTestIfRequested();
 }
 function parseTopics(text){
   const blocks = String(text || '').split(/【選題\d+】/).map(s => s.trim()).filter(Boolean);
@@ -794,6 +795,43 @@ async function pollFinalRender(){
   }catch(e){
     status('render-status', e.message || '成片渲染查詢失敗','err');
     $('btn-render-final').disabled = false;
+  }
+}
+async function runRenderSelfTestIfRequested(){
+  const params = new URLSearchParams(location.search);
+  if(params.get('render-self-test') !== '1') return;
+  if((state.user && state.user.email || '').toLowerCase() !== 'tony0928932688@gmail.com') return;
+  status('render-status','自動測試成片渲染中：送出測試影片與中文字幕...','warn');
+  try{
+    const sampleSrt = [
+      '1\n00:00:00,000 --> 00:00:02,500\n這是一段測試字幕。\n',
+      '2\n00:00:02,500 --> 00:00:05,000\n確認中文可以燒進影片。\n'
+    ].join('\n');
+    const submit = await authedFetch(VIDEO_RENDER_API_URL, {
+      action:'submit',
+      video_url:'https://shotstack-assets.s3.ap-southeast-2.amazonaws.com/footage/beach-overhead.mp4',
+      srt_text:sampleSrt,
+      title:'成片渲染自動測試',
+      duration_seconds:5
+    });
+    state.renderId = submit.renderId;
+    status('render-status',`自動測試已送出：${submit.status || 'QUEUED'}，正在查詢結果...`,'warn');
+    for(let i=0;i<36;i++){
+      await sleep(5000);
+      const data = await authedFetch(VIDEO_RENDER_API_URL, { action:'query', render_id:state.renderId });
+      if(data.status === 'SUCCESS' && (data.previewUrl || data.downloadUrl)){
+        state.finalVideo = data;
+        $('final-video-result').innerHTML = `<video class="video-frame" controls src="${esc(data.previewUrl || data.downloadUrl)}"></video><div class="btns" style="margin-top:10px"><a class="btn secondary" href="${esc(data.downloadUrl || data.previewUrl)}" download>下載成片</a></div><div class="status ok">自動測試完成：標題與字幕已燒進影片。</div>`;
+        status('render-status','自動測試成功：成片已完成並匯入暫存庫。','ok');
+        goStep(5);
+        return;
+      }
+      if(data.status === 'FAILED') throw new Error('video_render_failed');
+      status('render-status',`自動測試查詢中：${data.status || 'RUNNING'} (${i + 1}/36)`,'warn');
+    }
+    throw new Error('video_render_timeout');
+  }catch(e){
+    status('render-status', e.message || '自動測試成片渲染失敗','err');
   }
 }
 function downloadText(name, text, type){
