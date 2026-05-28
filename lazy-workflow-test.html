@@ -208,8 +208,11 @@ audio,video{width:100%;margin-top:10px;border-radius:10px}
           <button class="btn" id="btn-subtitles">產生字幕檔</button>
           <button class="btn secondary" id="btn-download-srt" disabled>下載 SRT</button>
           <button class="btn secondary" id="btn-download-vtt" disabled>下載 VTT</button>
+          <button class="btn" id="btn-render-final" disabled>產生成片</button>
         </div>
         <div class="subtitle-box" id="subtitle-output" style="margin-top:14px">尚未產生字幕。</div>
+        <div class="status" id="render-status"></div>
+        <div id="final-video-result"></div>
       </section>
     </main>
   </div>
@@ -221,6 +224,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1
 const SECURE_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-secure-api`;
 const VOICE_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-voice`;
 const AVATAR_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-avatar`;
+const VIDEO_RENDER_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-video-render`;
 const AVATAR_R2_URL = 'https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev';
 const AI_BACKEND_URL = 'https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev/';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -238,6 +242,8 @@ const state = {
   avatarVideoFile: null,
   avatarTaskId: '',
   avatarResult: null,
+  renderId: '',
+  finalVideo: null,
   srt: '',
   vtt: '',
 };
@@ -575,6 +581,66 @@ function generateSubtitles(){
   $('subtitle-output').textContent = `標題：${state.selectedTopic}\n\n` + state.srt;
   $('btn-download-srt').disabled = false;
   $('btn-download-vtt').disabled = false;
+  $('btn-render-final').disabled = !(state.avatarResult && (state.avatarResult.previewUrl || state.avatarResult.downloadUrl));
+}
+async function submitFinalRender(){
+  if(!state.avatarResult || !(state.avatarResult.previewUrl || state.avatarResult.downloadUrl)){
+    status('render-status','請先完成形象克隆影片。','err');
+    return;
+  }
+  if(!state.srt) generateSubtitles();
+  if(!state.srt){
+    status('render-status','請先產生字幕檔。','err');
+    return;
+  }
+  if(!confirm('確認產生成片？\n系統會把標題與字幕燒進影片，完成後可預覽並下載 MP4。')) return;
+  $('btn-render-final').disabled = true;
+  status('render-status','成片渲染任務送出中...','warn');
+  try{
+    const data = await authedFetch(VIDEO_RENDER_API_URL, {
+      action:'submit',
+      video_url:state.avatarResult.previewUrl || state.avatarResult.downloadUrl,
+      srt_text:state.srt,
+      title:state.selectedTopic || $('final-title').value || 'AI自媒體系統',
+      duration_seconds:state.voiceAudioSeconds || 60
+    });
+    state.renderId = data.renderId;
+    status('render-status',`成片渲染中：${data.status || 'QUEUED'}，10 秒後自動查詢。`,'warn');
+    setTimeout(pollFinalRender, 10000);
+  }catch(e){
+    status('render-status', e.message || '成片渲染送出失敗','err');
+    $('btn-render-final').disabled = false;
+  }
+}
+async function pollFinalRender(){
+  if(!state.renderId){
+    status('render-status','缺少成片渲染任務 ID。','err');
+    $('btn-render-final').disabled = false;
+    return;
+  }
+  try{
+    const data = await authedFetch(VIDEO_RENDER_API_URL, {
+      action:'query',
+      render_id:state.renderId
+    });
+    if(data.status === 'SUCCESS' && (data.previewUrl || data.downloadUrl)){
+      state.finalVideo = data;
+      $('final-video-result').innerHTML = `<video class="video-frame" controls src="${esc(data.previewUrl || data.downloadUrl)}"></video><div class="btns" style="margin-top:10px"><a class="btn secondary" href="${esc(data.downloadUrl || data.previewUrl)}" download>下載成片</a></div><div class="status ok">成片已完成，檔案會暫存 24 小時，請及時下載保存。</div>`;
+      status('render-status','標題與字幕已燒進影片，成片可以下載。','ok');
+      $('btn-render-final').disabled = false;
+      return;
+    }
+    if(data.status === 'FAILED'){
+      status('render-status','成片渲染失敗，請稍後再試。','err');
+      $('btn-render-final').disabled = false;
+      return;
+    }
+    status('render-status',`成片渲染中：${data.status || 'RUNNING'}，10 秒後自動查詢。`,'warn');
+    setTimeout(pollFinalRender, 10000);
+  }catch(e){
+    status('render-status', e.message || '成片渲染查詢失敗','err');
+    $('btn-render-final').disabled = false;
+  }
 }
 function downloadText(name, text, type){
   const blob = new Blob([text], { type:type || 'text/plain;charset=utf-8' });
@@ -598,6 +664,7 @@ $('btn-avatar').onclick = submitAvatar;
 $('btn-subtitles').onclick = generateSubtitles;
 $('btn-download-srt').onclick = () => downloadText('chiwa-workflow-subtitles.srt', state.srt, 'text/plain;charset=utf-8');
 $('btn-download-vtt').onclick = () => downloadText('chiwa-workflow-subtitles.vtt', state.vtt, 'text/vtt;charset=utf-8');
+$('btn-render-final').onclick = submitFinalRender;
 $('video-drop').onclick = () => $('avatar-video').click();
 $('avatar-video').onchange = e => selectVideo(e.target.files && e.target.files[0]);
 ['dragenter','dragover'].forEach(evt => $('video-drop').addEventListener(evt, e => { e.preventDefault(); $('video-drop').classList.add('drag'); }));
