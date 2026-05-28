@@ -149,9 +149,20 @@ audio,video{width:100%;margin-top:10px;border-radius:10px}
           <button class="btn secondary" id="btn-script-pro">生成博主專業版</button>
           <span class="status" id="script-status"></span>
         </div>
-        <div class="field" style="margin-top:14px">
-          <div class="label">確認版口播文案</div>
-          <textarea id="final-script" style="min-height:260px" placeholder="生成後會出現在這裡，也可以手動修改。"></textarea>
+        <div class="row" style="margin-top:14px;align-items:start">
+          <div class="field" style="margin-bottom:0">
+            <div class="label">確認版口播文案</div>
+            <textarea id="final-script" style="min-height:300px" placeholder="生成後會出現在這裡，也可以手動修改。"></textarea>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <div class="label">TikTok影片說明文字</div>
+            <textarea id="tiktok-caption" style="min-height:300px" placeholder="根據左側口播文案生成 TikTok 影片說明文字。"></textarea>
+            <div class="btns">
+              <button class="btn secondary" id="btn-tiktok-caption">生成說明文字</button>
+              <button class="btn secondary" id="btn-copy-tiktok-caption">複製</button>
+            </div>
+            <span class="status" id="caption-status"></span>
+          </div>
         </div>
         <button class="btn" id="btn-to-voice">確認文案，送到語音克隆</button>
       </section>
@@ -237,6 +248,7 @@ const state = {
   topics: [],
   selectedTopic: '',
   script: '',
+  tiktokCaption: '',
   voiceItem: null,
   voiceAudioSeconds: 0,
   avatarVideoFile: null,
@@ -401,6 +413,39 @@ async function generateScript(tone){
   }catch(e){ status('script-status', e.message || '文案生成失敗','err'); }
   $('btn-script').disabled = false;
   $('btn-script-pro').disabled = false;
+}
+async function generateTikTokCaption(){
+  const text = $('final-script').value.trim();
+  if(!text){
+    status('caption-status','請先生成或填入口播文案。','err');
+    return;
+  }
+  status('caption-status','TikTok 說明文字生成中...','warn');
+  $('btn-tiktok-caption').disabled = true;
+  try{
+    const system = `${buildProfilePrompt()}\n\n你是專業台灣短影音行銷文案師，專門根據口播文案生成 TikTok 影片說明文字。\n${compliancePrompt()}\n\n格式與內容規則：\n- 只輸出 TikTok 影片說明文字，不要輸出 LINE、CTA 清單或其他類型。\n- 150 字以內。\n- 開頭要直接承接影片主題，讓觀眾知道這支影片在講什麼。\n- 必須有實質商品、服務或專業內容，不能只有情緒語或語助詞。\n- 可以自然加入引導留言、收藏、私訊或預約諮詢，但不能做結果保證。\n- 結尾附 3 到 5 個精準 Hashtag。\n- Hashtag 必須貼合行業、主題與影片內容，不要過度泛用。\n- 不使用 emoji 或表情符號。\n- 使用台灣繁體中文。`;
+    const user = `選題：${state.selectedTopic || $('selected-topic').value || '未提供'}\n\n口播文案：\n${text}\n\n請根據以上內容，生成一段可直接貼到 TikTok 的影片說明文字。`;
+    state.tiktokCaption = await aiCall('marketing', system, user, 'professional');
+    $('tiktok-caption').value = state.tiktokCaption;
+    status('caption-status','TikTok 影片說明文字已生成。','ok');
+    await refreshProfile().catch(()=>{});
+  }catch(e){
+    status('caption-status', e.message || 'TikTok 說明文字生成失敗','err');
+  }
+  $('btn-tiktok-caption').disabled = false;
+}
+async function copyTikTokCaption(){
+  const text = $('tiktok-caption').value.trim();
+  if(!text){
+    status('caption-status','目前沒有可複製的說明文字。','err');
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(text);
+    status('caption-status','已複製 TikTok 影片說明文字。','ok');
+  }catch(e){
+    status('caption-status','複製失敗，請手動選取文字。','err');
+  }
 }
 async function loadVoices(){
   try{
@@ -657,6 +702,8 @@ function downloadText(name, text, type){
 $('btn-topics').onclick = generateTopics;
 $('btn-script').onclick = () => generateScript('casual');
 $('btn-script-pro').onclick = () => generateScript('professional');
+$('btn-tiktok-caption').onclick = generateTikTokCaption;
+$('btn-copy-tiktok-caption').onclick = copyTikTokCaption;
 $('btn-to-voice').onclick = () => { state.script = $('final-script').value.trim(); goStep(3); };
 $('btn-voice').onclick = generateVoice;
 $('btn-to-avatar').onclick = () => { goStep(4); $('btn-avatar').disabled = !(state.voiceItem && state.avatarVideoFile); };
