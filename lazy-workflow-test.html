@@ -38,6 +38,9 @@ h1{font-size:28px;line-height:1.2;margin:2px 0 6px}
 .hint{font-size:12px;color:var(--t3);margin-bottom:14px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .field{display:grid;gap:6px;margin-bottom:12px}
+.marketing-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.marketing-grid .wide{grid-column:1/-1}
+.marketing-grid textarea{min-height:118px}
 .label{font-size:12px;color:var(--gold2);font-weight:800}
 textarea,input,select{width:100%;border:1.5px solid var(--bdr2);background:#0f0f17;color:var(--t1);border-radius:10px;padding:10px 12px;outline:none}
 textarea:focus,input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,197,90,.13)}
@@ -61,7 +64,7 @@ audio,video{width:100%;margin-top:10px;border-radius:10px}
 .subtitle-box{white-space:pre-wrap;background:#0f0f17;border:1px solid var(--bdr);border-radius:12px;padding:12px;font-family:'Space Mono','Noto Sans TC',monospace;font-size:12px;color:var(--t2);max-height:260px;overflow:auto}
 .notice{border:1px solid rgba(62,207,142,.28);background:rgba(62,207,142,.07);color:#c9f7e3;border-radius:12px;padding:12px;font-size:12px;margin-bottom:14px}
 .lock{border-color:rgba(255,107,107,.32);background:rgba(255,107,107,.07);color:#ffd0d0}
-@media(max-width:860px){.grid{grid-template-columns:1fr}.rail{position:static}.cards,.row{grid-template-columns:1fr}.top{display:block}.pill{margin-top:12px}}
+@media(max-width:860px){.grid{grid-template-columns:1fr}.rail{position:static}.cards,.row,.marketing-grid{grid-template-columns:1fr}.top{display:block}.pill{margin-top:12px}.marketing-grid .wide{grid-column:auto}}
 </style>
 </head>
 <body>
@@ -155,11 +158,33 @@ audio,video{width:100%;margin-top:10px;border-radius:10px}
             <textarea id="final-script" style="min-height:300px" placeholder="生成後會出現在這裡，也可以手動修改。"></textarea>
           </div>
           <div class="field" style="margin-bottom:0">
-            <div class="label">TikTok影片說明文字</div>
-            <textarea id="tiktok-caption" style="min-height:300px" placeholder="根據左側口播文案生成 TikTok 影片說明文字。"></textarea>
-            <div class="btns">
-              <button class="btn secondary" id="btn-tiktok-caption">生成說明文字</button>
-              <button class="btn secondary" id="btn-copy-tiktok-caption">複製</button>
+            <div class="label">行銷文案輸出區</div>
+            <div class="hint" style="margin-bottom:8px">依照左側確認版口播文案，生成可搭配影片發布與投放使用的文案框位。</div>
+            <div class="marketing-grid">
+              <div class="field wide" style="margin-bottom:0">
+                <div class="label">TikTok 影片說明文字</div>
+                <textarea id="tiktok-caption" placeholder="生成 TikTok 影片說明文字，結尾附 3-5 個精準 Hashtag。"></textarea>
+                <button class="btn secondary" id="btn-copy-tiktok-caption" type="button">複製 TikTok 說明</button>
+              </div>
+              <div class="field wide" style="margin-bottom:0">
+                <div class="label">LINE 私訊推廣文</div>
+                <textarea id="ad-primary-copy" placeholder="生成適合私訊或導流使用的短推廣文。"></textarea>
+                <button class="btn secondary" id="btn-copy-ad-primary" type="button">複製私訊文</button>
+              </div>
+              <div class="field" style="margin-bottom:0">
+                <div class="label">5 個行動呼籲 CTA 短語</div>
+                <textarea id="ad-hook-title" placeholder="每個 10 字以內。"></textarea>
+                <button class="btn secondary" id="btn-copy-ad-title" type="button">複製 CTA</button>
+              </div>
+              <div class="field" style="margin-bottom:0">
+                <div class="label">精準 Hashtag 組合</div>
+                <textarea id="ad-cta-copy" placeholder="生成 3-5 個精準 Hashtag。"></textarea>
+                <button class="btn secondary" id="btn-copy-ad-cta" type="button">複製 Hashtag</button>
+              </div>
+            </div>
+            <div class="btns" style="margin-top:10px">
+              <button class="btn secondary" id="btn-tiktok-caption">生成行銷文案</button>
+              <button class="btn secondary" id="btn-copy-marketing-all">全部複製</button>
             </div>
             <span class="status" id="caption-status"></span>
           </div>
@@ -249,6 +274,7 @@ const state = {
   selectedTopic: '',
   script: '',
   tiktokCaption: '',
+  marketingCopies: {},
   voiceItem: null,
   voiceAudioSeconds: 0,
   avatarVideoFile: null,
@@ -265,6 +291,12 @@ function esc(value){ return String(value || '').replace(/[&<>"']/g, m => ({'&':'
 function status(id, text, cls){ const el=$(id); if(el){ el.className='status ' + (cls || ''); el.textContent=text || ''; } }
 function fmt(n){ return Math.max(0, Math.round(Number(n || 0))).toLocaleString('zh-TW'); }
 async function token(){ const { data } = await sb.auth.getSession(); return data && data.session ? data.session.access_token : ''; }
+function isLocalFileMode(){ return location.protocol === 'file:'; }
+function liveWorkflowUrl(){ return 'https://chiwaai.com/lazy-workflow-test.html'; }
+function authRedirectUrl(){
+  if(isLocalFileMode() || location.hostname !== 'chiwaai.com') return liveWorkflowUrl();
+  return location.href.split('#')[0];
+}
 async function authedFetch(url, body){
   const t = await token();
   if(!t) throw new Error('請先登入學員帳號。');
@@ -335,7 +367,7 @@ async function refreshProfile(){
 }
 async function init(){
   document.querySelectorAll('.stepnav button').forEach(btn => btn.onclick = () => goStep(btn.dataset.step));
-  $('login-btn').onclick = () => sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: location.href } });
+  $('login-btn').onclick = () => sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: authRedirectUrl() } });
   const { data } = await sb.auth.getSession();
   state.user = data && data.session && data.session.user;
   if(!state.user){
@@ -420,29 +452,77 @@ async function generateTikTokCaption(){
     status('caption-status','請先生成或填入口播文案。','err');
     return;
   }
-  status('caption-status','TikTok 說明文字生成中...','warn');
+  status('caption-status','行銷文案生成中...','warn');
   $('btn-tiktok-caption').disabled = true;
   try{
-    const system = `${buildProfilePrompt()}\n\n你是專業台灣短影音行銷文案師，專門根據口播文案生成 TikTok 影片說明文字。\n${compliancePrompt()}\n\n格式與內容規則：\n- 只輸出 TikTok 影片說明文字，不要輸出 LINE、CTA 清單或其他類型。\n- 150 字以內。\n- 開頭要直接承接影片主題，讓觀眾知道這支影片在講什麼。\n- 必須有實質商品、服務或專業內容，不能只有情緒語或語助詞。\n- 可以自然加入引導留言、收藏、私訊或預約諮詢，但不能做結果保證。\n- 結尾附 3 到 5 個精準 Hashtag。\n- Hashtag 必須貼合行業、主題與影片內容，不要過度泛用。\n- 不使用 emoji 或表情符號。\n- 使用台灣繁體中文。`;
-    const user = `選題：${state.selectedTopic || $('selected-topic').value || '未提供'}\n\n口播文案：\n${text}\n\n請根據以上內容，生成一段可直接貼到 TikTok 的影片說明文字。`;
-    state.tiktokCaption = await aiCall('marketing', system, user, 'professional');
-    $('tiktok-caption').value = state.tiktokCaption;
-    status('caption-status','TikTok 影片說明文字已生成。','ok');
+    const selectedDesc = [
+      'TikTok 影片說明文字（150字以內，結尾附帶最多5個黃金配置標籤）',
+      'LINE 私訊推廣文（100字以內）',
+      '5個行動呼籲 CTA 短語（每個10字以內）',
+      '精準 Hashtag 組合（3-5個黃金配置標籤）'
+    ].join('\n');
+    const system = `${buildProfilePrompt()}\n\n你是專業台灣數位行銷文案師，專門根據短影音腳本生成各類優質行銷文案。\n${compliancePrompt()}\n\n行銷文案規則：\n- 必須百分之百根據使用者提供的短影音腳本內容與學員背景生成。\n- 風格要口語、有服務力，只用繁體中文。\n- 每段都必須有實質商品、服務或專業內容，不能只寫語氣詞或空泛情緒。\n- 絕對不能使用任何 emoji 或表情符號。\n- 不論在 TikTok 說明文字還是 Hashtag 組合中，Hashtag 數量都要嚴格限制最多 5 個，通常為 3 到 5 個。\n- Hashtag 要貼合影片腳本行業主題與精準領域，不要過度泛用。\n- 每種類型前加上清楚的標題標示，格式固定為：【類型名稱】。\n- 只輸出要求的四種行銷文案，不要輸出分析、說明、表格、Markdown 或分隔線。`;
+    const user = `以下是一支短影音的腳本：\n\n${text}\n\n請根據這支影片內容，生成以下行銷文案：\n\n${selectedDesc}\n\n每種類型前加上清楚的標題標示，格式：【類型名稱】\n內容...\n\n重要：每段都必須有實質商品/服務內容，不能只寫語氣詞或空泛情緒。`;
+    const raw = await aiCall('marketing', system, user, 'professional');
+    state.marketingCopies = parseMarketingCopies(raw);
+    state.tiktokCaption = state.marketingCopies.caption || raw;
+    $('tiktok-caption').value = state.marketingCopies.caption || raw;
+    $('ad-primary-copy').value = state.marketingCopies.line || '';
+    $('ad-hook-title').value = state.marketingCopies.cta || '';
+    $('ad-cta-copy').value = state.marketingCopies.hashtags || '';
+    status('caption-status','行銷文案已生成。','ok');
     await refreshProfile().catch(()=>{});
   }catch(e){
-    status('caption-status', e.message || 'TikTok 說明文字生成失敗','err');
+    status('caption-status', e.message || '行銷文案生成失敗','err');
   }
   $('btn-tiktok-caption').disabled = false;
 }
+function parseMarketingCopies(text){
+  const raw = String(text || '').trim();
+  const pick = (label) => {
+    const labels = ['TikTok 影片說明文字','TikTok影片說明文字','LINE 私訊推廣文','LINE私訊推廣文','5個行動呼籲 CTA 短語','5 個行動呼籲 CTA 短語','精準 Hashtag 組合'];
+    const next = labels.filter(x => x !== label).map(x => `【${x}】`).join('|');
+    const pattern = new RegExp(`【${label}】\\s*([\\s\\S]*?)(?=${next ? next + '|' : ''}$)`);
+    const match = raw.match(pattern);
+    return match ? match[1].trim() : '';
+  };
+  return {
+    caption: pick('TikTok 影片說明文字') || pick('TikTok影片說明文字'),
+    line: pick('LINE 私訊推廣文') || pick('LINE私訊推廣文'),
+    cta: pick('5個行動呼籲 CTA 短語') || pick('5 個行動呼籲 CTA 短語'),
+    hashtags: pick('精準 Hashtag 組合')
+  };
+}
 async function copyTikTokCaption(){
-  const text = $('tiktok-caption').value.trim();
+  return copyMarketingField('tiktok-caption', 'TikTok 影片說明文字');
+}
+async function copyMarketingField(id, label){
+  const text = $(id).value.trim();
   if(!text){
-    status('caption-status','目前沒有可複製的說明文字。','err');
+    status('caption-status',`目前沒有可複製的${label}。`,'err');
     return;
   }
   try{
     await navigator.clipboard.writeText(text);
-    status('caption-status','已複製 TikTok 影片說明文字。','ok');
+    status('caption-status',`已複製${label}。`,'ok');
+  }catch(e){
+    status('caption-status','複製失敗，請手動選取文字。','err');
+  }
+}
+async function copyMarketingAll(){
+  const blocks = [
+    ['TikTok影片說明文字', $('tiktok-caption').value.trim()],
+    ['LINE私訊推廣文', $('ad-primary-copy').value.trim()],
+    ['5個行動呼籲 CTA 短語', $('ad-hook-title').value.trim()],
+    ['精準 Hashtag 組合', $('ad-cta-copy').value.trim()]
+  ].filter(([, value]) => value);
+  if(!blocks.length){
+    status('caption-status','目前沒有可複製的行銷文案。','err');
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(blocks.map(([label, value]) => `【${label}】\n${value}`).join('\n\n'));
+    status('caption-status','已複製全部行銷文案。','ok');
   }catch(e){
     status('caption-status','複製失敗，請手動選取文字。','err');
   }
@@ -629,6 +709,10 @@ function generateSubtitles(){
   $('btn-render-final').disabled = !(state.avatarResult && (state.avatarResult.previewUrl || state.avatarResult.downloadUrl));
 }
 async function submitFinalRender(){
+  if(isLocalFileMode()){
+    status('render-status','請改用線上測試頁產生成片：file:// 本機檔案無法穩定呼叫雲端渲染服務。','err');
+    return;
+  }
   if(!state.avatarResult || !(state.avatarResult.previewUrl || state.avatarResult.downloadUrl)){
     status('render-status','請先完成形象克隆影片。','err');
     return;
@@ -704,6 +788,10 @@ $('btn-script').onclick = () => generateScript('casual');
 $('btn-script-pro').onclick = () => generateScript('professional');
 $('btn-tiktok-caption').onclick = generateTikTokCaption;
 $('btn-copy-tiktok-caption').onclick = copyTikTokCaption;
+$('btn-copy-ad-primary').onclick = () => copyMarketingField('ad-primary-copy', 'LINE 私訊推廣文');
+$('btn-copy-ad-title').onclick = () => copyMarketingField('ad-hook-title', 'CTA 短語');
+$('btn-copy-ad-cta').onclick = () => copyMarketingField('ad-cta-copy', 'Hashtag 組合');
+$('btn-copy-marketing-all').onclick = copyMarketingAll;
 $('btn-to-voice').onclick = () => { state.script = $('final-script').value.trim(); goStep(3); };
 $('btn-voice').onclick = generateVoice;
 $('btn-to-avatar').onclick = () => { goStep(4); $('btn-avatar').disabled = !(state.voiceItem && state.avatarVideoFile); };
