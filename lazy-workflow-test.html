@@ -277,6 +277,7 @@ const state = {
   marketingCopies: {},
   voiceItem: null,
   voiceAudioSeconds: 0,
+  voiceScriptText: '',
   avatarVideoFile: null,
   avatarTaskId: '',
   avatarResult: null,
@@ -552,6 +553,8 @@ async function generateVoice(){
       text,
       language:$('voice-lang').value || 'zh'
     });
+    state.voiceScriptText = text;
+    state.script = text;
     state.voiceItem = data.item;
     state.voiceAudioSeconds = Math.max(1, Math.round(Number(data.item && data.item.audioSeconds || Math.ceil(chars / 4.2))));
     $('voice-result').innerHTML = `<audio controls src="${esc(data.item && data.item.playUrl || '')}"></audio><div class="status ok">語音已生成。請完整試聽，確認沒有念錯字或停頓問題後再送形象克隆。</div>`;
@@ -681,16 +684,36 @@ function srtTime(sec){
 }
 function vttTime(sec){ return srtTime(sec).replace(',', '.'); }
 function subtitleChunks(text){
-  return String(text || '').replace(/\s+/g,' ').split(/(?<=[。！？?])/).map(s => s.trim()).filter(Boolean).flatMap(s => {
-    if(Array.from(s).length <= 24) return [s];
+  const normalized = String(text || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  const sentences = normalized.split(/(?<=[。！？?!])/).map(s => s.trim()).filter(Boolean);
+  return (sentences.length ? sentences : [normalized]).filter(Boolean).flatMap(s => {
+    const chars = Array.from(s);
+    if(chars.length <= 24) return [s];
     const parts = [];
-    for(let i=0;i<s.length;i+=22) parts.push(s.slice(i,i+22));
+    for(let i=0;i<chars.length;i+=22) parts.push(chars.slice(i,i+22).join(''));
     return parts;
   });
 }
 function generateSubtitles(){
-  const text = $('final-script').value.trim();
+  const currentText = $('final-script').value.trim();
+  const text = (state.voiceScriptText || currentText).trim();
+  if(!text){
+    state.srt = '';
+    state.vtt = '';
+    status('render-status','請先生成或填入口播文案。','err');
+    return;
+  }
   const chunks = subtitleChunks(text);
+  if(!chunks.length){
+    state.srt = '';
+    state.vtt = '';
+    status('render-status','目前沒有可產生字幕的口播文字。','err');
+    return;
+  }
   const total = Math.max(1, Number(state.voiceAudioSeconds || chunks.length * 3));
   const dur = total / Math.max(1, chunks.length);
   const srt = [];
@@ -707,6 +730,9 @@ function generateSubtitles(){
   $('btn-download-srt').disabled = false;
   $('btn-download-vtt').disabled = false;
   $('btn-render-final').disabled = !(state.avatarResult && (state.avatarResult.previewUrl || state.avatarResult.downloadUrl));
+  if(state.voiceScriptText && currentText && state.voiceScriptText !== currentText){
+    status('render-status','字幕已依照本次語音生成時使用的口播文案產生。若要使用新版文案，請先重新生成語音。','warn');
+  }
 }
 async function submitFinalRender(){
   if(isLocalFileMode()){
@@ -717,7 +743,7 @@ async function submitFinalRender(){
     status('render-status','請先完成形象克隆影片。','err');
     return;
   }
-  if(!state.srt) generateSubtitles();
+  generateSubtitles();
   if(!state.srt){
     status('render-status','請先產生字幕檔。','err');
     return;
