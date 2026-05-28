@@ -7759,20 +7759,41 @@ function vimeoCoverUrl(vimeoId) {
   return /^[0-9]+$/.test(id) ? 'https://vumbnail.com/' + id + '.jpg' : '';
 }
 
-function applyVimeoCover(boxId, vimeoId) {
+var CHIWA_VSL_COVER_VERSION = '20260529-1';
+var CHIWA_VSL_COVER_ASSETS = {
+  homepage: 'assets/home-vsl-cover.jpg',
+  featureLeft: 'assets/home-feature-cover-left.jpg',
+  featureRight: 'assets/home-feature-cover-right.jpg'
+};
+
+function withCoverVersion(url) {
+  if (!url) return '';
+  return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'cover=' + CHIWA_VSL_COVER_VERSION;
+}
+
+function applyVimeoCover(boxId, vimeoId, customCoverUrl) {
   var box = document.getElementById(boxId);
-  var url = vimeoCoverUrl(vimeoId);
-  if (!box || !url) return;
+  if (!box) return;
+  var urls = [withCoverVersion(customCoverUrl), vimeoCoverUrl(vimeoId)].filter(Boolean);
+  if (!urls.length) return;
+  var idx = 0;
   var img = new Image();
+  function tryNextCover() {
+    if (idx >= urls.length) {
+      box.style.backgroundImage = '';
+      box.classList.remove('has-cover');
+      return;
+    }
+    img.src = urls[idx++];
+  }
   img.onload = function() {
-    box.style.backgroundImage = "url('" + url + "')";
+    box.style.backgroundImage = "url('" + img.src + "')";
     box.classList.add('has-cover');
   };
   img.onerror = function() {
-    box.style.backgroundImage = '';
-    box.classList.remove('has-cover');
+    tryNextCover();
   };
-  img.src = url;
+  tryNextCover();
 }
 
 function getVSLConfig() {
@@ -7819,7 +7840,7 @@ function renderVSLVideo() {
       
     </div>
   `;
-  applyVimeoCover('vsl-box-element', config.vimeoId);
+  applyVimeoCover('vsl-box-element', config.vimeoId, CHIWA_VSL_COVER_ASSETS.homepage);
 }
 
 function playVSLVideo(vimeoId) {
@@ -7903,7 +7924,7 @@ function renderVSLFeatureVideo() {
       <div class="vsl-label">點擊播放特色介紹影片</div>
     </div>
   `;
-  applyVimeoCover('vsl-feature-box-element', config.leftVimeoId);
+    applyVimeoCover('vsl-feature-box-element', config.leftVimeoId, CHIWA_VSL_COVER_ASSETS.featureLeft);
   // 第二個影片框
   var wrap2 = document.getElementById('vsl-feature-video-wrap-2');
   if (wrap2) {
@@ -7913,7 +7934,7 @@ function renderVSLFeatureVideo() {
         <div class="vsl-label">點擊播放特色介紹影片</div>
       </div>
     `;
-    applyVimeoCover('vsl-feature-box-element-2', config.rightVimeoId);
+    applyVimeoCover('vsl-feature-box-element-2', config.rightVimeoId, CHIWA_VSL_COVER_ASSETS.featureRight);
   }
 }
 
