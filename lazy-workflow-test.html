@@ -748,7 +748,6 @@ async function submitFinalRender(){
     status('render-status','請先產生字幕檔。','err');
     return;
   }
-  if(!confirm('確認產生成片？\n系統會把標題與字幕燒進影片，完成後可預覽並下載 MP4。')) return;
   $('btn-render-final').disabled = true;
   status('render-status','成片渲染任務送出中...','warn');
   try{
