@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>懶人自動化工作流測試頁</title>
+<link rel="icon" type="image/png" href="assets/chiwa-favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0a0a0f;--card:#111118;--card2:#171722;--bdr:#484962;--bdr2:rgba(245,224,160,.36);
+  --gold:#e8c55a;--gold2:#f5e0a0;--blue:#4a9eff;--green:#3ecf8e;--purple:#a78bfa;--red:#ff6b6b;
+  --t1:#f2f2f5;--t2:#aaaac4;--t3:#7f80a4;
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 20% 0%,rgba(74,158,255,.09),transparent 42%),radial-gradient(ellipse at 80% 20%,rgba(167,139,250,.08),transparent 42%),var(--bg);color:var(--t1);font-family:'Noto Sans TC',sans-serif;line-height:1.65}
+button,input,select,textarea{font-family:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 18px 56px}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand img{width:38px;height:38px;border-radius:8px}
+.eyebrow{font-size:12px;color:var(--gold);font-family:'Space Mono',monospace;letter-spacing:.08em}
+h1{font-size:28px;line-height:1.2;margin:2px 0 6px}
+.sub{color:var(--t2);font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bdr2);border-radius:999px;padding:7px 12px;color:var(--gold2);font-size:12px;background:rgba(255,255,255,.025)}
+.grid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:18px}
+.rail{position:sticky;top:18px;align-self:start;background:rgba(17,17,24,.78);border:1px solid var(--bdr);border-radius:14px;padding:14px}
+.stepnav{display:grid;gap:8px}
+.stepnav button{width:100%;border:1px solid var(--bdr);background:rgba(255,255,255,.025);color:var(--t2);border-radius:10px;padding:10px;text-align:left;cursor:pointer}
+.stepnav button.on{border-color:var(--gold);color:var(--t1);background:rgba(232,197,90,.1)}
+.quota{margin-top:14px;border-top:1px solid var(--bdr);padding-top:14px;display:grid;gap:9px;font-size:12px;color:var(--t2)}
+.quota b{color:var(--t1);font-family:'Space Mono',monospace}
+.panel{display:none;background:rgba(17,17,24,.82);border:1px solid var(--bdr);border-radius:16px;padding:18px;margin-bottom:14px}
+.panel.on{display:block}
+.panel h2{font-size:20px;margin:0 0 4px}
+.hint{font-size:12px;color:var(--t3);margin-bottom:14px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:grid;gap:6px;margin-bottom:12px}
+.label{font-size:12px;color:var(--gold2);font-weight:800}
+textarea,input,select{width:100%;border:1.5px solid var(--bdr2);background:#0f0f17;color:var(--t1);border-radius:10px;padding:10px 12px;outline:none}
+textarea:focus,input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,197,90,.13)}
+textarea{min-height:110px;resize:vertical}
+.btns{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:900;cursor:pointer;background:var(--gold);color:#08080c}
+.btn.secondary{background:transparent;color:var(--t1);border:1.5px solid var(--bdr2)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.card{border:1px solid var(--bdr);background:rgba(255,255,255,.025);border-radius:12px;padding:13px}
+.card.selected{border-color:var(--gold);box-shadow:0 0 0 2px rgba(232,197,90,.14)}
+.badge{display:inline-flex;border:1px solid rgba(74,158,255,.35);color:var(--blue);background:rgba(74,158,255,.08);border-radius:999px;padding:2px 8px;font-size:11px;font-weight:800;margin-right:6px}
+.card-title{font-weight:900;font-size:14px;margin:8px 0 4px}
+.card-text{font-size:12px;color:var(--t2)}
+.status{font-size:12px;color:var(--t2);margin-top:10px}
+.ok{color:var(--green)}.err{color:var(--red)}.warn{color:var(--gold)}
+.drop{border:1.5px dashed var(--bdr2);border-radius:12px;padding:16px;background:rgba(255,255,255,.02);cursor:pointer}
+.drop.drag{border-color:var(--gold);background:rgba(232,197,90,.07)}
+audio,video{width:100%;margin-top:10px;border-radius:10px}
+.video-frame{max-width:760px;max-height:52vh;object-fit:contain;background:#000}
+.subtitle-box{white-space:pre-wrap;background:#0f0f17;border:1px solid var(--bdr);border-radius:12px;padding:12px;font-family:'Space Mono','Noto Sans TC',monospace;font-size:12px;color:var(--t2);max-height:260px;overflow:auto}
+.notice{border:1px solid rgba(62,207,142,.28);background:rgba(62,207,142,.07);color:#c9f7e3;border-radius:12px;padding:12px;font-size:12px;margin-bottom:14px}
+.lock{border-color:rgba(255,107,107,.32);background:rgba(255,107,107,.07);color:#ffd0d0}
+@media(max-width:860px){.grid{grid-template-columns:1fr}.rail{position:static}.cards,.row{grid-template-columns:1fr}.top{display:block}.pill{margin-top:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <img src="assets/chiwa-favicon.png" alt="Chiwa">
+      <div>
+        <div class="eyebrow">HIDDEN TEST PAGE</div>
+        <h1>懶人自動化工作流</h1>
+        <div class="sub">獨立測試頁，不修改既有工作台頁面、面板、按鈕或原本流程。</div>
+      </div>
+    </div>
+    <div class="pill" id="login-state">檢查登入狀態中...</div>
+  </div>
+
+  <div class="notice lock">
+    安全隔離說明：這個頁面是獨立檔案 lazy-workflow-test.html。它不會改動原本 index.html 的工作台版面與函式；只有你進到這個測試頁並按下按鈕時，才會呼叫既有 API。
+  </div>
+
+  <div id="auth-box" class="panel on" style="display:none">
+    <h2>需要先登入學員帳號</h2>
+    <div class="hint">登入後才能讀取你的帳號定位、AI 額度、語音發音人與形象克隆權限。</div>
+    <button class="btn" id="login-btn">使用 Google 登入</button>
+  </div>
+
+  <div id="app" class="grid" style="display:none">
+    <aside class="rail">
+      <div class="stepnav">
+        <button class="on" data-step="1">1. 選題生成</button>
+        <button data-step="2">2. 口播文案確認</button>
+        <button data-step="3">3. 語音克隆試聽</button>
+        <button data-step="4">4. 形象克隆送出</button>
+        <button data-step="5">5. 標題與字幕</button>
+      </div>
+      <div class="quota">
+        <div>AI 生成剩餘：<b id="q-ai">--</b> 次</div>
+        <div>語音剩餘：<b id="q-voice">--</b> 字</div>
+        <div>影像克隆剩餘：<b id="q-avatar">--</b> 秒</div>
+      </div>
+    </aside>
+
+    <main>
+      <section class="panel on" id="step-1">
+        <h2>第一步：生成 8 個選題</h2>
+        <div class="hint">學員自己挑選題。選題會套用帳號定位、TikTok 廣告合規與台灣法規風險規則。</div>
+        <div class="row">
+          <div class="field">
+            <div class="label">選題方向</div>
+            <select id="topic-type">
+              <option>隨機分配</option>
+              <option>痛點鏡子</option>
+              <option>知識降維</option>
+              <option>迷思破解</option>
+              <option>客戶故事</option>
+              <option>選擇指南</option>
+              <option>行動催化</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="label">補充方向</div>
+            <input id="topic-extra" placeholder="例：本月想主打高資產離婚、專業信任感">
+          </div>
+        </div>
+        <div class="btns">
+          <button class="btn" id="btn-topics">生成 8 個選題</button>
+          <span class="status" id="topic-status"></span>
+        </div>
+        <div class="cards" id="topic-list"></div>
+      </section>
+
+      <section class="panel" id="step-2">
+        <h2>第二步：口播文案確認</h2>
+        <div class="hint">選題會自動送入口播文案。你可以手動修改、增補或重生版本，確認後再送語音。</div>
+        <div class="field">
+          <div class="label">已選選題</div>
+          <input id="selected-topic" readonly>
+        </div>
+        <div class="field">
+          <div class="label">補充要求</div>
+          <textarea id="script-extra" placeholder="可補充案例、產品重點、不要提到的內容。"></textarea>
+        </div>
+        <div class="btns">
+          <button class="btn" id="btn-script">生成口播文案</button>
+          <button class="btn secondary" id="btn-script-pro">生成博主專業版</button>
+          <span class="status" id="script-status"></span>
+        </div>
+        <div class="row" style="margin-top:14px;align-items:start">
+          <div class="field" style="margin-bottom:0">
+            <div class="label">確認版口播文案</div>
+            <textarea id="final-script" style="min-height:300px" placeholder="生成後會出現在這裡，也可以手動修改。"></textarea>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <div class="label">TikTok影片說明文字</div>
+            <textarea id="tiktok-caption" style="min-height:300px" placeholder="根據左側口播文案生成 TikTok 影片說明文字。"></textarea>
+            <div class="btns">
+              <button class="btn secondary" id="btn-tiktok-caption">生成說明文字</button>
+              <button class="btn secondary" id="btn-copy-tiktok-caption">複製</button>
+            </div>
+            <span class="status" id="caption-status"></span>
+          </div>
+        </div>
+        <button class="btn" id="btn-to-voice">確認文案，送到語音克隆</button>
+      </section>
+
+      <section class="panel" id="step-3">
+        <h2>第三步：語音克隆試聽</h2>
+        <div class="hint">這一步會消耗語音字數。生成後請先聽，有念錯字或停頓不對，可以回上一步修改文案再重生。</div>
+        <div class="row">
+          <div class="field">
+            <div class="label">發音人</div>
+            <select id="voice-select"></select>
+          </div>
+          <div class="field">
+            <div class="label">語言</div>
+            <select id="voice-lang">
+              <option value="zh">中文</option>
+              <option value="en">English</option>
+              <option value="ja">日本語</option>
+              <option value="ko">한국어</option>
+            </select>
+          </div>
+        </div>
+        <div class="btns">
+          <button class="btn" id="btn-voice">生成語音試聽</button>
+          <span class="status" id="voice-status"></span>
+        </div>
+        <div id="voice-result"></div>
+        <button class="btn" id="btn-to-avatar" disabled>語音確認沒問題，送到形象克隆</button>
+      </section>
+
+      <section class="panel" id="step-4">
+        <h2>第四步：形象克隆</h2>
+        <div class="hint">上傳形象影片，確認後才送出生成。此步成功完成後，才會扣影像克隆秒數。</div>
+        <div class="drop" id="video-drop">
+          <input type="file" id="avatar-video" accept="video/*" hidden>
+          <b>選擇或拖曳形象影片</b>
+          <div class="status" id="video-status">尚未選擇影片</div>
+        </div>
+        <div class="btns" style="margin-top:14px">
+          <button class="btn" id="btn-avatar" disabled>送出形象克隆任務</button>
+          <span class="status" id="avatar-status"></span>
+        </div>
+        <div id="avatar-result"></div>
+      </section>
+
+      <section class="panel" id="step-5">
+        <h2>第五步：標題與字幕檔</h2>
+        <div class="hint">第一版先產出標題、SRT 與 VTT 字幕草稿。確認穩定後，再接影片燒字幕服務。</div>
+        <div class="field">
+          <div class="label">影片標題</div>
+          <input id="final-title" readonly>
+        </div>
+        <div class="btns">
+          <button class="btn" id="btn-subtitles">產生字幕檔</button>
+          <button class="btn secondary" id="btn-download-srt" disabled>下載 SRT</button>
+          <button class="btn secondary" id="btn-download-vtt" disabled>下載 VTT</button>
+          <button class="btn" id="btn-render-final" disabled>產生成片</button>
+        </div>
+        <div class="subtitle-box" id="subtitle-output" style="margin-top:14px">尚未產生字幕。</div>
+        <div class="status" id="render-status"></div>
+        <div id="final-video-result"></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://nsauscojruqjcprvsfsn.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Im5zYXVzY29qcnVxamNwcnZzZnNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjAzMTksImV4cCI6MjA5NDU5NjMxOX0.gXX7cBcqohoHqvPkZM-FFrnZVDS59g5OBJPBqH73H_w'.replace('eyJpc3MiOiJIUzI1NiIsInJlZiI6', 'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6');
+const SECURE_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-secure-api`;
+const VOICE_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-voice`;
+const AVATAR_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-avatar`;
+const VIDEO_RENDER_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-video-render`;
+const AVATAR_R2_URL = 'https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev';
+const AI_BACKEND_URL = 'https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev/';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+});
+
+const state = {
+  user: null,
+  student: null,
+  topics: [],
+  selectedTopic: '',
+  script: '',
+  tiktokCaption: '',
+  voiceItem: null,
+  voiceAudioSeconds: 0,
+  avatarVideoFile: null,
+  avatarTaskId: '',
+  avatarResult: null,
+  renderId: '',
+  finalVideo: null,
+  srt: '',
+  vtt: '',
+};
+
+function $(id){ return document.getElementById(id); }
+function esc(value){ return String(value || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function status(id, text, cls){ const el=$(id); if(el){ el.className='status ' + (cls || ''); el.textContent=text || ''; } }
+function fmt(n){ return Math.max(0, Math.round(Number(n || 0))).toLocaleString('zh-TW'); }
+async function token(){ const { data } = await sb.auth.getSession(); return data && data.session ? data.session.access_token : ''; }
+async function authedFetch(url, body){
+  const t = await token();
+  if(!t) throw new Error('請先登入學員帳號。');
+  const res = await fetch(url, {
+    method:'POST',
+    headers:{ 'Authorization':'Bearer ' + t, 'Content-Type':'application/json' },
+    body: JSON.stringify(body || {})
+  });
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok) throw new Error(data.error || data.detail || `HTTP ${res.status}`);
+  return data;
+}
+async function aiCall(type, systemPrompt, userPrompt, tone){
+  const t = await token();
+  const res = await fetch(AI_BACKEND_URL, {
+    method:'POST',
+    headers:{ 'Authorization':'Bearer ' + t, 'Content-Type':'application/json' },
+    body: JSON.stringify({ type, systemPrompt, userPrompt, fmt:'simple', tone: tone || 'professional' })
+  });
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok || data.error) throw new Error('AI 服務暫時無法使用。');
+  return cleanScript(data.content && data.content[0] && data.content[0].text || '');
+}
+function cleanScript(text){
+  return String(text || '')
+    .replace(/#{1,6}\s/g,'')
+    .replace(/\*\*/g,'')
+    .replace(/---/g,'')
+    .replace(/[“”"]/g,'')
+    .replace(/；/g,'，')
+    .replace(/：/g,'，')
+    .replace(/\n{3,}/g,'\n\n')
+    .trim();
+}
+function buildProfilePrompt(){
+  const p = state.student && state.student.profile || {};
+  const lines = [];
+  if(p.name || state.student?.name) lines.push(`身份：${p.name || state.student.name}`);
+  if(p.industry) lines.push(`行業：${p.industry}`);
+  if(p.service) lines.push(`主要服務：${p.service}`);
+  if(p.target_gender || p.target_age || p.target_identity) lines.push(`目標受眾：${[p.target_gender, [].concat(p.target_age || []).join('、'), [].concat(p.target_identity || []).join('、')].filter(Boolean).join('，')}`);
+  if(p.style) lines.push(`說話風格：${p.style}`);
+  if(p.personality) lines.push(`個性特質：${[].concat(p.personality || []).join('、')}`);
+  if(p.audience_feeling) lines.push(`希望觀眾感受：${[].concat(p.audience_feeling || []).join('、')}`);
+  if(p.differentiation) lines.push(`與同行差異：${[].concat(p.differentiation || []).join('、')}`);
+  if(p.extra_note) lines.push(`補充說明：${p.extra_note}`);
+  return lines.length ? `學員背景：\n- ${lines.join('\n- ')}\n\n生成原則：語氣和選題必須符合以上背景，不要生成與定位相反的內容。` : '';
+}
+function compliancePrompt(){
+  return `合規規則：使用台灣繁體中文。內容必須先有實質內容，不得只有語氣詞。避開絕對化成效、財務暗示、未經驗證數字、最高級與唯一性宣稱。具體成效必須避免未經驗證的聲稱。可以有說服力，但要符合 TikTok 廣告政策與台灣常見法規風險。不得使用 emoji 或表情符號。`;
+}
+function updateQuota(){
+  const s = state.student || {};
+  $('q-ai').textContent = fmt(s.ai_usage);
+  $('q-voice').textContent = fmt(s.voice_credits);
+  $('q-avatar').textContent = fmt(s.avatar_seconds);
+}
+function goStep(n){
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  const panel = $('step-' + n);
+  if(panel) panel.classList.add('on');
+  document.querySelectorAll('.stepnav button').forEach(b => b.classList.toggle('on', b.dataset.step === String(n)));
+}
+async function refreshProfile(){
+  const data = await authedFetch(SECURE_API_URL, { action:'profile' });
+  state.student = data.student;
+  updateQuota();
+}
+async function init(){
+  document.querySelectorAll('.stepnav button').forEach(btn => btn.onclick = () => goStep(btn.dataset.step));
+  $('login-btn').onclick = () => sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: location.href } });
+  const { data } = await sb.auth.getSession();
+  state.user = data && data.session && data.session.user;
+  if(!state.user){
+    $('login-state').textContent = '尚未登入';
+    $('auth-box').style.display = 'block';
+    return;
+  }
+  $('login-state').textContent = `已登入：${state.user.email || ''}`;
+  $('app').style.display = 'grid';
+  $('auth-box').style.display = 'none';
+  await refreshProfile();
+  await loadVoices();
+}
+function parseTopics(text){
+  const blocks = String(text || '').split(/【選題\d+】/).map(s => s.trim()).filter(Boolean);
+  return blocks.slice(0,8).map((b, i) => {
+    const pick = (label) => {
+      const m = b.match(new RegExp(label + '[：:]\\s*([^\\n]+)'));
+      return m ? m[1].trim() : '';
+    };
+    return {
+      index: i + 1,
+      type: pick('類型') || '短影音選題',
+      title: pick('標題') || b.split('\n')[0].replace(/^\d+[.、]\s*/,'').slice(0,40),
+      subtitle: pick('副標題') || b.split('\n').slice(1).join(' ').slice(0,80),
+      raw: b
+    };
+  });
+}
+function renderTopics(){
+  $('topic-list').innerHTML = state.topics.map(t => `
+    <div class="card ${state.selectedTopic === t.title ? 'selected' : ''}">
+      <span class="badge">${esc(t.type)}</span>
+      <div class="card-title">${esc(t.title)}</div>
+      <div class="card-text">${esc(t.subtitle)}</div>
+      <button class="btn secondary" style="margin-top:10px" data-topic="${esc(t.title)}">選這個題目</button>
+    </div>`).join('');
+  document.querySelectorAll('[data-topic]').forEach(btn => btn.onclick = () => {
+    state.selectedTopic = btn.getAttribute('data-topic') || '';
+    $('selected-topic').value = state.selectedTopic;
+    $('final-title').value = state.selectedTopic;
+    renderTopics();
+    goStep(2);
+  });
+}
+async function generateTopics(){
+  status('topic-status','生成中...','warn');
+  $('btn-topics').disabled = true;
+  try{
+    const type = $('topic-type').value;
+    const extra = $('topic-extra').value.trim();
+    const system = `${buildProfilePrompt()}\n\n你是專業短影音選題策略師。\n${compliancePrompt()}`;
+    const user = `請生成 8 個短影音口播選題。選題方向：${type}。\n補充方向：${extra || '無'}。\n\n格式固定：\n【選題1】\n類型：（痛點鏡子/知識降維/迷思破解/客戶故事/選擇指南/行動催化）\n標題：（20字內）\n副標題：（30字內）\n\n請輸出到【選題8】。`;
+    const text = await aiCall('topics', system, user, 'professional');
+    state.topics = parseTopics(text);
+    renderTopics();
+    status('topic-status',`已生成 ${state.topics.length} 個選題。`,'ok');
+    await refreshProfile().catch(()=>{});
+  }catch(e){ status('topic-status', e.message || '生成失敗','err'); }
+  $('btn-topics').disabled = false;
+}
+async function generateScript(tone){
+  if(!state.selectedTopic){ status('script-status','請先選擇選題。','err'); return; }
+  status('script-status','文案生成中...','warn');
+  $('btn-script').disabled = true;
+  $('btn-script-pro').disabled = true;
+  try{
+    const casual = tone !== 'professional';
+    const system = `${buildProfilePrompt()}\n\n你是專業台灣口播文案撰寫師。\n${compliancePrompt()}\n內容規則：文案必須包含開場鉤子、痛點、解法、具體場景、CTA。語氣詞只佔全文 10% 以下。格式適合直接貼進語音合成工具朗讀，每句結尾必須有標點。\n${casual ? '語氣：素人隨聊感，像台灣人在自然聊天，但不能空洞。' : '語氣：博主專業感，有觀點、有邏輯、有乾貨。'}`;
+    const user = `選題：${state.selectedTopic}\n補充：${$('script-extra').value.trim() || '無'}\n\n請生成約 200-350 字，約 60-120 秒的完整口播文案。只輸出口播正文，不要 Markdown，不要標題，不要分隔線。`;
+    state.script = await aiCall('script', system, user, casual ? 'casual' : 'professional');
+    $('final-script').value = state.script;
+    status('script-status','文案已生成，可手動修改後送語音。','ok');
+    await refreshProfile().catch(()=>{});
+  }catch(e){ status('script-status', e.message || '文案生成失敗','err'); }
+  $('btn-script').disabled = false;
+  $('btn-script-pro').disabled = false;
+}
+async function generateTikTokCaption(){
+  const text = $('final-script').value.trim();
+  if(!text){
+    status('caption-status','請先生成或填入口播文案。','err');
+    return;
+  }
+  status('caption-status','TikTok 說明文字生成中...','warn');
+  $('btn-tiktok-caption').disabled = true;
+  try{
+    const system = `${buildProfilePrompt()}\n\n你是專業台灣短影音行銷文案師，專門根據口播文案生成 TikTok 影片說明文字。\n${compliancePrompt()}\n\n格式與內容規則：\n- 只輸出 TikTok 影片說明文字，不要輸出 LINE、CTA 清單或其他類型。\n- 150 字以內。\n- 開頭要直接承接影片主題，讓觀眾知道這支影片在講什麼。\n- 必須有實質商品、服務或專業內容，不能只有情緒語或語助詞。\n- 可以自然加入引導留言、收藏、私訊或預約諮詢，但不能做結果保證。\n- 結尾附 3 到 5 個精準 Hashtag。\n- Hashtag 必須貼合行業、主題與影片內容，不要過度泛用。\n- 不使用 emoji 或表情符號。\n- 使用台灣繁體中文。`;
+    const user = `選題：${state.selectedTopic || $('selected-topic').value || '未提供'}\n\n口播文案：\n${text}\n\n請根據以上內容，生成一段可直接貼到 TikTok 的影片說明文字。`;
+    state.tiktokCaption = await aiCall('marketing', system, user, 'professional');
+    $('tiktok-caption').value = state.tiktokCaption;
+    status('caption-status','TikTok 影片說明文字已生成。','ok');
+    await refreshProfile().catch(()=>{});
+  }catch(e){
+    status('caption-status', e.message || 'TikTok 說明文字生成失敗','err');
+  }
+  $('btn-tiktok-caption').disabled = false;
+}
+async function copyTikTokCaption(){
+  const text = $('tiktok-caption').value.trim();
+  if(!text){
+    status('caption-status','目前沒有可複製的說明文字。','err');
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(text);
+    status('caption-status','已複製 TikTok 影片說明文字。','ok');
+  }catch(e){
+    status('caption-status','複製失敗，請手動選取文字。','err');
+  }
+}
+async function loadVoices(){
+  try{
+    const data = await authedFetch(VOICE_API_URL, { action:'list' });
+    const voices = [].concat(data.systemVoices || [], data.voices || []);
+    $('voice-select').innerHTML = voices.map(v => `<option value="${esc(v.id)}">${esc(v.name)}${String(v.id).startsWith('def') ? '（系統預置）' : '（我的聲音）'}</option>`).join('');
+    if(data.student){ state.student = data.student; updateQuota(); }
+  }catch(e){
+    $('voice-select').innerHTML = '<option value="def-female">吉娃 AI 官方台灣女聲</option>';
+  }
+}
+function estimateChars(text){ return Array.from(String(text || '').replace(/\s+/g,'')).length; }
+async function generateVoice(){
+  const text = $('final-script').value.trim();
+  if(!text){ status('voice-status','請先確認文案。','err'); return; }
+  const chars = estimateChars(text);
+  if(!confirm(`即將生成語音\n文案長度：約 ${chars} 字\n即使只是試聽也會消耗語音額度。\n\n確認生成？`)) return;
+  status('voice-status','語音生成中...','warn');
+  $('btn-voice').disabled = true;
+  try{
+    const data = await authedFetch(VOICE_API_URL, {
+      action:'tts',
+      voice_id:$('voice-select').value || 'def-female',
+      text,
+      language:$('voice-lang').value || 'zh'
+    });
+    state.voiceItem = data.item;
+    state.voiceAudioSeconds = Math.max(1, Math.round(Number(data.item && data.item.audioSeconds || Math.ceil(chars / 4.2))));
+    $('voice-result').innerHTML = `<audio controls src="${esc(data.item && data.item.playUrl || '')}"></audio><div class="status ok">語音已生成。請完整試聽，確認沒有念錯字或停頓問題後再送形象克隆。</div>`;
+    $('btn-to-avatar').disabled = false;
+    if(data.student){ state.student = data.student; updateQuota(); }
+    status('voice-status',`已生成語音，約 ${state.voiceAudioSeconds} 秒。`,'ok');
+  }catch(e){ status('voice-status', e.message || '語音生成失敗','err'); }
+  $('btn-voice').disabled = false;
+}
+function fileExt(file, fallback){ const m=String(file && file.name || '').match(/\.([a-z0-9]+)$/i); return (m ? m[1] : fallback).toLowerCase(); }
+function fileMime(file, kind){ return file && file.type || (kind === 'video' ? 'video/mp4' : 'audio/wav'); }
+async function r2Json(path, options){
+  const res = await fetch(AVATAR_R2_URL + path, options);
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok) throw new Error(data.error || `upload_${res.status}`);
+  return data;
+}
+function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
+async function uploadVideoToR2(file, onProgress){
+  const t = await token();
+  const create = await r2Json('/avatar/multipart/create', {
+    method:'POST',
+    headers:{ 'Authorization':'Bearer ' + t, 'Content-Type':'application/json' },
+    body: JSON.stringify({ kind:'video', fileName:file.name || 'avatar-video.mp4', contentType:fileMime(file,'video'), size:file.size })
+  });
+  const partSize = Math.max(5 * 1024 * 1024, Math.min(Number(create.partSize || 10 * 1024 * 1024), 20 * 1024 * 1024));
+  const totalParts = Math.ceil(file.size / partSize);
+  const parts = [];
+  let uploaded = 0;
+  try{
+    for(let i=0;i<totalParts;i++){
+      const chunk = file.slice(i * partSize, Math.min(file.size, (i + 1) * partSize));
+      let lastError = null;
+      for(let attempt=0;attempt<4;attempt++){
+        try{
+          const part = await r2Json(`/avatar/multipart/part?key=${encodeURIComponent(create.key)}&uploadId=${encodeURIComponent(create.uploadId)}&partNumber=${i + 1}`, {
+            method:'PUT',
+            headers:{ 'Authorization':'Bearer ' + t, 'Content-Type':'application/octet-stream', 'x-chiwa-upload':'workflow-video-part' },
+            body: chunk
+          });
+          parts.push({ partNumber:Number(part.partNumber), etag:part.etag });
+          uploaded += chunk.size;
+          if(onProgress) onProgress(Math.min(100, uploaded / file.size * 100), uploaded, file.size);
+          lastError = null;
+          break;
+        }catch(err){ lastError = err; await sleep(800 * (attempt + 1)); }
+      }
+      if(lastError) throw lastError;
+    }
+    return await r2Json('/avatar/multipart/complete', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer ' + t, 'Content-Type':'application/json' },
+      body: JSON.stringify({ key:create.key, uploadId:create.uploadId, parts })
+    });
+  }catch(err){
+    await fetch(AVATAR_R2_URL + '/avatar/multipart/abort', {
+      method:'DELETE',
+      headers:{ 'Authorization':'Bearer ' + t, 'Content-Type':'application/json' },
+      body: JSON.stringify({ key:create.key, uploadId:create.uploadId })
+    }).catch(()=>{});
+    throw err;
+  }
+}
+async function submitAvatar(){
+  if(!state.voiceItem || !state.voiceItem.playUrl){ status('avatar-status','請先完成語音並確認。','err'); return; }
+  if(!state.avatarVideoFile){ status('avatar-status','請先選擇形象影片。','err'); return; }
+  if(!confirm(`確認送出形象克隆？\n語音長度：約 ${state.voiceAudioSeconds} 秒\n成功完成後才會扣影像克隆秒數。`)) return;
+  $('btn-avatar').disabled = true;
+  try{
+    status('avatar-status','形象影片上傳中 0%...','warn');
+    const uploaded = await uploadVideoToR2(state.avatarVideoFile, (pct, done, total) => {
+      status('avatar-status', `形象影片上傳中 ${pct.toFixed(1)}%（${(done/1024/1024).toFixed(1)}MB / ${(total/1024/1024).toFixed(1)}MB）`, 'warn');
+    });
+    status('avatar-status','素材已上傳，正在送出形象克隆任務...','warn');
+    const data = await authedFetch(AVATAR_API_URL, {
+      action:'submit_urls',
+      video_url:uploaded.signedUrl,
+      audio_url:state.voiceItem.playUrl,
+      video_path:uploaded.key,
+      audio_path:state.voiceItem.id || 'workflow-tts',
+      duration_seconds:state.voiceAudioSeconds
+    });
+    state.avatarTaskId = data.taskId;
+    status('avatar-status','任務已送出，正在查詢結果...','warn');
+    pollAvatar();
+  }catch(e){
+    status('avatar-status', e.message || '形象克隆送出失敗','err');
+    $('btn-avatar').disabled = false;
+  }
+}
+async function pollAvatar(){
+  try{
+    const data = await authedFetch(AVATAR_API_URL, { action:'query', taskId:state.avatarTaskId });
+    if(data.student){ state.student = data.student; updateQuota(); }
+    if(data.status === 'SUCCESS' && (data.previewUrl || data.downloadUrl)){
+      state.avatarResult = data;
+      $('avatar-result').innerHTML = `<video class="video-frame" controls src="${esc(data.previewUrl || data.downloadUrl)}"></video><div class="btns" style="margin-top:10px"><a class="btn secondary" href="${esc(data.downloadUrl || data.previewUrl)}" download>下載影片</a></div>`;
+      status('avatar-status','形象克隆影片已生成。','ok');
+      $('btn-avatar').disabled = false;
+      goStep(5);
+      return;
+    }
+    if(data.status === 'FAILED'){
+      status('avatar-status','形象克隆生成失敗，請稍後再試。','err');
+      $('btn-avatar').disabled = false;
+      return;
+    }
+    status('avatar-status',`生成中：${data.status || 'RUNNING'}，8 秒後自動查詢。`,'warn');
+    setTimeout(pollAvatar, 8000);
+  }catch(e){
+    status('avatar-status', e.message || '查詢失敗','err');
+    $('btn-avatar').disabled = false;
+  }
+}
+function selectVideo(file){
+  state.avatarVideoFile = file || null;
+  $('video-status').textContent = file ? `已選擇：${file.name}（${(file.size/1024/1024).toFixed(1)}MB）` : '尚未選擇影片';
+  $('btn-avatar').disabled = !(state.voiceItem && state.avatarVideoFile);
+}
+function srtTime(sec){
+  const ms = Math.floor((sec % 1) * 1000);
+  const t = Math.floor(sec);
+  const h = Math.floor(t / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  const s = t % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(ms).padStart(3,'0')}`;
+}
+function vttTime(sec){ return srtTime(sec).replace(',', '.'); }
+function subtitleChunks(text){
+  return String(text || '').replace(/\s+/g,' ').split(/(?<=[。！？?])/).map(s => s.trim()).filter(Boolean).flatMap(s => {
+    if(Array.from(s).length <= 24) return [s];
+    const parts = [];
+    for(let i=0;i<s.length;i+=22) parts.push(s.slice(i,i+22));
+    return parts;
+  });
+}
+function generateSubtitles(){
+  const text = $('final-script').value.trim();
+  const chunks = subtitleChunks(text);
+  const total = Math.max(1, Number(state.voiceAudioSeconds || chunks.length * 3));
+  const dur = total / Math.max(1, chunks.length);
+  const srt = [];
+  const vtt = ['WEBVTT', ''];
+  chunks.forEach((line, i) => {
+    const start = i * dur;
+    const end = Math.min(total, (i + 1) * dur);
+    srt.push(`${i + 1}\n${srtTime(start)} --> ${srtTime(end)}\n${line}\n`);
+    vtt.push(`${vttTime(start)} --> ${vttTime(end)}\n${line}\n`);
+  });
+  state.srt = srt.join('\n');
+  state.vtt = vtt.join('\n');
+  $('subtitle-output').textContent = `標題：${state.selectedTopic}\n\n` + state.srt;
+  $('btn-download-srt').disabled = false;
+  $('btn-download-vtt').disabled = false;
+  $('btn-render-final').disabled = !(state.avatarResult && (state.avatarResult.previewUrl || state.avatarResult.downloadUrl));
+}
+async function submitFinalRender(){
+  if(!state.avatarResult || !(state.avatarResult.previewUrl || state.avatarResult.downloadUrl)){
+    status('render-status','請先完成形象克隆影片。','err');
+    return;
+  }
+  if(!state.srt) generateSubtitles();
+  if(!state.srt){
+    status('render-status','請先產生字幕檔。','err');
+    return;
+  }
+  if(!confirm('確認產生成片？\n系統會把標題與字幕燒進影片，完成後可預覽並下載 MP4。')) return;
+  $('btn-render-final').disabled = true;
+  status('render-status','成片渲染任務送出中...','warn');
+  try{
+    const data = await authedFetch(VIDEO_RENDER_API_URL, {
+      action:'submit',
+      video_url:state.avatarResult.previewUrl || state.avatarResult.downloadUrl,
+      srt_text:state.srt,
+      title:state.selectedTopic || $('final-title').value || 'AI自媒體系統',
+      duration_seconds:state.voiceAudioSeconds || 60
+    });
+    state.renderId = data.renderId;
+    status('render-status',`成片渲染中：${data.status || 'QUEUED'}，10 秒後自動查詢。`,'warn');
+    setTimeout(pollFinalRender, 10000);
+  }catch(e){
+    status('render-status', e.message || '成片渲染送出失敗','err');
+    $('btn-render-final').disabled = false;
+  }
+}
+async function pollFinalRender(){
+  if(!state.renderId){
+    status('render-status','缺少成片渲染任務 ID。','err');
+    $('btn-render-final').disabled = false;
+    return;
+  }
+  try{
+    const data = await authedFetch(VIDEO_RENDER_API_URL, {
+      action:'query',
+      render_id:state.renderId
+    });
+    if(data.status === 'SUCCESS' && (data.previewUrl || data.downloadUrl)){
+      state.finalVideo = data;
+      $('final-video-result').innerHTML = `<video class="video-frame" controls src="${esc(data.previewUrl || data.downloadUrl)}"></video><div class="btns" style="margin-top:10px"><a class="btn secondary" href="${esc(data.downloadUrl || data.previewUrl)}" download>下載成片</a></div><div class="status ok">成片已完成，檔案會暫存 24 小時，請及時下載保存。</div>`;
+      status('render-status','標題與字幕已燒進影片，成片可以下載。','ok');
+      $('btn-render-final').disabled = false;
+      return;
+    }
+    if(data.status === 'FAILED'){
+      status('render-status','成片渲染失敗，請稍後再試。','err');
+      $('btn-render-final').disabled = false;
+      return;
+    }
+    status('render-status',`成片渲染中：${data.status || 'RUNNING'}，10 秒後自動查詢。`,'warn');
+    setTimeout(pollFinalRender, 10000);
+  }catch(e){
+    status('render-status', e.message || '成片渲染查詢失敗','err');
+    $('btn-render-final').disabled = false;
+  }
+}
+function downloadText(name, text, type){
+  const blob = new Blob([text], { type:type || 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 800);
+}
+
+$('btn-topics').onclick = generateTopics;
+$('btn-script').onclick = () => generateScript('casual');
+$('btn-script-pro').onclick = () => generateScript('professional');
+$('btn-tiktok-caption').onclick = generateTikTokCaption;
+$('btn-copy-tiktok-caption').onclick = copyTikTokCaption;
+$('btn-to-voice').onclick = () => { state.script = $('final-script').value.trim(); goStep(3); };
+$('btn-voice').onclick = generateVoice;
+$('btn-to-avatar').onclick = () => { goStep(4); $('btn-avatar').disabled = !(state.voiceItem && state.avatarVideoFile); };
+$('btn-avatar').onclick = submitAvatar;
+$('btn-subtitles').onclick = generateSubtitles;
+$('btn-download-srt').onclick = () => downloadText('chiwa-workflow-subtitles.srt', state.srt, 'text/plain;charset=utf-8');
+$('btn-download-vtt').onclick = () => downloadText('chiwa-workflow-subtitles.vtt', state.vtt, 'text/vtt;charset=utf-8');
+$('btn-render-final').onclick = submitFinalRender;
+$('video-drop').onclick = () => $('avatar-video').click();
+$('avatar-video').onchange = e => selectVideo(e.target.files && e.target.files[0]);
+['dragenter','dragover'].forEach(evt => $('video-drop').addEventListener(evt, e => { e.preventDefault(); $('video-drop').classList.add('drag'); }));
+['dragleave','drop'].forEach(evt => $('video-drop').addEventListener(evt, e => { e.preventDefault(); $('video-drop').classList.remove('drag'); }));
+$('video-drop').addEventListener('drop', e => selectVideo(e.dataTransfer.files && e.dataTransfer.files[0]));
+
+init().catch(e => {
+  $('login-state').textContent = '初始化失敗';
+  $('auth-box').style.display = 'block';
+  console.error(e);
+});
+</script>
+</body>
+</html>
