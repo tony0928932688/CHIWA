@@ -148,7 +148,10 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 
 .vsl-wrap{margin:0 auto 80px;width:min(430px,calc(100% - 32px));max-width:430px;padding:0}
-.vsl-box{background:var(--card);border:1px solid var(--bdr);border-radius:16px;aspect-ratio:9/16;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;position:relative;overflow:hidden}
+.vsl-box{background:var(--card);border:1px solid var(--bdr);border-radius:16px;aspect-ratio:9/16;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;position:relative;overflow:hidden;background-size:cover;background-position:center}
+.vsl-box::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.52));z-index:0;opacity:0;transition:opacity .2s}
+.vsl-box.has-cover::before{opacity:1}
+.vsl-box .vsl-play,.vsl-box .vsl-label{position:relative;z-index:1}
 .vsl-play{width:70px;height:70px;border-radius:50%;background:rgba(232,197,90,.15);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:26px;transition:all .2s}
 .vsl-box:hover .vsl-play{background:rgba(232,197,90,.25);transform:scale(1.05)}
 .vsl-label{color:var(--t2);font-size:13px}
@@ -7572,6 +7575,27 @@ function extractVimeoId(value) {
   return match ? match[1] : raw;
 }
 
+function vimeoCoverUrl(vimeoId) {
+  var id = String(vimeoId || '').trim();
+  return /^[0-9]+$/.test(id) ? 'https://vumbnail.com/' + id + '.jpg' : '';
+}
+
+function applyVimeoCover(boxId, vimeoId) {
+  var box = document.getElementById(boxId);
+  var url = vimeoCoverUrl(vimeoId);
+  if (!box || !url) return;
+  var img = new Image();
+  img.onload = function() {
+    box.style.backgroundImage = "url('" + url + "')";
+    box.classList.add('has-cover');
+  };
+  img.onerror = function() {
+    box.style.backgroundImage = '';
+    box.classList.remove('has-cover');
+  };
+  img.src = url;
+}
+
 function getVSLConfig() {
   try {
     var config = JSON.parse(localStorage.getItem('chiwa_vsl_video_config'));
@@ -7616,6 +7640,7 @@ function renderVSLVideo() {
       
     </div>
   `;
+  applyVimeoCover('vsl-box-element', config.vimeoId);
 }
 
 function playVSLVideo(vimeoId) {
@@ -7699,6 +7724,7 @@ function renderVSLFeatureVideo() {
       <div class="vsl-label">點擊播放特色介紹影片</div>
     </div>
   `;
+  applyVimeoCover('vsl-feature-box-element', config.leftVimeoId);
   // 第二個影片框
   var wrap2 = document.getElementById('vsl-feature-video-wrap-2');
   if (wrap2) {
@@ -7708,6 +7734,7 @@ function renderVSLFeatureVideo() {
         <div class="vsl-label">點擊播放特色介紹影片</div>
       </div>
     `;
+    applyVimeoCover('vsl-feature-box-element-2', config.rightVimeoId);
   }
 }
 
