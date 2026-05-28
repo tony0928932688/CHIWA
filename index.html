@@ -1428,6 +1428,11 @@ function chiwaTrack(eventName, params) {
   }, getChiwaAttribution(), params || {});
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push(Object.assign({ event: eventName }, payload));
+  try {
+    document.documentElement.setAttribute('data-chiwa-last-event', eventName);
+    document.documentElement.setAttribute('data-chiwa-last-source', payload.traffic_source || '');
+    document.documentElement.setAttribute('data-chiwa-last-campaign', payload.traffic_campaign || '');
+  } catch(e) {}
   if (typeof window.gtag === 'function' && CHIWA_GA4_MEASUREMENT_ID) {
     window.gtag('event', eventName, payload);
   }
