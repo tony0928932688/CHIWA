@@ -1564,7 +1564,11 @@ function flushVideoAnalytics(reason, onlyKey) {
   });
 }
 
-document.addEventListener('DOMContentLoaded', initChiwaAnalytics);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initChiwaAnalytics);
+} else {
+  initChiwaAnalytics();
+}
 document.addEventListener('visibilitychange', function() {
   if (document.visibilityState === 'hidden') flushVideoAnalytics('visibility_hidden');
 });
