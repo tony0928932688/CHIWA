@@ -1285,6 +1285,11 @@ let chiwaAnalyticsReady = false;
 let chiwaVimeoSdkPromise = null;
 const chiwaVideoSessions = {};
 const chiwaScrollMarks = {};
+const CHIWA_ATTR_SESSION_KEY = 'chiwa_ad_attribution_session';
+const CHIWA_ATTR_FIRST_KEY = 'chiwa_ad_attribution_first';
+let chiwaSessionStartedAt = Date.now();
+let chiwaSectionObserverReady = false;
+let chiwaClickTrackerReady = false;
 
 function loadChiwaScript(src, id) {
   if (id && document.getElementById(id)) return Promise.resolve();
@@ -1303,6 +1308,7 @@ function initChiwaAnalytics() {
   if (chiwaAnalyticsReady) return;
   chiwaAnalyticsReady = true;
   window.dataLayer = window.dataLayer || [];
+  captureChiwaAttribution();
 
   if (CHIWA_GTM_CONTAINER_ID) {
     window.dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' });
@@ -1328,14 +1334,98 @@ function initChiwaAnalytics() {
       y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, 'clarity', 'script', CHIWA_CLARITY_PROJECT_ID);
   }
+  pushChiwaLandingEvent();
+  initChiwaClickTracking();
+  initChiwaSectionTracking();
+}
+
+function parseChiwaAttributionFromUrl() {
+  const params = new URLSearchParams(location.search || '');
+  const keys = [
+    'ttclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content',
+    'utm_term', 'campaignid', 'adgroupid', 'adid', 'gbraid', 'gclid', 'fbclid'
+  ];
+  const data = {};
+  keys.forEach(function(key) {
+    const value = params.get(key);
+    if (value) data[key] = value.slice(0, 220);
+  });
+  if (!data.utm_source && data.ttclid) data.utm_source = 'tiktok';
+  if (!data.utm_medium && data.ttclid) data.utm_medium = 'paid_social';
+  return data;
+}
+
+function readChiwaJson(key) {
+  try { return JSON.parse(localStorage.getItem(key) || 'null') || {}; } catch(e) { return {}; }
+}
+
+function writeChiwaJson(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value || {})); } catch(e) {}
+}
+
+function captureChiwaAttribution() {
+  const current = parseChiwaAttributionFromUrl();
+  const hasCurrent = Object.keys(current).length > 0;
+  const sessionData = Object.assign({}, readChiwaJson(CHIWA_ATTR_SESSION_KEY));
+  const firstData = Object.assign({}, readChiwaJson(CHIWA_ATTR_FIRST_KEY));
+  if (hasCurrent) {
+    const stamped = Object.assign({}, current, {
+      landing_page: location.href,
+      landing_path: location.pathname || '/',
+      referrer: document.referrer || '',
+      captured_at: new Date().toISOString()
+    });
+    writeChiwaJson(CHIWA_ATTR_SESSION_KEY, stamped);
+    if (!firstData.captured_at) writeChiwaJson(CHIWA_ATTR_FIRST_KEY, stamped);
+  } else if (!sessionData.captured_at && document.referrer) {
+    writeChiwaJson(CHIWA_ATTR_SESSION_KEY, {
+      referrer: document.referrer,
+      landing_page: location.href,
+      landing_path: location.pathname || '/',
+      captured_at: new Date().toISOString()
+    });
+  }
+}
+
+function getChiwaAttribution() {
+  const sessionData = readChiwaJson(CHIWA_ATTR_SESSION_KEY);
+  const firstData = readChiwaJson(CHIWA_ATTR_FIRST_KEY);
+  return {
+    traffic_source: sessionData.utm_source || sessionData.source || '',
+    traffic_medium: sessionData.utm_medium || '',
+    traffic_campaign: sessionData.utm_campaign || '',
+    traffic_content: sessionData.utm_content || '',
+    traffic_term: sessionData.utm_term || '',
+    ttclid: sessionData.ttclid || '',
+    ad_id: sessionData.adid || '',
+    adgroup_id: sessionData.adgroupid || '',
+    campaign_id: sessionData.campaignid || '',
+    first_traffic_source: firstData.utm_source || '',
+    first_traffic_campaign: firstData.utm_campaign || '',
+    landing_page: sessionData.landing_page || firstData.landing_page || '',
+    landing_referrer: sessionData.referrer || firstData.referrer || document.referrer || ''
+  };
+}
+
+function pushChiwaLandingEvent() {
+  const attribution = getChiwaAttribution();
+  chiwaTrack('ad_landing', {
+    landing_has_ttclid: !!attribution.ttclid,
+    landing_source: attribution.traffic_source || 'direct_or_unknown',
+    landing_medium: attribution.traffic_medium || '',
+    landing_campaign: attribution.traffic_campaign || '',
+    landing_path: location.pathname || '/'
+  });
 }
 
 function chiwaTrack(eventName, params) {
   const payload = Object.assign({
     page_location: location.href,
     page_title: document.title,
-    logged_in: !!currentUser
-  }, params || {});
+    page_path: location.pathname || '/',
+    logged_in: !!currentUser,
+    event_id: eventName + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)
+  }, getChiwaAttribution(), params || {});
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push(Object.assign({ event: eventName }, payload));
   if (typeof window.gtag === 'function' && CHIWA_GA4_MEASUREMENT_ID) {
@@ -1490,6 +1580,86 @@ window.addEventListener('scroll', function() {
     }
   });
 }, { passive: true });
+
+function cleanTrackText(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+}
+
+function describeTrackElement(el) {
+  if (!el) return {};
+  const target = el.closest('a,button,[onclick],.nav-link,.faq-item,.vsl-box,.chip,.sb-item,.mn-item,.copy-btn');
+  if (!target) return {};
+  const href = target.getAttribute('href') || '';
+  let destination = '';
+  try { if (href) destination = new URL(href, location.href).hostname; } catch(e) {}
+  return {
+    click_text: cleanTrackText(target.getAttribute('aria-label') || target.getAttribute('title') || target.innerText || target.textContent || target.id || target.className),
+    click_id: target.id || '',
+    click_classes: cleanTrackText(target.className || ''),
+    click_url: href,
+    click_destination: destination,
+    click_is_outbound: !!(destination && destination !== location.hostname),
+    click_section: target.closest('section,.section,.cta-section,.nav,.vsl-wrap,.split-solution,.faq,.page')?.id || target.closest('.page')?.id || ''
+  };
+}
+
+function initChiwaClickTracking() {
+  if (chiwaClickTrackerReady) return;
+  chiwaClickTrackerReady = true;
+  document.addEventListener('click', function(e) {
+    const info = describeTrackElement(e.target);
+    if (!info.click_text && !info.click_id && !info.click_url) return;
+    chiwaTrack(info.click_is_outbound ? 'outbound_click' : 'site_click', info);
+  }, true);
+}
+
+function initChiwaSectionTracking() {
+  if (chiwaSectionObserverReady || !('IntersectionObserver' in window)) return;
+  chiwaSectionObserverReady = true;
+  const seen = {};
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (!entry.isIntersecting || entry.intersectionRatio < 0.35) return;
+      const el = entry.target;
+      const sectionId = el.id || el.getAttribute('data-track-section') || '';
+      if (!sectionId || seen[sectionId]) return;
+      seen[sectionId] = true;
+      chiwaTrack('section_view', {
+        section_id: sectionId,
+        section_label: cleanTrackText(el.getAttribute('data-track-label') || el.querySelector('h1,h2,.section-h,.column-title')?.textContent || sectionId)
+      });
+    });
+  }, { threshold: [0.35] });
+  [
+    'vsl-wrap-container',
+    'vsl-feature-container',
+    'solutions-anchor',
+    'faq-anchor'
+  ].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) observer.observe(el);
+  });
+  document.querySelectorAll('.cta-section').forEach(function(el, index) {
+    el.setAttribute('data-track-section', el.id || 'cta-section-' + (index + 1));
+    observer.observe(el);
+  });
+}
+
+function trackChiwaEngagement(reason) {
+  const seconds = Math.max(1, Math.round((Date.now() - chiwaSessionStartedAt) / 1000));
+  chiwaTrack('page_engagement', {
+    engagement_seconds: seconds,
+    engagement_reason: reason || 'update',
+    page_id: document.querySelector('.page.active')?.id || 'unknown'
+  });
+}
+
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden') trackChiwaEngagement('visibility_hidden');
+});
+window.addEventListener('pagehide', function() {
+  trackChiwaEngagement('pagehide');
+});
 
 function setChiwaLocal(key, value) {
   try { localStorage.setItem(key, String(value)); } catch(e) {}
