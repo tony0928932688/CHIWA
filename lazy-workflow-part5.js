@@ -1,3 +1,13 @@
+    vtt.push(`${vttTime(start)} --> ${vttTime(end)}\n${line}\n`);
+  });
+  state.srt = srt.join('\n');
+  state.vtt = vtt.join('\n');
+  updateRenderPreview();
+  $('subtitle-output').textContent = `標題：${stripLeadingPunctuation($('final-title')?.value || state.selectedTopic || '')}\n\n字幕預覽說明：下方時間軸可先檢查文字分段；正式成片時會依照第三步已確認的語音重新校準字幕時間。\n\n` + state.srt;
+  $('btn-download-srt').disabled = false;
+  $('btn-download-vtt').disabled = false;
+  $('btn-render-final').disabled = !(state.avatarResult && (state.avatarResult.previewUrl || state.avatarResult.downloadUrl));
+  if(state.voiceScriptText && currentText && state.voiceScriptText !== currentText){
     status('render-status','字幕預覽已依照本次語音生成時使用的口播文案產生。若要使用新版文案，請先重新生成語音。','warn');
   }else{
     status('render-status','字幕預覽已產生。正式成片會依照已確認語音重新校準時間軸。','ok');
@@ -32,7 +42,7 @@ async function submitFinalRender(){
       title_size:state.renderControls.titleSize,
       subtitle_position:state.renderControls.subtitlePosition,
       subtitle_size:state.renderControls.subtitleSize,
-      title:stripLeadingPunctuation(state.selectedTopic || $('final-title').value || 'AI自媒體系統'),
+      title:stripLeadingPunctuation($('final-title').value || state.selectedTopic || 'AI自媒體系統'),
       duration_seconds:state.voiceAudioSeconds || 60
     });
     state.renderId = data.renderId;
@@ -161,7 +171,12 @@ $('avatar-video').onchange = e => selectVideo(e.target.files && e.target.files[0
 $('video-drop').addEventListener('drop', e => selectVideo(e.dataTransfer.files && e.dataTransfer.files[0]));
 
 init().catch(e => {
-  $('login-state').textContent = '初始化失敗';
+  $('login-state').textContent = e && e.message === 'supabase_js_not_loaded'
+    ? '登入模組載入失敗，請重新整理'
+    : '初始化失敗';
   $('auth-box').style.display = 'block';
+  status('topic-status', e && e.message === 'supabase_js_not_loaded'
+    ? '登入模組沒有載入完成，請重新整理一次。'
+    : (e && e.message || '初始化失敗'), 'err');
   console.error(e);
 });
