@@ -1,3 +1,12 @@
+function compliancePrompt(){
+  return `合規規則：使用台灣繁體中文。內容必須先有實質內容，不得只有語氣詞。避開絕對化成效、財務暗示、未經驗證數字、最高級與唯一性宣稱。具體成效必須避免未經驗證的聲稱。可以有說服力，但要符合 TikTok 廣告政策與台灣常見法規風險。不得使用 emoji 或表情符號。`;
+}
+function updateQuota(){
+  const s = state.student || {};
+  $('q-ai').textContent = fmt(s.ai_usage);
+  $('q-voice').textContent = fmt(s.voice_credits);
+  $('q-avatar').textContent = fmt(s.avatar_seconds);
+}
 function goStep(n){
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
   const panel = $('step-' + n);
@@ -100,8 +109,9 @@ async function init(){
   initRenderTemplates();
   initScriptLengthControls();
   initRenderControls();
-  $('login-btn').onclick = () => sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: authRedirectUrl() } });
-  const { data } = await sb.auth.getSession();
+  const client = getSupabaseClient();
+  $('login-btn').onclick = () => client.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: authRedirectUrl() } });
+  const { data } = await client.auth.getSession();
   state.user = data && data.session && data.session.user;
   if(!state.user){
     $('login-state').textContent = '尚未登入';
@@ -199,13 +209,3 @@ async function generateScript(tone){
       combined = cleanScript(combined + (combined ? '\n\n' : '') + next);
       $('final-script').value = combined;
       updateRenderPreview();
-    }
-    state.script = combined;
-    $('final-script').value = state.script;
-    updateRenderPreview();
-    status('script-status',`文案已生成，目標 ${cfg.minutes} 分鐘，可手動修改後送語音。`,'ok');
-    await refreshProfile().catch(()=>{});
-  }catch(e){ status('script-status', e.message || '文案生成失敗','err'); }
-  $('btn-script').disabled = false;
-  $('btn-script-pro').disabled = false;
-}
