@@ -13,13 +13,26 @@
     status('render-status','字幕預覽已產生。正式成片會依照已確認語音重新校準時間軸。','ok');
   }
 }
+function finalAvatarVideoUrl(){
+  return state.avatarResult && (state.avatarResult.downloadUrl || state.avatarResult.previewUrl || '');
+}
+function renderFailureReason(data){
+  if(!data) return 'video_render_failed';
+  const reason = data.error || data.message || data.reason || data.detail || data.shotstackError || data.shotstackStatus || data.status;
+  return String(reason || 'video_render_failed').slice(0, 500);
+}
 async function submitFinalRender(){
   if(isLocalFileMode()){
     status('render-status','目前本機預覽只能檢查畫面與流程。正式成片請在 chiwaai.com 登入後執行。','err');
     return;
   }
-  if(!state.avatarResult || !(state.avatarResult.previewUrl || state.avatarResult.downloadUrl)){
+  const finalVideoUrl = finalAvatarVideoUrl();
+  if(!finalVideoUrl){
     status('render-status','請先完成形象克隆影片。','err');
+    return;
+  }
+  if(!/^https:\/\//i.test(finalVideoUrl)){
+    status('render-status','成片影片連結不是可供渲染服務讀取的 HTTPS 影片網址，請重新產生形象克隆影片。','err');
     return;
   }
   if(!state.voiceItem || !state.voiceItem.playUrl){
@@ -31,7 +44,7 @@ async function submitFinalRender(){
   try{
     const data = await authedFetch(VIDEO_RENDER_API_URL, {
       action:'submit',
-      video_url:state.avatarResult.previewUrl || state.avatarResult.downloadUrl,
+      video_url:finalVideoUrl,
       audio_url:state.voiceItem.playUrl,
       srt_text:state.srt,
       use_stt:true,
@@ -66,13 +79,13 @@ async function pollFinalRender(){
     });
     if(data.status === 'SUCCESS' && (data.previewUrl || data.downloadUrl)){
       state.finalVideo = data;
-      $('final-video-result').innerHTML = `<video class="video-frame" controls src="${esc(data.previewUrl || data.downloadUrl)}"></video><div class="btns" style="margin-top:10px"><a class="btn secondary" href="${esc(data.downloadUrl || data.previewUrl)}" download>下載成片</a></div><div class="status ok">成片已完成，檔案會暫存 24 小時，請及時下載保存。</div>`;
+      $('final-video-result').innerHTML = `<video class="video-frame" controls src="${esc(data.downloadUrl || data.previewUrl)}"></video><div class="btns" style="margin-top:10px"><a class="btn secondary" href="${esc(data.downloadUrl || data.previewUrl)}" download>下載成片</a></div><div class="status ok">成片已完成，檔案會暫存 24 小時，請及時下載保存。</div>`;
       status('render-status','標題與字幕已燒進影片，正式成片可以下載。','ok');
       $('btn-render-final').disabled = false;
       return;
     }
     if(data.status === 'FAILED'){
-      status('render-status','正式成片輸出失敗，請稍後再試。','err');
+      status('render-status','正式成片輸出失敗：' + renderFailureReason(data),'err');
       $('btn-render-final').disabled = false;
       return;
     }
@@ -107,12 +120,12 @@ async function runRenderSelfTestIfRequested(){
       const data = await authedFetch(VIDEO_RENDER_API_URL, { action:'query', render_id:state.renderId });
       if(data.status === 'SUCCESS' && (data.previewUrl || data.downloadUrl)){
         state.finalVideo = data;
-        $('final-video-result').innerHTML = `<video class="video-frame" controls src="${esc(data.previewUrl || data.downloadUrl)}"></video><div class="btns" style="margin-top:10px"><a class="btn secondary" href="${esc(data.downloadUrl || data.previewUrl)}" download>下載成片</a></div><div class="status ok">內部檢查完成：標題與字幕已燒進影片。</div>`;
+        $('final-video-result').innerHTML = `<video class="video-frame" controls src="${esc(data.downloadUrl || data.previewUrl)}"></video><div class="btns" style="margin-top:10px"><a class="btn secondary" href="${esc(data.downloadUrl || data.previewUrl)}" download>下載成片</a></div><div class="status ok">內部檢查完成：標題與字幕已燒進影片。</div>`;
         status('render-status','內部成片檢查成功：成片已完成並匯入暫存庫。','ok');
         goStep(5);
         return;
       }
-      if(data.status === 'FAILED') throw new Error('video_render_failed');
+      if(data.status === 'FAILED') throw new Error(renderFailureReason(data));
       status('render-status',`內部成片檢查查詢中：${data.status || 'RUNNING'} (${i + 1}/36)`,'warn');
     }
     throw new Error('video_render_timeout');
