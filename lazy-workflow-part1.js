@@ -7,9 +7,18 @@ const AVATAR_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-avatar`;
 const VIDEO_RENDER_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-video-render`;
 const AVATAR_R2_URL = 'https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev';
 const AI_BACKEND_URL = 'https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev/';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-});
+let sb = null;
+function getSupabaseClient(){
+  if(!window.supabase || !window.supabase.createClient){
+    throw new Error('supabase_js_not_loaded');
+  }
+  if(!sb){
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+  }
+  return sb;
+}
 
 const state = {
   user: null,
@@ -51,7 +60,7 @@ function $(id){ return document.getElementById(id); }
 function esc(value){ return String(value || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function status(id, text, cls){ const el=$(id); if(el){ el.className='status ' + (cls || ''); el.textContent=text || ''; } }
 function fmt(n){ return Math.max(0, Math.round(Number(n || 0))).toLocaleString('zh-TW'); }
-async function token(){ const { data } = await sb.auth.getSession(); return data && data.session ? data.session.access_token : ''; }
+async function token(){ const { data } = await getSupabaseClient().auth.getSession(); return data && data.session ? data.session.access_token : ''; }
 function isLocalFileMode(){ return location.protocol === 'file:'; }
 function liveWorkflowUrl(){ return 'https://chiwaai.com/lazy-workflow.html'; }
 function authRedirectUrl(){
@@ -145,7 +154,7 @@ function inferTopicTitle(block) {
   const quoted = String(block || '').match(/[「『](.+?)[」』]/);
   if (quoted) return quoted[1].trim();
   const bold = String(block || '').match(/\*\*([^*]{6,80})\*\*/);
-  return bold ? bold[1].replace(/[「」『』]/g,'').trim() : '';
+  return bold ? bold[1].replace(/[「」『』]/g, '').trim() : '';
 }
 function firstUnlabeledLine(lines) {
   return (lines || [])
@@ -198,13 +207,4 @@ function buildProfilePrompt(){
   if(p.differentiation) lines.push(`與同行差異：${[].concat(p.differentiation || []).join('、')}`);
   if(p.extra_note) lines.push(`補充說明：${p.extra_note}`);
   return lines.length ? `學員背景：\n- ${lines.join('\n- ')}\n\n生成原則：語氣和選題必須符合以上背景，不要生成與定位相反的內容。` : '';
-}
-function compliancePrompt(){
-  return `合規規則：使用台灣繁體中文。內容必須先有實質內容，不得只有語氣詞。避開絕對化成效、財務暗示、未經驗證數字、最高級與唯一性宣稱。具體成效必須避免未經驗證的聲稱。可以有說服力，但要符合 TikTok 廣告政策與台灣常見法規風險。不得使用 emoji 或表情符號。`;
-}
-function updateQuota(){
-  const s = state.student || {};
-  $('q-ai').textContent = fmt(s.ai_usage);
-  $('q-voice').textContent = fmt(s.voice_credits);
-  $('q-avatar').textContent = fmt(s.avatar_seconds);
 }
