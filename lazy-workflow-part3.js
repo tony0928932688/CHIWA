@@ -1,3 +1,13 @@
+    }
+    state.script = combined;
+    $('final-script').value = state.script;
+    updateRenderPreview();
+    status('script-status',`文案已生成，目標 ${cfg.minutes} 分鐘，可手動修改後送語音。`,'ok');
+    await refreshProfile().catch(()=>{});
+  }catch(e){ status('script-status', e.message || '文案生成失敗','err'); }
+  $('btn-script').disabled = false;
+  $('btn-script-pro').disabled = false;
+}
 async function generateTikTokCaption(){
   const text = $('final-script').value.trim();
   if(!text){
@@ -248,13 +258,3 @@ async function generateVoice(){
     state.voiceScriptText = text;
     state.script = text;
     state.voiceItem = data.item;
-    state.voiceAudioSeconds = Math.max(1, Math.round(Number(data.item && data.item.audioSeconds || Math.ceil(chars / 4.2))));
-    $('voice-result').innerHTML = `<audio controls src="${esc(data.item && data.item.playUrl || '')}"></audio><div class="status ok">語音已生成。請完整試聽，確認沒有念錯字或停頓問題後再送形象克隆。</div>`;
-    $('btn-to-avatar').disabled = false;
-    if(data.student){ state.student = data.student; updateQuota(); }
-    generateSubtitles();
-    updateRenderPreview();
-    status('voice-status',`已生成語音，約 ${state.voiceAudioSeconds} 秒。`,'ok');
-  }catch(e){ status('voice-status', e.message || '語音生成失敗','err'); }
-  $('btn-voice').disabled = false;
-}
