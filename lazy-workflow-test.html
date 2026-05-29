@@ -5,10 +5,11 @@
 <body style="margin:0;background:#08080c;color:#f6f1dd;font-family:system-ui,'Noto Sans TC',sans-serif;display:grid;place-items:center;min-height:100vh">
 <div style="max-width:620px;padding:32px;text-align:center;line-height:1.7">
   <h1 style="font-size:26px;margin:0 0 10px">懶人自動化工作流載入中</h1>
-  <p id="status" style="color:#d9c878">正在載入新版頁面...</p>
+  <p id="status" style="color:#d9c878">正在載入新版頁面 v-no-guard...</p>
 </div>
 <script>
 (async()=>{
+  const VERSION = 'no-guard-20260529-01';
   const status = document.getElementById('status');
   const source = 'https://raw.githubusercontent.com/tony0928932688/CHIWA/b44b3da8d12241bd412da77c02352004dd3bdf9d/lazy-workflow-test.html';
   const pakoCdn = 'https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js';
@@ -53,7 +54,8 @@
     return new TextDecoder('utf-8').decode(window.pako.ungzip(bytes));
   }
   try{
-    const raw = await fetch(source + '?v=stable-decoder-20260529', { cache:'no-store' }).then(r=>{
+    status.textContent = '正在載入新版頁面 ' + VERSION + '...';
+    const raw = await fetch(source + '?v=' + VERSION, { cache:'no-store' }).then(r=>{
       if(!r.ok) throw new Error('payload HTTP ' + r.status);
       return r.text();
     });
@@ -63,10 +65,10 @@
     let html;
     try{ html = await ungzipNative(bytes); }
     catch(_){ html = await ungzipPako(bytes); }
-    if(!/(<html[\s>]|SUPABASE_URL|step-1|懶人自動化工作流)/i.test(html)) throw new Error('payload html invalid');
+    if(!html || html.length < 1000) throw new Error('payload too short ' + (html ? html.length : 0));
     document.open(); document.write(html); document.close();
   }catch(e){
-    status.textContent = '載入失敗：' + e.message + '。這是部署載入器問題，不是你操作問題。';
+    status.textContent = '載入失敗 ' + VERSION + '：' + e.message + '。這是部署載入器問題，不是你操作問題。';
     status.style.color = '#ff8b8b';
   }
 })();
