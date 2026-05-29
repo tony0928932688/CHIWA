@@ -7,7 +7,7 @@
 <title>AI 短影音一鍵成片工作流｜吉娃 AI</title>
 <link rel="icon" type="image/png" href="assets/chiwa-favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="lazy-workflow.css?v=20260529-10">
+<link rel="stylesheet" href="lazy-workflow.css?v=20260529-11">
 </head>
 <body>
 <div class="wrap">
@@ -251,7 +251,7 @@
         <div class="hint">選一套成片模板後一鍵輸出。系統會依照已確認的語音重新校準字幕時間軸，再把標題與字幕燒進影片安全區。</div>
         <div class="field">
           <div class="label">影片標題（可手動修改）</div>
-          <input id="final-title" placeholder="最後輸出的片頭標題會以這裡為準">
+          <textarea id="final-title" class="final-title-input" rows="2" placeholder="最後輸出的片頭標題會以這裡為準"></textarea>
           <div class="hint">可以在輸出前刪字、改短、改成更有鉤子的標題；預覽會同步更新。</div>
         </div>
         <div class="field">
@@ -339,8 +339,6 @@
 <script>
 (function(){
   var state=document.getElementById('login-state');
-  var fixedGenerateScript = "async function generateScript(tone){\n  if(!state.selectedTopic){ status(\u0027script-status\u0027,\u0027請先選擇選題。\u0027,\u0027err\u0027); return; }\n  const cfg = getScriptLengthConfig();\n  status(\u0027script-status\u0027,`文案生成中，目標約 ${fmt(cfg.words)} 字、${cfg.minutes} 分鐘...`,\u0027warn\u0027);\n  $(\u0027btn-script\u0027).disabled = true;\n  $(\u0027btn-script-pro\u0027).disabled = true;\n  try{\n    const casual = tone !== \u0027professional\u0027;\n    const system = `${buildProfilePrompt()}\\n\\n你是專業台灣口播文案撰寫師。\\n${compliancePrompt()}\\n內容規則：文案必須包含開場鉤子、痛點、解法、具體場景、CTA。語氣詞只佔全文 10% 以下。格式適合直接貼進語音合成工具朗讀，每句結尾必須有標點。\\n${casual ? \u0027語氣：素人隨聊感，像台灣人在自然聊天，但不能空洞。\u0027 : \u0027語氣：博主專業感，有觀點、有邏輯、有乾貨。\u0027}`;\n    const extra = $(\u0027script-extra\u0027).value.trim() || \u0027無\u0027;\n    const chunks = aiCostForWords(cfg.words);\n    const chunkTarget = Math.ceil(cfg.words / chunks);\n    let combined = \u0027\u0027;\n    for(let i = 0; i \u003c chunks; i++){\n      const done = scriptCharCount(combined);\n      if(done \u003e= Math.round(cfg.words * 0.96)) break;\n      const remaining = cfg.words - done;\n      if(remaining \u003c= 80) break;\n      const thisTarget = chunks === 1 ? cfg.words : Math.min(chunkTarget, remaining);\n      const user = combined\n        ? `選題：${state.selectedTopic}\\n補充：${extra}\\n\\n以下是前面已完成的口播文案，請直接順著語意續寫，不要重複開場，不要重複前文。\\n\\n已完成內容：\\n${combined}\\n\\n整篇最終目標：約 ${cfg.words} 字。現在已完成約 ${done} 字，本次只補約 ${thisTarget} 字，不能超過 ${Math.round(thisTarget * 1.15)} 字。${i === chunks - 1 || remaining \u003c= chunkTarget ? \u0027這是最後一段，請自然收尾並加入 CTA。\u0027 : \u0027這不是最後一段，請先不要收尾，不要加入最終 CTA。\u0027}\\n\\n只輸出口播正文，不要 Markdown，不要標題，不要分隔線。`\n        : `選題：${state.selectedTopic}\\n補充：${extra}\\n\\n請生成約 ${thisTarget} 字的口播文案第一段。整篇最終目標是約 ${cfg.words} 字、約 ${cfg.minutes} 分鐘，所以本次不能超過 ${Math.round(thisTarget * 1.15)} 字。\\n\\n內容要有具體場景、細節、例子與轉折，但不要灌水。\\n${chunks === 1 ? \u0027結構：開場鉤子、痛點、原因拆解、具體場景、解法、例子、總結、CTA。\u0027 : \u0027結構：開場鉤子、痛點、原因拆解、具體場景。這不是完整長文，先不要做最終 CTA。\u0027}\\n\\n只輸出口播正文，不要 Markdown，不要標題，不要分隔線。`;\n      const next = await aiCall(\u0027script\u0027, system, user, casual ? \u0027casual\u0027 : \u0027professional\u0027);\n      combined = fitScriptToTarget(combined + (combined ? \u0027\\n\\n\u0027 : \u0027\u0027) + next, cfg.words);\n      $(\u0027final-script\u0027).value = combined;\n      updateRenderPreview();\n    }\n    state.script = combined;\n    $(\u0027final-script\u0027).value = state.script;\n    updateRenderPreview();\n    status(\u0027script-status\u0027,`文案已生成，目標約 ${fmt(cfg.words)} 字，實際約 ${fmt(scriptCharCount(state.script))} 字，可手動修改後送語音。`,\u0027ok\u0027);\n    await refreshProfile().catch(()=\u003e{});\n  }catch(e){ status(\u0027script-status\u0027, e.message || \u0027文案生成失敗\u0027,\u0027err\u0027); }\n  $(\u0027btn-script\u0027).disabled = false;\n  $(\u0027btn-script-pro\u0027).disabled = false;\n}\n";
-  var lengthHelperCode = "function scriptCharCount(text){\n  return Array.from(String(text || \u0027\u0027).replace(/\\s+/g,\u0027\u0027)).length;\n}\nfunction fitScriptToTarget(text, targetWords){\n  const raw = cleanScript(text);\n  const max = Math.round(Number(targetWords || 0) * 1.12);\n  if(!max || scriptCharCount(raw) \u003c= max) return raw;\n  const parts = raw.match(/[^。！？!?；;]+[。！？!?；;]?/g) || [raw];\n  let output = \u0027\u0027;\n  for(const part of parts){\n    const next = cleanScript(output + (output ? \u0027\u0027 : \u0027\u0027) + part);\n    if(scriptCharCount(next) \u003e max) break;\n    output = next;\n  }\n  return output || raw.slice(0, max);\n}";
   function set(text){ if(state) state.textContent=text; }
   function showError(message){
     set('Workflow load failed. Refresh once.');
@@ -352,16 +350,6 @@
     if(!res.ok) throw new Error(src + ' HTTP ' + res.status);
     return await res.text();
   }
-  function patch(code){
-    code = code.replace('async function init(){', 'function withTimeout(promise, ms, label){ return Promise.race([promise, new Promise(function(_, reject){ setTimeout(function(){ reject(new Error(label || \'request_timeout\')); }, ms); })]); }\nasync function init(){');
-    code = code.replace('const { data } = await sb.auth.getSession();', "$('login-state').textContent = 'Reading login status...';\n  const { data } = await withTimeout(sb.auth.getSession(), 8000, 'Login status timeout. Refresh or login again.');");
-    code = code.replace('await refreshProfile();\n  await loadVoices();', "refreshProfile().catch(function(e){ status('topic-status', e.message || 'Quota temporarily failed to load. You can still operate first.', 'warn'); });\n  loadVoices().catch(function(e){ status('voice-status', e.message || 'Voice list temporarily failed to load. Refresh later.', 'warn'); });");
-    code = code.replace("title:stripLeadingPunctuation(state.selectedTopic || $('final-title').value || 'AI自媒體系統')", "title:stripLeadingPunctuation($('final-title').value || state.selectedTopic || 'AI自媒體系統')");
-    code = code.replace("$('final-script').oninput = updateRenderPreview;", "$('final-script').oninput = updateRenderPreview;\n$('final-title').oninput = updateRenderPreview;");
-    code = code.replace('function getScriptLengthConfig(){', lengthHelperCode + '\nfunction getScriptLengthConfig(){');
-    code = code.replace(/async function generateScript\(tone\)\{[\s\S]*?\n\}\s*(?=async function generateTikTokCaption\(\)\{)/, fixedGenerateScript + '\n');
-    return code;
-  }
   async function start(){
     try{
       set('Loading login module...');
@@ -369,10 +357,9 @@
       catch(e){ await new Promise(function(resolve,reject){ var s=document.createElement('script'); s.src='https://unpkg.com/@supabase/supabase-js@2'; s.onload=resolve; s.onerror=reject; document.head.appendChild(s); }); }
       set('Loading workflow...');
       setTimeout(function(){ if(state && /Loading workflow|Reading login/i.test(state.textContent || '')) set('Workflow init is slow. Please wait or refresh.'); }, 12000);
-      var parts=['lazy-workflow-part1.js?v=20260529-10','lazy-workflow-part2.js?v=20260529-10','lazy-workflow-part3.js?v=20260529-10','lazy-workflow-part4.js?v=20260529-10','lazy-workflow-part5.js?v=20260529-10'];
+      var parts=['lazy-workflow-part1.js?v=20260529-12','lazy-workflow-part2.js?v=20260529-12','lazy-workflow-part3.js?v=20260529-12','lazy-workflow-part4.js?v=20260529-12','lazy-workflow-part5.js?v=20260529-12'];
       var code='';
       for(var i=0;i<parts.length;i++){ code += '\n' + await text(parts[i]); }
-      code = patch(code);
       new Function(code + '\n//# sourceURL=lazy-workflow-combined.js')();
     }catch(err){
       console.error(err);
