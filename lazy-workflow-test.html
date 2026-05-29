@@ -11,15 +11,61 @@
 (async()=>{
   const status = document.getElementById('status');
   const source = 'https://raw.githubusercontent.com/tony0928932688/CHIWA/b44b3da8d12241bd412da77c02352004dd3bdf9d/lazy-workflow-test.html';
+  const pakoCdn = 'https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js';
+  function extractPayload(raw){
+    const marker = "const b='";
+    const start = raw.indexOf(marker);
+    if(start < 0) throw new Error('payload marker not found');
+    const from = start + marker.length;
+    const end = raw.indexOf("';", from);
+    if(end < 0) throw new Error('payload end not found');
+    return raw.slice(from, end).replace(/[^A-Za-z0-9+/=]/g, '');
+  }
+  function base64ToBytes(b64){
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    const out = [];
+    let buffer = 0, bits = 0;
+    for(const ch of b64){
+      if(ch === '=') break;
+      const val = chars.indexOf(ch);
+      if(val < 0) continue;
+      buffer = (buffer << 6) | val;
+      bits += 6;
+      if(bits >= 8){
+        bits -= 8;
+        out.push((buffer >> bits) & 255);
+      }
+    }
+    return new Uint8Array(out);
+  }
+  async function ungzipNative(bytes){
+    if(!('DecompressionStream' in window)) throw new Error('native gzip unavailable');
+    const ds = new DecompressionStream('gzip');
+    return await new Response(new Blob([bytes]).stream().pipeThrough(ds)).text();
+  }
+  async function ungzipPako(bytes){
+    if(!window.pako){
+      await new Promise((resolve,reject)=>{
+        const s=document.createElement('script');
+        s.src=pakoCdn; s.onload=resolve; s.onerror=()=>reject(new Error('pako load failed'));
+        document.head.appendChild(s);
+      });
+    }
+    return new TextDecoder('utf-8').decode(window.pako.ungzip(bytes));
+  }
   try{
-    const raw = await fetch(source + '?v=direct-html-20260529', { cache:'no-store' }).then(r=>{
+    const raw = await fetch(source + '?v=no-atob-20260529', { cache:'no-store' }).then(r=>{
       if(!r.ok) throw new Error('payload HTTP ' + r.status);
       return r.text();
     });
-    if(!/const\s+b\s*=/.test(raw)) throw new Error('payload not found');
-    document.open();
-    document.write(raw);
-    document.close();
+    const payload = extractPayload(raw);
+    const bytes = base64ToBytes(payload);
+    if(bytes[0] !== 31 || bytes[1] !== 139) throw new Error('payload gzip invalid');
+    let html;
+    try{ html = await ungzipNative(bytes); }
+    catch(_){ html = await ungzipPako(bytes); }
+    if(!/^\s*<!doctype html/i.test(html) && !/<html[\s>]/i.test(html)) throw new Error('payload html invalid');
+    document.open(); document.write(html); document.close();
   }catch(e){
     status.textContent = '載入失敗：' + e.message + '。這是部署載入器問題，不是你操作問題。';
     status.style.color = '#ff8b8b';
