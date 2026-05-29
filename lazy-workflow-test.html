@@ -11,41 +11,15 @@
 (async()=>{
   const status = document.getElementById('status');
   const source = 'https://raw.githubusercontent.com/tony0928932688/CHIWA/b44b3da8d12241bd412da77c02352004dd3bdf9d/lazy-workflow-test.html';
-  const pakoCdn = 'https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js';
-  function cleanBase64(s){
-    let b64 = String(s || '').replace(/[^A-Za-z0-9+/=]/g, '');
-    b64 += '='.repeat((4 - b64.length % 4) % 4);
-    return b64;
-  }
-  function bytesFromBase64(b64){ return Uint8Array.from(atob(cleanBase64(b64)), c => c.charCodeAt(0)); }
-  async function ungzipNative(bytes){
-    if(!('DecompressionStream' in window)) throw new Error('native gzip unavailable');
-    const ds = new DecompressionStream('gzip');
-    return await new Response(new Blob([bytes]).stream().pipeThrough(ds)).text();
-  }
-  async function ungzipPako(bytes){
-    if(!window.pako){
-      await new Promise((resolve,reject)=>{
-        const s=document.createElement('script');
-        s.src=pakoCdn; s.onload=resolve; s.onerror=()=>reject(new Error('pako load failed'));
-        document.head.appendChild(s);
-      });
-    }
-    return new TextDecoder('utf-8').decode(window.pako.ungzip(bytes));
-  }
   try{
-    const raw = await fetch(source + '?v=payload-20260529', { cache:'no-store' }).then(r=>{
+    const raw = await fetch(source + '?v=direct-html-20260529', { cache:'no-store' }).then(r=>{
       if(!r.ok) throw new Error('payload HTTP ' + r.status);
       return r.text();
     });
-    const m = raw.match(/const\s+b\s*=\s*['"]([A-Za-z0-9+/=\s]+)['"]/);
-    if(!m) throw new Error('payload base64 not found');
-    const bytes = bytesFromBase64(m[1]);
-    let html;
-    try{ html = await ungzipNative(bytes); }
-    catch(_){ html = await ungzipPako(bytes); }
-    if(!/^\s*<!doctype html/i.test(html) && !/<html[\s>]/i.test(html)) throw new Error('payload html invalid');
-    document.open(); document.write(html); document.close();
+    if(!/const\s+b\s*=/.test(raw)) throw new Error('payload not found');
+    document.open();
+    document.write(raw);
+    document.close();
   }catch(e){
     status.textContent = '載入失敗：' + e.message + '。這是部署載入器問題，不是你操作問題。';
     status.style.color = '#ff8b8b';
