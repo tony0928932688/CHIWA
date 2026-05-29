@@ -3,20 +3,37 @@
 (function(){
   var state=document.getElementById('login-state');
   function set(text){ if(state) state.textContent=text; }
-  function load(src){ return new Promise(function(resolve,reject){ var s=document.createElement('script'); s.src=src; s.onload=resolve; s.onerror=function(){ reject(new Error(src)); }; document.head.appendChild(s); }); }
+  function showError(message){
+    set('Workflow load failed. Refresh once.');
+    var box=document.getElementById('auth-box');
+    if(box){ box.style.display='block'; box.innerHTML='<h2>Workflow load failed</h2><div class="hint">'+String(message || '')+'</div>'; }
+  }
+  async function text(src){
+    var res = await fetch(src, { cache:'no-store' });
+    if(!res.ok) throw new Error(src + ' HTTP ' + res.status);
+    return await res.text();
+  }
+  function patch(code){
+    code = code.replace('async function init(){', 'function withTimeout(promise, ms, label){ return Promise.race([promise, new Promise(function(_, reject){ setTimeout(function(){ reject(new Error(label || \'request_timeout\')); }, ms); })]); }\nasync function init(){');
+    code = code.replace('const { data } = await sb.auth.getSession();', "$('login-state').textContent = 'Reading login status...';\n  const { data } = await withTimeout(sb.auth.getSession(), 8000, 'Login status timeout. Refresh or login again.');");
+    code = code.replace('await refreshProfile();\n  await loadVoices();', "refreshProfile().catch(function(e){ status('topic-status', e.message || 'Quota temporarily failed to load. You can still operate first.', 'warn'); });\n  loadVoices().catch(function(e){ status('voice-status', e.message || 'Voice list temporarily failed to load. Refresh later.', 'warn'); });");
+    return code;
+  }
   async function start(){
     try{
       set('Loading login module...');
-      try{ await load('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'); }
-      catch(e){ await load('https://unpkg.com/@supabase/supabase-js@2'); }
+      try{ await new Promise(function(resolve,reject){ var s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'; s.onload=resolve; s.onerror=reject; document.head.appendChild(s); }); }
+      catch(e){ await new Promise(function(resolve,reject){ var s=document.createElement('script'); s.src='https://unpkg.com/@supabase/supabase-js@2'; s.onload=resolve; s.onerror=reject; document.head.appendChild(s); }); }
       set('Loading workflow...');
+      setTimeout(function(){ if(state && /Loading workflow|Reading login/i.test(state.textContent || '')) set('Workflow init is slow. Please wait or refresh.'); }, 12000);
       var parts=['lazy-workflow-part1.js?v=20260529-05','lazy-workflow-part2.js?v=20260529-05','lazy-workflow-part3.js?v=20260529-05','lazy-workflow-part4.js?v=20260529-05','lazy-workflow-part5.js?v=20260529-05'];
-      for(var i=0;i<parts.length;i++) await load(parts[i]);
+      var code='';
+      for(var i=0;i<parts.length;i++){ code += '\n' + await text(parts[i]); }
+      code = patch(code);
+      new Function(code + '\n//# sourceURL=lazy-workflow-combined.js')();
     }catch(err){
-      set('Load failed. Please refresh.');
-      var box=document.getElementById('auth-box');
-      if(box){ box.style.display='block'; box.innerHTML='<h2>Workflow load failed</h2><div class="hint">The login or workflow module did not finish loading. Please refresh once. Error: '+String(err && err.message || err)+'</div>'; }
       console.error(err);
+      showError(err && err.message || err);
     }
   }
   start();
