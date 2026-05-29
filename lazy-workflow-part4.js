@@ -1,3 +1,13 @@
+    state.voiceAudioSeconds = Math.max(1, Math.round(Number(data.item && data.item.audioSeconds || Math.ceil(chars / 4.2))));
+    $('voice-result').innerHTML = `<audio controls src="${esc(data.item && data.item.playUrl || '')}"></audio><div class="status ok">語音已生成。請完整試聽，確認沒有念錯字或停頓問題後再送形象克隆。</div>`;
+    $('btn-to-avatar').disabled = false;
+    if(data.student){ state.student = data.student; updateQuota(); }
+    generateSubtitles();
+    updateRenderPreview();
+    status('voice-status',`已生成語音，約 ${state.voiceAudioSeconds} 秒。`,'ok');
+  }catch(e){ status('voice-status', e.message || '語音生成失敗','err'); }
+  $('btn-voice').disabled = false;
+}
 function fileExt(file, fallback){ const m=String(file && file.name || '').match(/\.([a-z0-9]+)$/i); return (m ? m[1] : fallback).toLowerCase(); }
 function fileMime(file, kind){ return file && file.type || (kind === 'video' ? 'video/mp4' : 'audio/wav'); }
 async function r2Json(path, options){
@@ -157,13 +167,3 @@ function generateSubtitles(){
     const start = i * dur;
     const end = Math.min(total, (i + 1) * dur);
     srt.push(`${i + 1}\n${srtTime(start)} --> ${srtTime(end)}\n${line}\n`);
-    vtt.push(`${vttTime(start)} --> ${vttTime(end)}\n${line}\n`);
-  });
-  state.srt = srt.join('\n');
-  state.vtt = vtt.join('\n');
-  updateRenderPreview();
-  $('subtitle-output').textContent = `標題：${stripLeadingPunctuation(state.selectedTopic)}\n\n字幕預覽說明：下方時間軸可先檢查文字分段；正式成片時會依照第三步已確認的語音重新校準字幕時間。\n\n` + state.srt;
-  $('btn-download-srt').disabled = false;
-  $('btn-download-vtt').disabled = false;
-  $('btn-render-final').disabled = !(state.avatarResult && (state.avatarResult.previewUrl || state.avatarResult.downloadUrl));
-  if(state.voiceScriptText && currentText && state.voiceScriptText !== currentText){
