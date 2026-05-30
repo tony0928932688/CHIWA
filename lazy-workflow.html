@@ -1,29 +1,116 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>AI 短影音一鍵成片工作流｜吉娃 AI</title>
-<link rel="icon" type="image/png" href="assets/chiwa-favicon.png">
+<link rel="icon" type="image/svg+xml" href="assets/chiwa-favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="lazy-workflow.css?v=20260529-11">
-<style id="lazy-workflow-safe-zone-patch">
-.phone-preview.has-video:before{display:none!important}
-.preview-video-bg{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:contain!important;background:#000!important;z-index:1!important;pointer-events:none!important}
-.preview-title{position:absolute;left:8%!important;right:8%!important;top:5.5%;border-radius:14px!important;padding:7px 12px!important;text-align:center;font-weight:900;line-height:1.06!important;letter-spacing:0;white-space:pre-line!important;word-break:keep-all!important;overflow:hidden!important;max-height:96px!important;z-index:4!important}
-.preview-subtitle{position:absolute;left:9%!important;right:9%!important;bottom:18%;border-radius:12px!important;padding:5px 10px!important;text-align:center;font-weight:900;line-height:1.12!important;color:#fff;max-height:58px!important;overflow:hidden!important;z-index:4!important}
-.final-title-input{white-space:pre-wrap!important;line-height:1.32!important;min-height:70px!important;resize:vertical!important}
-textarea.subtitle-box{display:block!important;width:100%!important;min-height:300px!important;resize:vertical!important;line-height:1.65!important;white-space:pre!important;box-sizing:border-box!important;pointer-events:auto!important;user-select:text!important}
-.range-row{display:grid!important;grid-template-columns:1fr auto!important;gap:8px!important;align-items:center!important}
-.range-row input{padding:0!important}
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0a0a0f;--card:#111118;--card2:#171722;--bdr:#484962;--bdr2:rgba(245,224,160,.36);
+  --gold:#e8c55a;--gold2:#f5e0a0;--blue:#4a9eff;--green:#3ecf8e;--purple:#a78bfa;--red:#ff6b6b;
+  --t1:#f2f2f5;--t2:#aaaac4;--t3:#7f80a4;
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 20% 0%,rgba(74,158,255,.09),transparent 42%),radial-gradient(ellipse at 80% 20%,rgba(167,139,250,.08),transparent 42%),var(--bg);color:var(--t1);font-family:'Noto Sans TC',sans-serif;line-height:1.65}
+button,input,select,textarea{font-family:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 18px 56px}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand img{width:38px;height:38px;border-radius:8px}
+.eyebrow{font-size:12px;color:var(--gold);font-family:'Space Mono',monospace;letter-spacing:.08em}
+h1{font-size:28px;line-height:1.2;margin:2px 0 6px}
+.sub{color:var(--t2);font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bdr2);border-radius:999px;padding:7px 12px;color:var(--gold2);font-size:12px;background:rgba(255,255,255,.025)}
+.grid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:18px}
+.rail{position:sticky;top:18px;align-self:start;background:rgba(17,17,24,.78);border:1px solid var(--bdr);border-radius:14px;padding:14px}
+.stepnav{display:grid;gap:8px}
+.stepnav button{width:100%;border:1px solid var(--bdr);background:rgba(255,255,255,.025);color:var(--t2);border-radius:10px;padding:10px;text-align:left;cursor:pointer}
+.stepnav button.on{border-color:var(--gold);color:var(--t1);background:rgba(232,197,90,.1)}
+.quota{margin-top:14px;border-top:1px solid var(--bdr);padding-top:14px;display:grid;gap:9px;font-size:12px;color:var(--t2)}
+.quota b{color:var(--t1);font-family:'Space Mono',monospace}
+.panel{display:none;background:rgba(17,17,24,.82);border:1px solid var(--bdr);border-radius:16px;padding:18px;margin-bottom:14px}
+.panel.on{display:block}
+.panel h2{font-size:20px;margin:0 0 4px}
+.hint{font-size:12px;color:var(--t3);margin-bottom:14px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:grid;gap:6px;margin-bottom:12px}
+.marketing-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.marketing-grid .wide{grid-column:1/-1}
+.marketing-grid textarea{min-height:118px}
+.label{font-size:12px;color:var(--gold2);font-weight:800}
+textarea,input,select{width:100%;border:1.5px solid var(--bdr2);background:#0f0f17;color:var(--t1);border-radius:10px;padding:10px 12px;outline:none}
+textarea:focus,input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,197,90,.13)}
+textarea{min-height:110px;resize:vertical}
+.btns{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:900;cursor:pointer;background:var(--gold);color:#08080c}
+.btn.secondary{background:transparent;color:var(--t1);border:1.5px solid var(--bdr2)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.card{border:1px solid var(--bdr);background:rgba(255,255,255,.025);border-radius:12px;padding:13px}
+.card.selected{border-color:var(--gold);box-shadow:0 0 0 2px rgba(232,197,90,.14)}
+.badge{display:inline-flex;border:1px solid rgba(74,158,255,.35);color:var(--blue);background:rgba(74,158,255,.08);border-radius:999px;padding:2px 8px;font-size:11px;font-weight:800;margin-right:6px}
+.card-title{font-weight:900;font-size:14px;margin:8px 0 4px}
+.card-text{font-size:12px;color:var(--t2)}
+.status{font-size:12px;color:var(--t2);margin-top:10px}
+.ok{color:var(--green)}.err{color:var(--red)}.warn{color:var(--gold)}
+.drop{border:1.5px dashed var(--bdr2);border-radius:12px;padding:16px;background:rgba(255,255,255,.02);cursor:pointer}
+.drop.drag{border-color:var(--gold);background:rgba(232,197,90,.07)}
+audio,video{width:100%;margin-top:10px;border-radius:10px}
+.video-frame{max-width:760px;max-height:52vh;object-fit:contain;background:#000}
+.subtitle-box{white-space:pre-wrap;background:#0f0f17;border:1px solid var(--bdr);border-radius:12px;padding:12px;font-family:'Space Mono','Noto Sans TC',monospace;font-size:12px;color:var(--t2);max-height:260px;overflow:auto}
+textarea.subtitle-box{display:block;width:100%;min-height:260px;resize:vertical;line-height:1.65;white-space:pre;box-sizing:border-box}
+.notice{border:1px solid rgba(62,207,142,.28);background:rgba(62,207,142,.07);color:#c9f7e3;border-radius:12px;padding:12px;font-size:12px;margin-bottom:14px}
+.lock{border-color:rgba(255,107,107,.32);background:rgba(255,107,107,.07);color:#ffd0d0}
+.template-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 14px}
+.template-card{border:1.5px solid var(--bdr);border-radius:12px;padding:12px;background:rgba(255,255,255,.025);cursor:pointer}
+.template-card.on{border-color:var(--gold);box-shadow:0 0 0 2px rgba(232,197,90,.14)}
+.template-preview{aspect-ratio:9/16;max-height:180px;border-radius:10px;background:#050507;position:relative;overflow:hidden;margin-bottom:10px;border:1px solid rgba(255,255,255,.08)}
+.template-preview:before{content:"";position:absolute;inset:28% 28% 18%;border-radius:999px;background:linear-gradient(180deg,#2a2d39,#11131a)}
+.template-title{position:absolute;left:10%;right:10%;top:9%;border-radius:10px;padding:7px 8px;text-align:center;font-size:12px;font-weight:900;line-height:1.15}
+.template-sub{position:absolute;left:9%;right:9%;bottom:12%;border-radius:9px;padding:7px 8px;text-align:center;font-size:11px;font-weight:900;line-height:1.2;color:#fff;background:rgba(0,0,0,.68)}
+.tpl-gold .template-title{background:linear-gradient(135deg,#f7dc72,#b88923);color:#08080c}
+.tpl-tiktok .template-title{background:#ff2e63;color:#fff;box-shadow:3px 3px 0 #000}
+.tpl-clean .template-title{background:rgba(20,24,35,.86);color:#fff}
+.tpl-quiet .template-title{background:rgba(0,0,0,.58);color:#f6d66d;border:1px solid rgba(246,214,109,.34)}
+.tone-row{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 12px}
+.tone-row label{display:flex;align-items:center;gap:7px;border:1px solid var(--bdr);border-radius:999px;padding:8px 12px;color:var(--t2);cursor:pointer;background:rgba(255,255,255,.025)}
+.tone-row input{width:auto;accent-color:var(--gold)}
+.voice-manager{border:1px solid var(--bdr);border-radius:14px;background:rgba(255,255,255,.025);padding:14px;margin-top:14px}
+.voice-card{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--bdr);border-radius:12px;padding:10px 12px;margin-top:8px;background:#0f0f17}
+.voice-card b{font-size:13px}.voice-card small{display:block;color:var(--t3);margin-top:2px}
+.danger{border-color:rgba(255,107,107,.38)!important;color:#ff9a9a!important}
+.rec-dot{width:76px;height:76px;border-radius:50%;border:1px solid var(--bdr2);background:rgba(232,197,90,.1);color:var(--gold);display:grid;place-items:center;font-size:26px;cursor:pointer}
+.rec-dot.recording{background:rgba(255,107,107,.13);color:#ff9a9a;border-color:rgba(255,107,107,.5);animation:pulse 1.2s infinite}
+.length-controls{border:1px solid var(--bdr);border-radius:14px;background:rgba(255,255,255,.025);padding:12px;margin:12px 0}
+.length-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.length-option{border:1px solid var(--bdr);border-radius:12px;padding:10px;background:#0f0f17;color:var(--t2);cursor:pointer}
+.length-option.on{border-color:var(--gold);background:rgba(232,197,90,.1);color:var(--t1)}
+.length-option b{display:block;color:inherit;font-size:13px}.length-option span{display:block;font-size:11px;color:var(--t3);margin-top:2px}
+.control-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+.range-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.range-row input{padding:0}
+.render-lab{display:grid;grid-template-columns:minmax(230px,360px) minmax(0,1fr);gap:16px;margin-top:14px}
+.phone-preview{aspect-ratio:9/16;border-radius:18px;background:#050507;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.12);max-height:620px;margin:auto;width:100%}
+.phone-preview:before{content:"";position:absolute;left:31%;right:31%;top:22%;bottom:22%;border-radius:999px;background:linear-gradient(180deg,#2a2d39,#11131a)}
+.phone-preview.has-video:before{display:none}
+.preview-video-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;z-index:1;pointer-events:none}
+.phone-safe{position:absolute;left:5%;right:5%;top:8%;bottom:13%;border:1px dashed rgba(255,255,255,.22);border-radius:14px;pointer-events:none}
+.preview-title{position:absolute;left:8%;right:8%;top:5.5%;border-radius:14px;padding:8px 12px;text-align:center;font-weight:900;line-height:1.06;letter-spacing:0;box-shadow:0 10px 28px rgba(0,0,0,.38);white-space:pre-line;word-break:keep-all;overflow:hidden;max-height:92px;z-index:4}
+.preview-subtitle{position:absolute;left:9%;right:9%;bottom:18%;border-radius:12px;padding:7px 10px;text-align:center;font-weight:900;line-height:1.12;color:#fff;background:rgba(0,0,0,.68);box-shadow:0 14px 40px rgba(0,0,0,.45);max-height:58px;overflow:hidden;z-index:4}
+.template-card.on .template-preview{box-shadow:0 0 0 2px rgba(232,197,90,.2)}
+@keyframes pulse{50%{transform:scale(1.04);box-shadow:0 0 0 8px rgba(255,107,107,.08)}}
+@media(max-width:860px){.grid{grid-template-columns:1fr}.rail{position:static}.cards,.row,.marketing-grid,.length-grid,.control-grid,.render-lab{grid-template-columns:1fr}.top{display:block}.pill{margin-top:12px}.marketing-grid .wide{grid-column:auto}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <div class="brand">
-      <img src="assets/chiwa-favicon.png" alt="Chiwa">
+      <img src="assets/chiwa-favicon.svg" alt="Chiwa">
       <div>
         <div class="eyebrow">CHIWA AI WORKFLOW</div>
         <h1>AI 短影音一鍵成片工作流</h1>
@@ -296,13 +383,11 @@ textarea.subtitle-box{display:block!important;width:100%!important;min-height:30
             </div>
           </div>
           <div>
-            <div class="control-grid">
+            <div class="control-grid render-control-grid" id="render-control-grid">
               <div class="field">
                 <div class="label">標題位置</div>
                 <select id="title-position">
-                  <option value="top">上方安全區</option>
-                  <option value="upper">中上方</option>
-                  <option value="lower">中下方</option>
+                  <option value="top">上方安全區（固定）</option>
                 </select>
               </div>
               <div class="field">
@@ -311,6 +396,7 @@ textarea.subtitle-box{display:block!important;width:100%!important;min-height:30
                   <option value="medium">中</option>
                   <option value="small">小</option>
                   <option value="large">大</option>
+                  <option value="xlarge">特大</option>
                 </select>
               </div>
               <div class="field">
@@ -328,6 +414,26 @@ textarea.subtitle-box{display:block!important;width:100%!important;min-height:30
                   <option value="large">大</option>
                 </select>
               </div>
+              <div class="field">
+                <div class="label">標題貼紙背景</div>
+                <div class="range-row"><input id="title-background-opacity" type="range" min="0" max="100" value="18"><span id="title-background-value">18%</span></div>
+              </div>
+              <div class="field">
+                <div class="label">字幕貼紙背景</div>
+                <div class="range-row"><input id="subtitle-background-opacity" type="range" min="0" max="100" value="18"><span id="subtitle-background-value">18%</span></div>
+              </div>
+              <div class="field">
+                <div class="label">標題字體陰影</div>
+                <div class="range-row"><input id="title-text-shadow-opacity" type="range" min="0" max="100" value="55"><span id="title-text-shadow-value">55%</span></div>
+              </div>
+              <div class="field">
+                <div class="label">字幕字體陰影</div>
+                <div class="range-row"><input id="subtitle-text-shadow-opacity" type="range" min="0" max="100" value="55"><span id="subtitle-text-shadow-value">55%</span></div>
+              </div>
+              <div class="field">
+                <div class="label">字幕提前校正</div>
+                <div class="range-row"><input id="subtitle-lead-seconds" type="range" min="0" max="2" step="0.1" value="1"><span id="subtitle-lead-value">1.0秒</span></div>
+              </div>
             </div>
             <div class="hint">第一版先做簡單可控，不做剪輯軟體級自由拖曳；之後要做拖曳也可以接在這個面板上。</div>
           </div>
@@ -338,7 +444,7 @@ textarea.subtitle-box{display:block!important;width:100%!important;min-height:30
           <button class="btn secondary" id="btn-download-vtt" disabled>下載 VTT</button>
           <button class="btn" id="btn-render-final" disabled>一鍵輸出正式成片</button>
         </div>
-        <div class="subtitle-box" id="subtitle-output" style="margin-top:14px">尚未產生字幕預覽。</div>
+        <textarea class="subtitle-box" id="subtitle-output" style="margin-top:14px">尚未產生字幕預覽。</textarea>
         <div class="status" id="render-status"></div>
         <div id="final-video-result"></div>
       </section>
@@ -347,37 +453,1443 @@ textarea.subtitle-box{display:block!important;width:100%!important;min-height:30
 </div>
 
 <script>
-(function(){
-  var state=document.getElementById('login-state');
-  function set(text){ if(state) state.textContent=text; }
-  function showError(message){
-    set('Workflow load failed. Refresh once.');
-    var box=document.getElementById('auth-box');
-    if(box){ box.style.display='block'; box.innerHTML='<h2>Workflow load failed</h2><div class="hint">'+String(message || '')+'</div>'; }
+const SUPABASE_URL = 'https://nsauscojruqjcprvsfsn.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zYXVzY29qcnVxamNwcnZzZnNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjAzMTksImV4cCI6MjA5NDU5NjMxOX0.gXX7cBcqohoHqvPkZM-FFrnZVDS59g5OBJPBqH73H_w';
+const SECURE_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-secure-api`;
+const VOICE_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-voice`;
+const AVATAR_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-avatar`;
+const VIDEO_RENDER_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-video-render`;
+const AVATAR_R2_URL = 'https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev';
+const AI_BACKEND_URL = 'https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev/';
+let sb = null;
+function getSupabaseClient(){
+  if(!window.supabase || !window.supabase.createClient){
+    throw new Error('supabase_js_not_loaded');
   }
-  async function text(src){
-    var res = await fetch(src, { cache:'no-store' });
-    if(!res.ok) throw new Error(src + ' HTTP ' + res.status);
-    return await res.text();
+  if(!sb){
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
   }
-  async function start(){
-    try{
-      set('Loading login module...');
-      try{ await new Promise(function(resolve,reject){ var s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'; s.onload=resolve; s.onerror=reject; document.head.appendChild(s); }); }
-      catch(e){ await new Promise(function(resolve,reject){ var s=document.createElement('script'); s.src='https://unpkg.com/@supabase/supabase-js@2'; s.onload=resolve; s.onerror=reject; document.head.appendChild(s); }); }
-      set('Loading workflow...');
-      setTimeout(function(){ if(state && /Loading workflow|Reading login/i.test(state.textContent || '')) set('Workflow init is slow. Please wait or refresh.'); }, 12000);
-      var parts=['lazy-workflow-part1.js?v=20260530-v38','lazy-workflow-part2.js?v=20260530-v38','lazy-workflow-part3.js?v=20260530-v38','lazy-workflow-part4.js?v=20260530-v38','lazy-workflow-part5.js?v=20260530-v38'];
-      var code='';
-      for(var i=0;i<parts.length;i++){ code += '\n' + await text(parts[i]); }
-      var patchB64='Ci8qIGxhenktd29ya2Zsb3cgcGF0Y2ggMjAyNjA1MzAtdjM4LXJlbmRlci1hbGlnbm1lbnQtd2VpZ2h0OiBzdGVwIDUgcmVuZGVyIGNvbnRyb2xzIGFuZCBzYWZlIGxhYmVscyAqLwpmdW5jdGlvbiB0YXJnZXRXb3Jkc0Zyb21NaW51dGVzKG1pbnV0ZXMpewogIGNvbnN0IG0gPSBNYXRoLm1heCgwLjUsIE1hdGgubWluKDEwLCBOdW1iZXIobWludXRlcyB8fCAxKSkpOwogIHJldHVybiBNYXRoLnJvdW5kKG0gKiAyMjApOwp9CgpmdW5jdGlvbiBzY3JpcHRDaGFyQ291bnQodGV4dCl7CiAgcmV0dXJuIEFycmF5LmZyb20oU3RyaW5nKHRleHQgfHwgJycpLnJlcGxhY2UoL1xzKy9nLCcnKSkubGVuZ3RoOwp9CgpmdW5jdGlvbiBoYXJkVHJpbVNjcmlwdFRvTWF4KHRleHQsIG1heENoYXJzKXsKICBjb25zdCBtYXggPSBNYXRoLm1heCgxLCBOdW1iZXIobWF4Q2hhcnMgfHwgMCkpOwogIGxldCBvdXRwdXQgPSAnJzsKICBmb3IoY29uc3QgcGFydCBvZiBTdHJpbmcodGV4dCB8fCAnJykubWF0Y2goL1te44CC77yB77yfIT9dK1vjgILvvIHvvJ8hP10/L2cpIHx8IFtTdHJpbmcodGV4dCB8fCAnJyldKXsKICAgIGNvbnN0IG5leHQgPSBjbGVhblNjcmlwdChvdXRwdXQgKyBwYXJ0KTsKICAgIGlmKHNjcmlwdENoYXJDb3VudChuZXh0KSA+IG1heCkgYnJlYWs7CiAgICBvdXRwdXQgPSBuZXh0OwogIH0KICBpZighb3V0cHV0KSBvdXRwdXQgPSBBcnJheS5mcm9tKGNsZWFuU2NyaXB0KHRleHQpKS5zbGljZSgwLCBtYXgpLmpvaW4oJycpOwogIHJldHVybiBjbGVhblNjcmlwdChvdXRwdXQpOwp9CgpmdW5jdGlvbiBmaXRTY3JpcHRUb1RhcmdldCh0ZXh0LCB0YXJnZXRXb3Jkcyl7CiAgY29uc3QgcmF3ID0gY2xlYW5TY3JpcHQodGV4dCk7CiAgY29uc3QgbWF4ID0gTWF0aC5yb3VuZChOdW1iZXIodGFyZ2V0V29yZHMgfHwgMCkgKiAxLjA1KTsKICBpZighbWF4IHx8IHNjcmlwdENoYXJDb3VudChyYXcpIDw9IG1heCkgcmV0dXJuIHJhdzsKICBjb25zdCBwYXJ0cyA9IHJhdy5tYXRjaCgvW17jgILvvIHvvJ8hP++8mztdK1vjgILvvIHvvJ8hP++8mztdPy9nKSB8fCBbcmF3XTsKICBsZXQgb3V0cHV0ID0gJyc7CiAgZm9yKGNvbnN0IHBhcnQgb2YgcGFydHMpewogICAgY29uc3QgbmV4dCA9IGNsZWFuU2NyaXB0KG91dHB1dCArIChvdXRwdXQgPyAnJyA6ICcnKSArIHBhcnQpOwogICAgaWYoc2NyaXB0Q2hhckNvdW50KG5leHQpID4gbWF4KSBicmVhazsKICAgIG91dHB1dCA9IG5leHQ7CiAgfQogIHJldHVybiBjbGVhblNjcmlwdChvdXRwdXQgfHwgQXJyYXkuZnJvbShyYXcpLnNsaWNlKDAsIG1heCkuam9pbignJykpOwp9CgpmdW5jdGlvbiBzY3JpcHRUYXJnZXRSYW5nZSh0YXJnZXRXb3Jkcyl7CiAgY29uc3QgdGFyZ2V0ID0gTWF0aC5tYXgoMSwgTnVtYmVyKHRhcmdldFdvcmRzIHx8IDApKTsKICByZXR1cm4gewogICAgbWluOiBNYXRoLnJvdW5kKHRhcmdldCAqIDAuOTUpLAogICAgbWF4OiBNYXRoLnJvdW5kKHRhcmdldCAqIDEuMDUpCiAgfTsKfQoKYXN5bmMgZnVuY3Rpb24gZW5mb3JjZVNjcmlwdExlbmd0aCh0ZXh0LCBjZmcsIHN5c3RlbSwgY2FzdWFsKXsKICBjb25zdCByYW5nZSA9IHNjcmlwdFRhcmdldFJhbmdlKGNmZy53b3Jkcyk7CiAgbGV0IG91dHB1dCA9IGZpdFNjcmlwdFRvVGFyZ2V0KHRleHQsIGNmZy53b3Jkcyk7CiAgbGV0IGNvdW50ID0gc2NyaXB0Q2hhckNvdW50KG91dHB1dCk7CiAgaWYoY291bnQgPj0gcmFuZ2UubWluICYmIGNvdW50IDw9IHJhbmdlLm1heCkgcmV0dXJuIG91dHB1dDsKICBjb25zdCBhY3Rpb24gPSBjb3VudCA+IHJhbmdlLm1heCA/ICfnuK7nn63kuKbph43mlbQnIDogJ+ijnOi2s+S4pumHjeaVtCc7CiAgY29uc3QgcHJvbXB0ID0gYOiri+aKiuS7peS4i+WPo+aSreaWh+ahiCR7YWN0aW9ufeaIkCAke3JhbmdlLm1pbn0g5YiwICR7cmFuZ2UubWF4fSDlrZfkuYvplpPvvIznm67mqJnntIQgJHtjZmcud29yZHN9IOWtl+OAggoK56Gs5oCn6KaP5YmH77yaCjEuIOWPquiDvei8uOWHuuWPo+aSreato+aWh+OAggoyLiDkuI3opoEgTWFya2Rvd27jgIHkuI3opoHmqJnpoYzjgIHkuI3opoHmop3liJfjgIIKMy4g5LiN6KaB5paw5aKe6KqH5aSn5om/6Ku+77yM5LiN6KaB6YGV5Y+NIFRpa1RvayDlu6PlkYrmlL/nrZboiIflj7DngaPms5Xopo/jgIIKNC4g5a2X5pW45LiA5a6a6KaB6JC95ZyoICR7cmFuZ2UubWlufSDliLAgJHtyYW5nZS5tYXh9IOWtl+OAggo1LiDkv53nlZnljp/mnKzmlofmoYjnmoTlj7DngaPlj6Poqp7mhJ/jgIHnl5vpu57jgIHkvovlrZDoiIcgQ1RB44CCCgrljp/mlofvvJoKJHtvdXRwdXR9YDsKICB0cnl7CiAgICBjb25zdCByZXZpc2VkID0gYXdhaXQgYWlDYWxsKCdzY3JpcHQnLCBzeXN0ZW0sIHByb21wdCwgY2FzdWFsID8gJ2Nhc3VhbCcgOiAncHJvZmVzc2lvbmFsJyk7CiAgICBvdXRwdXQgPSBmaXRTY3JpcHRUb1RhcmdldChyZXZpc2VkLCBjZmcud29yZHMpOwogIH1jYXRjaChfZSl7fQogIGNvdW50ID0gc2NyaXB0Q2hhckNvdW50KG91dHB1dCk7CiAgaWYoY291bnQgPiByYW5nZS5tYXgpIG91dHB1dCA9IGhhcmRUcmltU2NyaXB0VG9NYXgob3V0cHV0LCByYW5nZS5tYXgpOwogIGlmKHNjcmlwdENoYXJDb3VudChvdXRwdXQpID4gcmFuZ2UubWF4KSBvdXRwdXQgPSBBcnJheS5mcm9tKGNsZWFuU2NyaXB0KG91dHB1dCkpLnNsaWNlKDAsIHJhbmdlLm1heCkuam9pbignJyk7CiAgcmV0dXJuIG91dHB1dDsKfQoKZnVuY3Rpb24gY2xhbXBQZXJjZW50KHZhbHVlLCBmYWxsYmFjayl7CiAgY29uc3QgbnVtYmVyID0gTnVtYmVyKHZhbHVlKTsKICBpZighTnVtYmVyLmlzRmluaXRlKG51bWJlcikpIHJldHVybiBmYWxsYmFjazsKICByZXR1cm4gTWF0aC5tYXgoMCwgTWF0aC5taW4oMTAwLCBNYXRoLnJvdW5kKG51bWJlcikpKTsKfQoKZnVuY3Rpb24gY29udHJvbFBlcmNlbnQoa2V5LCBmYWxsYmFjayl7CiAgcmV0dXJuIGNsYW1wUGVyY2VudChzdGF0ZS5yZW5kZXJDb250cm9scyAmJiBzdGF0ZS5yZW5kZXJDb250cm9sc1trZXldLCBmYWxsYmFjayk7Cn0KCmZ1bmN0aW9uIGNvbnRyb2xBbHBoYShrZXksIGZhbGxiYWNrKXsKICByZXR1cm4gY2xhbXBQZXJjZW50KHN0YXRlLnJlbmRlckNvbnRyb2xzICYmIHN0YXRlLnJlbmRlckNvbnRyb2xzW2tleV0sIGZhbGxiYWNrKSAvIDEwMDsKfQoKZnVuY3Rpb24gcmFuZ2VMYWJlbCh2YWx1ZSwgc3VmZml4KXsKICByZXR1cm4gYCR7dmFsdWV9JHtzdWZmaXggfHwgJyUnfWA7Cn0KCmZ1bmN0aW9uIHJlbmRlckNvbnRyb2xHcmlkKCl7CiAgcmV0dXJuICQoJ3JlbmRlci1jb250cm9sLWdyaWQnKSB8fAogICAgJCgndGl0bGUtcG9zaXRpb24nKT8uY2xvc2VzdCgnLmNvbnRyb2wtZ3JpZCcpIHx8CiAgICAkKCdyZW5kZXItcHJldmlldycpPy5jbG9zZXN0KCcucmVuZGVyLWxhYicpPy5xdWVyeVNlbGVjdG9yKCcuY29udHJvbC1ncmlkJykgfHwKICAgIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJyNzdGVwLXJlbmRlciAuY29udHJvbC1ncmlkJyk7Cn0KCmZ1bmN0aW9uIG1vdmVDb250cm9sRmllbGRUb1JlbmRlckdyaWQoaWQpewogIGNvbnN0IGdyaWQgPSByZW5kZXJDb250cm9sR3JpZCgpOwogIGNvbnN0IGVsID0gJChpZCk7CiAgY29uc3QgZmllbGQgPSBlbD8uY2xvc2VzdCgnLmZpZWxkJyk7CiAgaWYoZ3JpZCAmJiBmaWVsZCAmJiBmaWVsZC5wYXJlbnRFbGVtZW50ICE9PSBncmlkKSBncmlkLmFwcGVuZENoaWxkKGZpZWxkKTsKfQoKZnVuY3Rpb24gZW5zdXJlUmVuZGVyUmFuZ2UoaWQsIGxhYmVsLCBzdGF0ZUtleSwgZmFsbGJhY2ssIHN1ZmZpeCl7CiAgY29uc3QgZXhpc3RpbmcgPSAkKGlkKTsKICBpZihleGlzdGluZyl7CiAgICBtb3ZlQ29udHJvbEZpZWxkVG9SZW5kZXJHcmlkKGlkKTsKICAgIHJldHVybiBleGlzdGluZzsKICB9CiAgY29uc3QgZ3JpZCA9IHJlbmRlckNvbnRyb2xHcmlkKCk7CiAgaWYoIWdyaWQpIHJldHVybiBudWxsOwogIGNvbnN0IHZhbHVlID0gc3RhdGUucmVuZGVyQ29udHJvbHNbc3RhdGVLZXldID8/IGZhbGxiYWNrOwogIGNvbnN0IGZpZWxkID0gZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgnZGl2Jyk7CiAgZmllbGQuY2xhc3NOYW1lID0gJ2ZpZWxkJzsKICBmaWVsZC5pbm5lckhUTUwgPSBgPGRpdiBjbGFzcz0ibGFiZWwiPiR7bGFiZWx9PC9kaXY+PGRpdiBjbGFzcz0icmFuZ2Utcm93Ij48aW5wdXQgaWQ9IiR7aWR9IiB0eXBlPSJyYW5nZSIgbWluPSIwIiBtYXg9IjEwMCIgdmFsdWU9IiR7dmFsdWV9Ij48c3BhbiBpZD0iJHtpZH0tdmFsdWUiPiR7cmFuZ2VMYWJlbCh2YWx1ZSwgc3VmZml4KX08L3NwYW4+PC9kaXY+YDsKICBncmlkLmFwcGVuZENoaWxkKGZpZWxkKTsKICByZXR1cm4gJChpZCk7Cn0KCmZ1bmN0aW9uIGVuc3VyZVJlbmRlclNlbGVjdChpZCwgbGFiZWwsIG9wdGlvbnMsIHN0YXRlS2V5LCBmYWxsYmFjayl7CiAgY29uc3QgZXhpc3RpbmcgPSAkKGlkKTsKICBpZihleGlzdGluZyl7CiAgICBtb3ZlQ29udHJvbEZpZWxkVG9SZW5kZXJHcmlkKGlkKTsKICAgIHJldHVybiBleGlzdGluZzsKICB9CiAgY29uc3QgZ3JpZCA9IHJlbmRlckNvbnRyb2xHcmlkKCk7CiAgaWYoIWdyaWQpIHJldHVybiBudWxsOwogIGNvbnN0IHZhbHVlID0gc3RhdGUucmVuZGVyQ29udHJvbHNbc3RhdGVLZXldID8/IGZhbGxiYWNrOwogIGNvbnN0IGZpZWxkID0gZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgnZGl2Jyk7CiAgZmllbGQuY2xhc3NOYW1lID0gJ2ZpZWxkJzsKICBmaWVsZC5pbm5lckhUTUwgPSBgPGRpdiBjbGFzcz0ibGFiZWwiPiR7bGFiZWx9PC9kaXY+PHNlbGVjdCBpZD0iJHtpZH0iPiR7b3B0aW9ucy5tYXAob3B0ID0+IGA8b3B0aW9uIHZhbHVlPSIke2VzYyhvcHQudmFsdWUpfSI+JHtlc2Mob3B0LmxhYmVsKX08L29wdGlvbj5gKS5qb2luKCcnKX08L3NlbGVjdD5gOwogIGdyaWQuYXBwZW5kQ2hpbGQoZmllbGQpOwogIGNvbnN0IGVsID0gJChpZCk7CiAgaWYoZWwpIGVsLnZhbHVlID0gdmFsdWU7CiAgcmV0dXJuIGVsOwp9CgpmdW5jdGlvbiBlbnN1cmVSZW5kZXJGaW5lQ29udHJvbHMoKXsKICBjb25zdCB0aXRsZVNpemUgPSAkKCd0aXRsZS1zaXplJyk7CiAgaWYodGl0bGVTaXplICYmICFBcnJheS5mcm9tKHRpdGxlU2l6ZS5vcHRpb25zKS5zb21lKG9wdCA9PiBvcHQudmFsdWUgPT09ICd4bGFyZ2UnKSl7CiAgICBjb25zdCBvcHRpb24gPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KCdvcHRpb24nKTsKICAgIG9wdGlvbi52YWx1ZSA9ICd4bGFyZ2UnOwogICAgb3B0aW9uLnRleHRDb250ZW50ID0gJ+eJueWkpyc7CiAgICB0aXRsZVNpemUuYXBwZW5kQ2hpbGQob3B0aW9uKTsKICB9CiAgY29uc3Qgb2xkVGl0bGUgPSAkKCd0aXRsZS1zaGFkb3ctb3BhY2l0eScpOwogIGlmKG9sZFRpdGxlKXsKICAgIG9sZFRpdGxlLmlkID0gJ3RpdGxlLWJhY2tncm91bmQtb3BhY2l0eSc7CiAgICBjb25zdCBsYWJlbCA9IG9sZFRpdGxlLmNsb3Nlc3QoJy5maWVsZCcpPy5xdWVyeVNlbGVjdG9yKCcubGFiZWwnKTsKICAgIGNvbnN0IHZhbHVlID0gb2xkVGl0bGUuY2xvc2VzdCgnLmZpZWxkJyk/LnF1ZXJ5U2VsZWN0b3IoJ3NwYW4nKTsKICAgIGlmKGxhYmVsKSBsYWJlbC50ZXh0Q29udGVudCA9ICfmqJnpoYzosrzntJnog4zmma8nOwogICAgaWYodmFsdWUpIHZhbHVlLmlkID0gJ3RpdGxlLWJhY2tncm91bmQtdmFsdWUnOwogIH0KICBtb3ZlQ29udHJvbEZpZWxkVG9SZW5kZXJHcmlkKCd0aXRsZS1iYWNrZ3JvdW5kLW9wYWNpdHknKTsKICBjb25zdCBvbGRTdWJ0aXRsZSA9ICQoJ3N1YnRpdGxlLXNoYWRvdy1vcGFjaXR5Jyk7CiAgaWYob2xkU3VidGl0bGUpewogICAgb2xkU3VidGl0bGUuaWQgPSAnc3VidGl0bGUtYmFja2dyb3VuZC1vcGFjaXR5JzsKICAgIGNvbnN0IGxhYmVsID0gb2xkU3VidGl0bGUuY2xvc2VzdCgnLmZpZWxkJyk/LnF1ZXJ5U2VsZWN0b3IoJy5sYWJlbCcpOwogICAgY29uc3QgdmFsdWUgPSBvbGRTdWJ0aXRsZS5jbG9zZXN0KCcuZmllbGQnKT8ucXVlcnlTZWxlY3Rvcignc3BhbicpOwogICAgaWYobGFiZWwpIGxhYmVsLnRleHRDb250ZW50ID0gJ+Wtl+W5leiyvOe0meiDjOaZryc7CiAgICBpZih2YWx1ZSkgdmFsdWUuaWQgPSAnc3VidGl0bGUtYmFja2dyb3VuZC12YWx1ZSc7CiAgfQogIG1vdmVDb250cm9sRmllbGRUb1JlbmRlckdyaWQoJ3N1YnRpdGxlLWJhY2tncm91bmQtb3BhY2l0eScpOwogIGVuc3VyZVJlbmRlclJhbmdlKCd0aXRsZS1iYWNrZ3JvdW5kLW9wYWNpdHknLCAn5qiZ6aGM6LK857SZ6IOM5pmvJywgJ3RpdGxlQmFja2dyb3VuZE9wYWNpdHknLCAxOCwgJyUnKTsKICBlbnN1cmVSZW5kZXJSYW5nZSgnc3VidGl0bGUtYmFja2dyb3VuZC1vcGFjaXR5JywgJ+Wtl+W5leiyvOe0meiDjOaZrycsICdzdWJ0aXRsZUJhY2tncm91bmRPcGFjaXR5JywgMTgsICclJyk7CiAgZW5zdXJlUmVuZGVyUmFuZ2UoJ3RpdGxlLXRleHQtc2hhZG93LW9wYWNpdHknLCAn5qiZ6aGM5a2X6auU6Zmw5b2xJywgJ3RpdGxlVGV4dFNoYWRvd09wYWNpdHknLCA1NSwgJyUnKTsKICBlbnN1cmVSZW5kZXJSYW5nZSgnc3VidGl0bGUtdGV4dC1zaGFkb3ctb3BhY2l0eScsICflrZfluZXlrZfpq5TpmbDlvbEnLCAnc3VidGl0bGVUZXh0U2hhZG93T3BhY2l0eScsIDU1LCAnJScpOwogIGVuc3VyZVJlbmRlclNlbGVjdCgndGl0bGUtYWxpZ24nLCAn5qiZ6aGM5bCN6b2KJywgWwogICAgeyB2YWx1ZTonY2VudGVyJywgbGFiZWw6J+e9ruS4rScgfSwKICAgIHsgdmFsdWU6J2xlZnQnLCBsYWJlbDon6Z2g5bemJyB9LAogICAgeyB2YWx1ZToncmlnaHQnLCBsYWJlbDon6Z2g5Y+zJyB9CiAgXSwgJ3RpdGxlQWxpZ24nLCAnY2VudGVyJyk7CiAgZW5zdXJlUmVuZGVyU2VsZWN0KCd0aXRsZS13ZWlnaHQnLCAn5qiZ6aGM57KX57SwJywgWwogICAgeyB2YWx1ZTonNzAwJywgbGFiZWw6J+S4gOiIrOeylycgfSwKICAgIHsgdmFsdWU6JzgwMCcsIGxhYmVsOifnspcnIH0sCiAgICB7IHZhbHVlOic5MDAnLCBsYWJlbDon6LaF57KXJyB9CiAgXSwgJ3RpdGxlV2VpZ2h0JywgJzkwMCcpOwogIGVuc3VyZVJlbmRlclNlbGVjdCgnc3VidGl0bGUtYWxpZ24nLCAn5a2X5bmV5bCN6b2KJywgWwogICAgeyB2YWx1ZTonY2VudGVyJywgbGFiZWw6J+e9ruS4rScgfSwKICAgIHsgdmFsdWU6J2xlZnQnLCBsYWJlbDon6Z2g5bemJyB9LAogICAgeyB2YWx1ZToncmlnaHQnLCBsYWJlbDon6Z2g5Y+zJyB9CiAgXSwgJ3N1YnRpdGxlQWxpZ24nLCAnY2VudGVyJyk7CiAgZW5zdXJlUmVuZGVyU2VsZWN0KCdzdWJ0aXRsZS13ZWlnaHQnLCAn5a2X5bmV57KX57SwJywgWwogICAgeyB2YWx1ZTonNzAwJywgbGFiZWw6J+S4gOiIrOeylycgfSwKICAgIHsgdmFsdWU6JzgwMCcsIGxhYmVsOifnspcnIH0sCiAgICB7IHZhbHVlOic5MDAnLCBsYWJlbDon6LaF57KXJyB9CiAgXSwgJ3N1YnRpdGxlV2VpZ2h0JywgJzkwMCcpOwogIGNvbnN0IGxlYWQgPSBlbnN1cmVSZW5kZXJSYW5nZSgnc3VidGl0bGUtbGVhZC1zZWNvbmRzJywgJ+Wtl+W5leaPkOWJjeagoeatoycsICdzdWJ0aXRsZUxlYWRTZWNvbmRzJywgMSwgJ+enkicpOwogIGlmKGxlYWQpewogICAgbGVhZC5taW4gPSAnMCc7CiAgICBsZWFkLm1heCA9ICcyJzsKICAgIGxlYWQuc3RlcCA9ICcwLjEnOwogIH0KICBjb25zdCBzdWJ0aXRsZUJveCA9ICQoJ3N1YnRpdGxlLW91dHB1dCcpOwogIGlmKHN1YnRpdGxlQm94ICYmIHN1YnRpdGxlQm94LnRhZ05hbWUgIT09ICdURVhUQVJFQScpewogICAgY29uc3QgdGV4dGFyZWEgPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KCd0ZXh0YXJlYScpOwogICAgdGV4dGFyZWEuaWQgPSAnc3VidGl0bGUtb3V0cHV0JzsKICAgIHRleHRhcmVhLmNsYXNzTmFtZSA9IHN1YnRpdGxlQm94LmNsYXNzTmFtZSB8fCAnc3VidGl0bGUtYm94JzsKICAgIHRleHRhcmVhLnN0eWxlLmNzc1RleHQgPSBzdWJ0aXRsZUJveC5zdHlsZS5jc3NUZXh0IHx8ICdtYXJnaW4tdG9wOjE0cHgnOwogICAgdGV4dGFyZWEudmFsdWUgPSBzdWJ0aXRsZUJveC50ZXh0Q29udGVudCB8fCAn5bCa5pyq55Si55Sf5a2X5bmV6aCQ6Ka944CCJzsKICAgIHN1YnRpdGxlQm94LnJlcGxhY2VXaXRoKHRleHRhcmVhKTsKICB9CiAgY29uc3QgZWRpdGFibGUgPSAkKCdzdWJ0aXRsZS1vdXRwdXQnKTsKICBpZihlZGl0YWJsZSAmJiAndmFsdWUnIGluIGVkaXRhYmxlKXsKICAgIGVkaXRhYmxlLnJlbW92ZUF0dHJpYnV0ZSgncmVhZG9ubHknKTsKICAgIGVkaXRhYmxlLmRpc2FibGVkID0gZmFsc2U7CiAgICBlZGl0YWJsZS5wbGFjZWhvbGRlciA9ICfpgJnoo6Hlj6/ku6Xnm7TmjqXkv67mlLnlrZfluZXmloflrZfoiIcgU1JUIOaZgumWk+i7uOOAgic7CiAgICBlZGl0YWJsZS5zdHlsZS5wb2ludGVyRXZlbnRzID0gJ2F1dG8nOwogICAgZWRpdGFibGUuc3R5bGUudXNlclNlbGVjdCA9ICd0ZXh0JzsKICB9Cn0KCmZ1bmN0aW9uIHNldFN1YnRpdGxlT3V0cHV0KHZhbHVlKXsKICBlbnN1cmVSZW5kZXJGaW5lQ29udHJvbHMoKTsKICBjb25zdCBib3ggPSAkKCdzdWJ0aXRsZS1vdXRwdXQnKTsKICBpZighYm94KSByZXR1cm47CiAgaWYoJ3ZhbHVlJyBpbiBib3gpIGJveC52YWx1ZSA9IHZhbHVlOwogIGVsc2UgYm94LnRleHRDb250ZW50ID0gdmFsdWU7Cn0KCmZ1bmN0aW9uIHN1YnRpdGxlT3V0cHV0VmFsdWUoKXsKICBjb25zdCBib3ggPSAkKCdzdWJ0aXRsZS1vdXRwdXQnKTsKICBpZighYm94KSByZXR1cm4gJyc7CiAgcmV0dXJuICd2YWx1ZScgaW4gYm94ID8gYm94LnZhbHVlIDogYm94LnRleHRDb250ZW50Owp9CgpmdW5jdGlvbiBlZGl0YWJsZVNydFRleHQoKXsKICBjb25zdCByYXcgPSBTdHJpbmcoc3VidGl0bGVPdXRwdXRWYWx1ZSgpIHx8ICcnKS5yZXBsYWNlKC9cclxuL2csICdcbicpLnRyaW0oKTsKICBjb25zdCBmaXJzdEN1ZSA9IHJhdy5zZWFyY2goL1xuXHMqMVxzKlxuXGR7Mn06XGR7Mn06XGR7Mn1bLC5dXGR7M31ccyotLT4vKTsKICBpZihmaXJzdEN1ZSA+PSAwKSByZXR1cm4gcmF3LnNsaWNlKGZpcnN0Q3VlKS50cmltKCk7CiAgaWYoL15ccyoxXHMqXG5cZHsyfTpcZHsyfTpcZHsyfVssLl1cZHszfVxzKi0tPi8udGVzdChyYXcpKSByZXR1cm4gcmF3OwogIHJldHVybiBzdGF0ZS5zcnQgfHwgJyc7Cn0KCmZ1bmN0aW9uIHZ0dEZyb21TcnQoc3J0KXsKICByZXR1cm4gJ1dFQlZUVFxuXG4nICsgU3RyaW5nKHNydCB8fCAnJykucmVwbGFjZSgvXHJcbi9nLCAnXG4nKS5yZXBsYWNlKC8oXGR7Mn06XGR7Mn06XGR7Mn0pLChcZHszfSkvZywgJyQxLiQyJykudHJpbSgpICsgJ1xuJzsKfQoKZnVuY3Rpb24gZmlyc3RTdWJ0aXRsZUxpbmVGcm9tU3J0KHNydCl7CiAgY29uc3QgYmxvY2tzID0gU3RyaW5nKHNydCB8fCAnJykucmVwbGFjZSgvXHJcbi9nLCAnXG4nKS5zcGxpdCgvXG5ccypcbi8pOwogIGZvcihjb25zdCBibG9jayBvZiBibG9ja3MpewogICAgY29uc3QgbGluZXMgPSBibG9jay5zcGxpdCgnXG4nKS5tYXAobGluZSA9PiBsaW5lLnRyaW0oKSkuZmlsdGVyKEJvb2xlYW4pOwogICAgY29uc3QgaW5kZXggPSBsaW5lcy5maW5kSW5kZXgobGluZSA9PiBsaW5lLmluY2x1ZGVzKCctLT4nKSk7CiAgICBpZihpbmRleCA+PSAwICYmIGxpbmVzW2luZGV4ICsgMV0pIHJldHVybiBsaW5lcy5zbGljZShpbmRleCArIDEpLmpvaW4oJyAnKTsKICB9CiAgcmV0dXJuICcnOwp9CgpmdW5jdGlvbiByZW5kZXJUZW1wbGF0ZVByZXZpZXdTdHlsZSgpewogIGNvbnN0IHRpdGxlID0gJCgncHJldmlldy10aXRsZScpOwogIGNvbnN0IHN1YnRpdGxlID0gJCgncHJldmlldy1zdWJ0aXRsZScpOwogIGlmKCF0aXRsZSB8fCAhc3VidGl0bGUpIHJldHVybjsKICBjb25zdCB0ZW1wbGF0ZSA9IHN0YXRlLnJlbmRlclRlbXBsYXRlIHx8ICdnb2xkX2F1dGhvcml0eSc7CiAgY29uc3QgdGl0bGVQb3MgPSBzdGF0ZS5yZW5kZXJDb250cm9scy50aXRsZVBvc2l0aW9uIHx8ICd0b3AnOwogIGNvbnN0IHN1YnRpdGxlUG9zID0gc3RhdGUucmVuZGVyQ29udHJvbHMuc3VidGl0bGVQb3NpdGlvbiB8fCAnc3RhbmRhcmQnOwogIGNvbnN0IHRpdGxlU2l6ZSA9IHN0YXRlLnJlbmRlckNvbnRyb2xzLnRpdGxlU2l6ZSB8fCAnbWVkaXVtJzsKICBjb25zdCBzdWJ0aXRsZVNpemUgPSBzdGF0ZS5yZW5kZXJDb250cm9scy5zdWJ0aXRsZVNpemUgfHwgJ21lZGl1bSc7CiAgY29uc3QgdGl0bGVBbGlnbiA9IHN0YXRlLnJlbmRlckNvbnRyb2xzLnRpdGxlQWxpZ24gfHwgJ2NlbnRlcic7CiAgY29uc3Qgc3VidGl0bGVBbGlnbiA9IHN0YXRlLnJlbmRlckNvbnRyb2xzLnN1YnRpdGxlQWxpZ24gfHwgJ2NlbnRlcic7CiAgY29uc3QgdGl0bGVXZWlnaHQgPSBzdGF0ZS5yZW5kZXJDb250cm9scy50aXRsZVdlaWdodCB8fCAnOTAwJzsKICBjb25zdCBzdWJ0aXRsZVdlaWdodCA9IHN0YXRlLnJlbmRlckNvbnRyb2xzLnN1YnRpdGxlV2VpZ2h0IHx8ICc5MDAnOwogIGNvbnN0IHRvcE1hcCA9IHsgdG9wOic1LjUlJywgdXBwZXI6JzExJScsIGxvd2VyOicxOCUnIH07CiAgY29uc3QgYm90dG9tTWFwID0geyBzdGFuZGFyZDonMTglJywgaGlnaGVyOicyNCUnIH07CiAgY29uc3QgdGl0bGVTaXplTWFwID0geyBzbWFsbDonMThweCcsIG1lZGl1bTonMjRweCcsIGxhcmdlOiczMHB4JywgeGxhcmdlOiczNnB4JyB9OwogIGNvbnN0IHN1YnRpdGxlU2l6ZU1hcCA9IHsgc21hbGw6JzEycHgnLCBtZWRpdW06JzE0cHgnLCBsYXJnZTonMTZweCcgfTsKICBjb25zdCB0aXRsZUJnQWxwaGEgPSBjb250cm9sQWxwaGEoJ3RpdGxlQmFja2dyb3VuZE9wYWNpdHknLCAxOCk7CiAgY29uc3Qgc3VidGl0bGVCZ0FscGhhID0gY29udHJvbEFscGhhKCdzdWJ0aXRsZUJhY2tncm91bmRPcGFjaXR5JywgMTgpOwogIGNvbnN0IHRpdGxlVGV4dEFscGhhID0gY29udHJvbEFscGhhKCd0aXRsZVRleHRTaGFkb3dPcGFjaXR5JywgNTUpOwogIGNvbnN0IHN1YnRpdGxlVGV4dEFscGhhID0gY29udHJvbEFscGhhKCdzdWJ0aXRsZVRleHRTaGFkb3dPcGFjaXR5JywgNTUpOwogIHRpdGxlLnN0eWxlLnRvcCA9IHRvcE1hcFt0aXRsZVBvc10gfHwgdG9wTWFwLnRvcDsKICB0aXRsZS5zdHlsZS5mb250U2l6ZSA9IHRpdGxlU2l6ZU1hcFt0aXRsZVNpemVdIHx8IHRpdGxlU2l6ZU1hcC5tZWRpdW07CiAgdGl0bGUuc3R5bGUudGV4dEFsaWduID0gdGl0bGVBbGlnbjsKICB0aXRsZS5zdHlsZS5mb250V2VpZ2h0ID0gdGl0bGVXZWlnaHQ7CiAgc3VidGl0bGUuc3R5bGUuYm90dG9tID0gYm90dG9tTWFwW3N1YnRpdGxlUG9zXSB8fCBib3R0b21NYXAuc3RhbmRhcmQ7CiAgc3VidGl0bGUuc3R5bGUuZm9udFNpemUgPSBzdWJ0aXRsZVNpemVNYXBbc3VidGl0bGVTaXplXSB8fCBzdWJ0aXRsZVNpemVNYXAubWVkaXVtOwogIHN1YnRpdGxlLnN0eWxlLnRleHRBbGlnbiA9IHN1YnRpdGxlQWxpZ247CiAgc3VidGl0bGUuc3R5bGUuZm9udFdlaWdodCA9IHN1YnRpdGxlV2VpZ2h0OwogIHRpdGxlLnN0eWxlLmJhY2tncm91bmQgPSBgcmdiYSgwLDAsMCwke3RpdGxlQmdBbHBoYX0pYDsKICB0aXRsZS5zdHlsZS5jb2xvciA9ICcjZmZmJzsKICB0aXRsZS5zdHlsZS5ib3JkZXIgPSB0aXRsZUJnQWxwaGEgPiAwID8gJzFweCBzb2xpZCByZ2JhKDI1NSwyNTUsMjU1LC4xOCknIDogJzFweCBzb2xpZCB0cmFuc3BhcmVudCc7CiAgdGl0bGUuc3R5bGUuYm94U2hhZG93ID0gdGl0bGVCZ0FscGhhID4gMCA/IGAwIDEwcHggMjhweCByZ2JhKDAsMCwwLCR7TWF0aC5taW4oLjM4LCB0aXRsZUJnQWxwaGEgKyAuMDYpfSlgIDogJ25vbmUnOwogIHRpdGxlLnN0eWxlLnRleHRTaGFkb3cgPSB0aXRsZVRleHRBbHBoYSA+IDAgPyBgMCAzcHggMTBweCByZ2JhKDAsMCwwLCR7dGl0bGVUZXh0QWxwaGF9KSwgMCAxcHggMnB4IHJnYmEoMCwwLDAsJHtNYXRoLm1pbigxLCB0aXRsZVRleHRBbHBoYSArIC4yNSl9KWAgOiAnbm9uZSc7CiAgaWYodGVtcGxhdGUgPT09ICdnb2xkX2F1dGhvcml0eScpewogICAgdGl0bGUuc3R5bGUuYmFja2dyb3VuZCA9IGByZ2JhKDAsMCwwLCR7dGl0bGVCZ0FscGhhfSlgOwogICAgdGl0bGUuc3R5bGUuY29sb3IgPSAnI2Y3ZGM3Mic7CiAgICB0aXRsZS5zdHlsZS5ib3JkZXIgPSB0aXRsZUJnQWxwaGEgPiAwID8gJzFweCBzb2xpZCByZ2JhKDI0NywyMjAsMTE0LC4zNCknIDogJzFweCBzb2xpZCB0cmFuc3BhcmVudCc7CiAgfWVsc2UgaWYodGVtcGxhdGUgPT09ICd0aWt0b2tfaG9vaycpewogICAgdGl0bGUuc3R5bGUuYmFja2dyb3VuZCA9IGByZ2JhKDI1NSw0Niw5OSwke3RpdGxlQmdBbHBoYX0pYDsKICAgIHRpdGxlLnN0eWxlLmNvbG9yID0gJyNmZmYnOwogICAgdGl0bGUuc3R5bGUuYm9yZGVyID0gdGl0bGVCZ0FscGhhID4gMCA/ICcxcHggc29saWQgcmdiYSgyNTUsMjU1LDI1NSwuNDUpJyA6ICcxcHggc29saWQgdHJhbnNwYXJlbnQnOwogICAgdGl0bGUuc3R5bGUudGV4dFNoYWRvdyA9IHRpdGxlVGV4dEFscGhhID4gMCA/IGAycHggMnB4IDAgcmdiYSgwLDAsMCwke3RpdGxlVGV4dEFscGhhfSksIDAgNHB4IDEwcHggcmdiYSgwLDAsMCwke3RpdGxlVGV4dEFscGhhfSlgIDogJ25vbmUnOwogIH1lbHNlIGlmKHRlbXBsYXRlID09PSAncXVpZXRfY2FwdGlvbicpewogICAgdGl0bGUuc3R5bGUuYmFja2dyb3VuZCA9IGByZ2JhKDAsMCwwLCR7dGl0bGVCZ0FscGhhfSlgOwogICAgdGl0bGUuc3R5bGUuY29sb3IgPSAnI2Y2ZDY2ZCc7CiAgICB0aXRsZS5zdHlsZS5ib3JkZXIgPSB0aXRsZUJnQWxwaGEgPiAwID8gJzFweCBzb2xpZCByZ2JhKDI0NiwyMTQsMTA5LC4yOCknIDogJzFweCBzb2xpZCB0cmFuc3BhcmVudCc7CiAgfQogIHN1YnRpdGxlLnN0eWxlLmJhY2tncm91bmQgPSBgcmdiYSgwLDAsMCwke3N1YnRpdGxlQmdBbHBoYX0pYDsKICBzdWJ0aXRsZS5zdHlsZS5ib3hTaGFkb3cgPSBzdWJ0aXRsZUJnQWxwaGEgPiAwID8gYDAgMTRweCAzNHB4IHJnYmEoMCwwLDAsJHtNYXRoLm1pbiguNDIsIHN1YnRpdGxlQmdBbHBoYSArIC4wOCl9KWAgOiAnbm9uZSc7CiAgc3VidGl0bGUuc3R5bGUudGV4dFNoYWRvdyA9IHN1YnRpdGxlVGV4dEFscGhhID4gMCA/IGAwIDNweCA5cHggcmdiYSgwLDAsMCwke3N1YnRpdGxlVGV4dEFscGhhfSksIDAgMXB4IDJweCByZ2JhKDAsMCwwLCR7TWF0aC5taW4oMSwgc3VidGl0bGVUZXh0QWxwaGEgKyAuMjUpfSlgIDogJ25vbmUnOwp9CgpmdW5jdGlvbiBzYWZlVGl0bGVMaW5lc0ZvclByZXZpZXcodmFsdWUpewogIGNvbnN0IHJhdyA9IHN0cmlwTGVhZGluZ1B1bmN0dWF0aW9uKFN0cmluZyh2YWx1ZSB8fCAnJykucmVwbGFjZSgvXHJcbi9nLCAnXG4nKSkudHJpbSgpOwogIGNvbnN0IHNvdXJjZXMgPSByYXcuc3BsaXQoJ1xuJykubWFwKGxpbmUgPT4gbGluZS50cmltKCkpLmZpbHRlcihCb29sZWFuKTsKICBjb25zdCBzaXplID0gc3RhdGUucmVuZGVyQ29udHJvbHMudGl0bGVTaXplIHx8ICdtZWRpdW0nOwogIGNvbnN0IG1heENoYXJzID0gc2l6ZSA9PT0gJ3hsYXJnZScgPyA4IDogc2l6ZSA9PT0gJ2xhcmdlJyA/IDkgOiBzaXplID09PSAnc21hbGwnID8gMTQgOiAxMTsKICBjb25zdCBlbGxpcHNpemUgPSAobGluZSkgPT4gewogICAgY29uc3QgY2hhcnMgPSBBcnJheS5mcm9tKFN0cmluZyhsaW5lIHx8ICcnKS50cmltKCkpOwogICAgaWYoY2hhcnMubGVuZ3RoIDw9IG1heENoYXJzKSByZXR1cm4gY2hhcnMuam9pbignJyk7CiAgICByZXR1cm4gY2hhcnMuc2xpY2UoMCwgTWF0aC5tYXgoMSwgbWF4Q2hhcnMgLSAzKSkuam9pbignJykgKyAnLi4uJzsKICB9OwogIGlmKHNvdXJjZXMubGVuZ3RoKXsKICAgIHJldHVybiBzb3VyY2VzLnNsaWNlKDAsIDIpLm1hcChlbGxpcHNpemUpLmpvaW4oJ1xuJykgfHwgJ+W9seeJh+aomemhjCc7CiAgfQogIGNvbnN0IGxpbmVzID0gW107CiAgW3Jhd10uZm9yRWFjaChzb3VyY2UgPT4gewogICAgY29uc3QgY2hhcnMgPSBBcnJheS5mcm9tKHNvdXJjZS5yZXBsYWNlKC9ccysvZywgJyAnKSk7CiAgICBmb3IobGV0IGkgPSAwOyBpIDwgY2hhcnMubGVuZ3RoOyBpICs9IG1heENoYXJzKXsKICAgICAgaWYobGluZXMubGVuZ3RoID49IDIpIHJldHVybjsKICAgICAgbGluZXMucHVzaChjaGFycy5zbGljZShpLCBpICsgbWF4Q2hhcnMpLmpvaW4oJycpLnRyaW0oKSk7CiAgICB9CiAgfSk7CiAgY29uc3QgdG9vTG9uZyA9IEFycmF5LmZyb20ocmF3KS5sZW5ndGggPiBBcnJheS5mcm9tKGxpbmVzLmpvaW4oJycpKS5sZW5ndGg7CiAgaWYodG9vTG9uZyAmJiBsaW5lc1sxXSkgbGluZXNbMV0gPSBlbGxpcHNpemUobGluZXNbMV0pOwogIHJldHVybiAobGluZXMubGVuZ3RoID8gbGluZXMgOiBbJ+W9seeJh+aomemhjCddKS5qb2luKCdcbicpOwp9CgpmdW5jdGlvbiBjdXJyZW50QXZhdGFyUHJldmlld1VybCgpewogIHJldHVybiBzdGF0ZS5hdmF0YXJSZXN1bHQgJiYgKHN0YXRlLmF2YXRhclJlc3VsdC5wcmV2aWV3VXJsIHx8IHN0YXRlLmF2YXRhclJlc3VsdC5kb3dubG9hZFVybCB8fCAnJyk7Cn0KCmZ1bmN0aW9uIGN1cnJlbnRBdmF0YXJSZW5kZXJVcmwoKXsKICByZXR1cm4gc3RhdGUuYXZhdGFyUmVzdWx0ICYmIChzdGF0ZS5hdmF0YXJSZXN1bHQuZG93bmxvYWRVcmwgfHwgc3RhdGUuYXZhdGFyUmVzdWx0LnByZXZpZXdVcmwgfHwgJycpOwp9CgpmdW5jdGlvbiBzeW5jUHJldmlld1ZpZGVvKCl7CiAgY29uc3QgYm94ID0gJCgncmVuZGVyLXByZXZpZXcnKTsKICBpZighYm94KSByZXR1cm47CiAgY29uc3QgdXJsID0gY3VycmVudEF2YXRhclByZXZpZXdVcmwoKTsKICBsZXQgdmlkZW8gPSAkKCdwcmV2aWV3LXZpZGVvLWJnJyk7CiAgaWYodXJsKXsKICAgIGlmKCF2aWRlbyl7CiAgICAgIHZpZGVvID0gZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgndmlkZW8nKTsKICAgICAgdmlkZW8uaWQgPSAncHJldmlldy12aWRlby1iZyc7CiAgICAgIHZpZGVvLmNsYXNzTmFtZSA9ICdwcmV2aWV3LXZpZGVvLWJnJzsKICAgICAgdmlkZW8ubXV0ZWQgPSB0cnVlOwogICAgICB2aWRlby5sb29wID0gdHJ1ZTsKICAgICAgdmlkZW8ucGxheXNJbmxpbmUgPSB0cnVlOwogICAgICB2aWRlby5wcmVsb2FkID0gJ21ldGFkYXRhJzsKICAgICAgYm94Lmluc2VydEJlZm9yZSh2aWRlbywgYm94LmZpcnN0Q2hpbGQpOwogICAgfQogICAgaWYodmlkZW8uZ2V0QXR0cmlidXRlKCdzcmMnKSAhPT0gdXJsKSB2aWRlby5zZXRBdHRyaWJ1dGUoJ3NyYycsIHVybCk7CiAgICB2aWRlby5zdHlsZS5kaXNwbGF5ID0gJ2Jsb2NrJzsKICAgIGJveC5jbGFzc0xpc3QuYWRkKCdoYXMtdmlkZW8nKTsKICAgIHZpZGVvLnBsYXkoKS5jYXRjaCgoKSA9PiB7fSk7CiAgfWVsc2V7CiAgICBpZih2aWRlbykgdmlkZW8uc3R5bGUuZGlzcGxheSA9ICdub25lJzsKICAgIGJveC5jbGFzc0xpc3QucmVtb3ZlKCdoYXMtdmlkZW8nKTsKICB9Cn0KCmZ1bmN0aW9uIHVwZGF0ZVJlbmRlclByZXZpZXcoKXsKICBzeW5jUHJldmlld1ZpZGVvKCk7CiAgaWYoJCgncHJldmlldy10aXRsZScpKXsKICAgIGNvbnN0IHRpdGxlVGV4dCA9IHNhZmVUaXRsZUxpbmVzRm9yUHJldmlldygkKCdmaW5hbC10aXRsZScpPy52YWx1ZSB8fCBzdGF0ZS5zZWxlY3RlZFRvcGljIHx8ICflvbHniYfmqJnpoYwnKTsKICAgICQoJ3ByZXZpZXctdGl0bGUnKS50ZXh0Q29udGVudCA9IHRpdGxlVGV4dCB8fCAn5b2x54mH5qiZ6aGMJzsKICB9CiAgY29uc3QgdGV4dCA9ICgkKCdmaW5hbC1zY3JpcHQnKT8udmFsdWUgfHwgc3RhdGUudm9pY2VTY3JpcHRUZXh0IHx8ICcnKS50cmltKCk7CiAgY29uc3QgZWRpdGVkTGluZSA9IGZpcnN0U3VidGl0bGVMaW5lRnJvbVNydChlZGl0YWJsZVNydFRleHQoKSk7CiAgaWYoJCgncHJldmlldy1zdWJ0aXRsZScpKSAkKCdwcmV2aWV3LXN1YnRpdGxlJykudGV4dENvbnRlbnQgPSBlZGl0ZWRMaW5lIHx8IHN1YnRpdGxlQ2h1bmtzKHRleHQpWzBdIHx8ICflrZfluZXmnIPlh7rnj77lnKjpgJnoo6EnOwogIHJlbmRlclRlbXBsYXRlUHJldmlld1N0eWxlKCk7Cn0KCmZ1bmN0aW9uIGluaXRSZW5kZXJDb250cm9scygpewogIGVuc3VyZVJlbmRlckZpbmVDb250cm9scygpOwogIGNvbnN0IGJpbmRpbmdzID0gWwogICAgWyd0aXRsZS1wb3NpdGlvbicsICd0aXRsZVBvc2l0aW9uJ10sCiAgICBbJ3RpdGxlLXNpemUnLCAndGl0bGVTaXplJ10sCiAgICBbJ3RpdGxlLWFsaWduJywgJ3RpdGxlQWxpZ24nXSwKICAgIFsndGl0bGUtd2VpZ2h0JywgJ3RpdGxlV2VpZ2h0J10sCiAgICBbJ3N1YnRpdGxlLXBvc2l0aW9uJywgJ3N1YnRpdGxlUG9zaXRpb24nXSwKICAgIFsnc3VidGl0bGUtc2l6ZScsICdzdWJ0aXRsZVNpemUnXSwKICAgIFsnc3VidGl0bGUtYWxpZ24nLCAnc3VidGl0bGVBbGlnbiddLAogICAgWydzdWJ0aXRsZS13ZWlnaHQnLCAnc3VidGl0bGVXZWlnaHQnXQogIF07CiAgYmluZGluZ3MuZm9yRWFjaCgoW2lkLCBrZXldKSA9PiB7CiAgICBjb25zdCBlbCA9ICQoaWQpOwogICAgaWYoIWVsKSByZXR1cm47CiAgICBpZihzdGF0ZS5yZW5kZXJDb250cm9sc1trZXldICE9IG51bGwpIGVsLnZhbHVlID0gc3RhdGUucmVuZGVyQ29udHJvbHNba2V5XTsKICAgIGVsLm9uY2hhbmdlID0gKCkgPT4gewogICAgICBzdGF0ZS5yZW5kZXJDb250cm9sc1trZXldID0gZWwudmFsdWU7CiAgICAgIHVwZGF0ZVJlbmRlclByZXZpZXcoKTsKICAgIH07CiAgfSk7CiAgY29uc3QgcmFuZ2VCaW5kaW5ncyA9IFsKICAgIFsndGl0bGUtYmFja2dyb3VuZC1vcGFjaXR5JywgJ3RpdGxlQmFja2dyb3VuZE9wYWNpdHknLCAndGl0bGUtYmFja2dyb3VuZC12YWx1ZScsIDE4LCAnJSddLAogICAgWydzdWJ0aXRsZS1iYWNrZ3JvdW5kLW9wYWNpdHknLCAnc3VidGl0bGVCYWNrZ3JvdW5kT3BhY2l0eScsICdzdWJ0aXRsZS1iYWNrZ3JvdW5kLXZhbHVlJywgMTgsICclJ10sCiAgICBbJ3RpdGxlLXRleHQtc2hhZG93LW9wYWNpdHknLCAndGl0bGVUZXh0U2hhZG93T3BhY2l0eScsICd0aXRsZS10ZXh0LXNoYWRvdy12YWx1ZScsIDU1LCAnJSddLAogICAgWydzdWJ0aXRsZS10ZXh0LXNoYWRvdy1vcGFjaXR5JywgJ3N1YnRpdGxlVGV4dFNoYWRvd09wYWNpdHknLCAnc3VidGl0bGUtdGV4dC1zaGFkb3ctdmFsdWUnLCA1NSwgJyUnXQogIF07CiAgcmFuZ2VCaW5kaW5ncy5mb3JFYWNoKChbaWQsIGtleSwgbGFiZWxJZCwgZmFsbGJhY2ssIHN1ZmZpeF0pID0+IHsKICAgIGNvbnN0IGVsID0gJChpZCk7CiAgICBpZighZWwpIHJldHVybjsKICAgIGNvbnN0IGxhYmVscyA9IFskKGxhYmVsSWQpLCAkKGAke2lkfS12YWx1ZWApXS5maWx0ZXIoQm9vbGVhbik7CiAgICBzdGF0ZS5yZW5kZXJDb250cm9sc1trZXldID0gY2xhbXBQZXJjZW50KHN0YXRlLnJlbmRlckNvbnRyb2xzW2tleV0sIGZhbGxiYWNrKTsKICAgIGVsLnZhbHVlID0gc3RhdGUucmVuZGVyQ29udHJvbHNba2V5XTsKICAgIGxhYmVscy5mb3JFYWNoKGxhYmVsID0+IGxhYmVsLnRleHRDb250ZW50ID0gcmFuZ2VMYWJlbChzdGF0ZS5yZW5kZXJDb250cm9sc1trZXldLCBzdWZmaXgpKTsKICAgIGVsLm9uaW5wdXQgPSAoKSA9PiB7CiAgICAgIHN0YXRlLnJlbmRlckNvbnRyb2xzW2tleV0gPSBjbGFtcFBlcmNlbnQoZWwudmFsdWUsIGZhbGxiYWNrKTsKICAgICAgWyQobGFiZWxJZCksICQoYCR7aWR9LXZhbHVlYCldLmZpbHRlcihCb29sZWFuKS5mb3JFYWNoKGxhYmVsID0+IGxhYmVsLnRleHRDb250ZW50ID0gcmFuZ2VMYWJlbChzdGF0ZS5yZW5kZXJDb250cm9sc1trZXldLCBzdWZmaXgpKTsKICAgICAgdXBkYXRlUmVuZGVyUHJldmlldygpOwogICAgfTsKICB9KTsKICBjb25zdCBsZWFkID0gJCgnc3VidGl0bGUtbGVhZC1zZWNvbmRzJyk7CiAgaWYobGVhZCl7CiAgICBjb25zdCB2YWx1ZSA9IE1hdGgubWF4KDAsIE1hdGgubWluKDIsIE51bWJlcihzdGF0ZS5yZW5kZXJDb250cm9scy5zdWJ0aXRsZUxlYWRTZWNvbmRzID8/IDEpKSk7CiAgICBzdGF0ZS5yZW5kZXJDb250cm9scy5zdWJ0aXRsZUxlYWRTZWNvbmRzID0gdmFsdWU7CiAgICBsZWFkLnZhbHVlID0gU3RyaW5nKHZhbHVlKTsKICAgIFskKCdzdWJ0aXRsZS1sZWFkLXZhbHVlJyksICQoJ3N1YnRpdGxlLWxlYWQtc2Vjb25kcy12YWx1ZScpXS5maWx0ZXIoQm9vbGVhbikuZm9yRWFjaChsYWJlbCA9PiBsYWJlbC50ZXh0Q29udGVudCA9IGAke3ZhbHVlLnRvRml4ZWQoMSl956eSYCk7CiAgICBsZWFkLm9uaW5wdXQgPSAoKSA9PiB7CiAgICAgIGNvbnN0IG5leHQgPSBNYXRoLm1heCgwLCBNYXRoLm1pbigyLCBOdW1iZXIobGVhZC52YWx1ZSB8fCAwKSkpOwogICAgICBzdGF0ZS5yZW5kZXJDb250cm9scy5zdWJ0aXRsZUxlYWRTZWNvbmRzID0gbmV4dDsKICAgICAgWyQoJ3N1YnRpdGxlLWxlYWQtdmFsdWUnKSwgJCgnc3VidGl0bGUtbGVhZC1zZWNvbmRzLXZhbHVlJyldLmZpbHRlcihCb29sZWFuKS5mb3JFYWNoKGxhYmVsID0+IGxhYmVsLnRleHRDb250ZW50ID0gYCR7bmV4dC50b0ZpeGVkKDEpfeenkmApOwogICAgfTsKICB9CiAgY29uc3Qgc3VidGl0bGVCb3ggPSAkKCdzdWJ0aXRsZS1vdXRwdXQnKTsKICBpZihzdWJ0aXRsZUJveCkgc3VidGl0bGVCb3gub25pbnB1dCA9ICgpID0+IHsKICAgIHN0YXRlLnNydCA9IGVkaXRhYmxlU3J0VGV4dCgpOwogICAgc3RhdGUudnR0ID0gdnR0RnJvbVNydChzdGF0ZS5zcnQpOwogICAgdXBkYXRlUmVuZGVyUHJldmlldygpOwogIH07CiAgdXBkYXRlUmVuZGVyUHJldmlldygpOwp9Cgphc3luYyBmdW5jdGlvbiBnZW5lcmF0ZVNjcmlwdCh0b25lKXsKICBpZighc3RhdGUuc2VsZWN0ZWRUb3BpYyl7IHN0YXR1cygnc2NyaXB0LXN0YXR1cycsJ+iri+WFiOmBuOaTh+mBuOmhjOOAgicsJ2VycicpOyByZXR1cm47IH0KICBjb25zdCBjZmcgPSBnZXRTY3JpcHRMZW5ndGhDb25maWcoKTsKICBzdGF0dXMoJ3NjcmlwdC1zdGF0dXMnLGDmlofmoYjnlJ/miJDkuK3vvIznm67mqJnntIQgJHtmbXQoY2ZnLndvcmRzKX0g5a2X44CBJHtjZmcubWludXRlc30g5YiG6ZCYLi4uYCwnd2FybicpOwogICQoJ2J0bi1zY3JpcHQnKS5kaXNhYmxlZCA9IHRydWU7CiAgJCgnYnRuLXNjcmlwdC1wcm8nKS5kaXNhYmxlZCA9IHRydWU7CiAgdHJ5ewogICAgY29uc3QgY2FzdWFsID0gdG9uZSAhPT0gJ3Byb2Zlc3Npb25hbCc7CiAgICBjb25zdCBzeXN0ZW0gPSBgJHtidWlsZFByb2ZpbGVQcm9tcHQoKX1cblxu5L2g5piv5bCI5qWt5Y+w54Gj5Y+j5pKt5paH5qGI5pKw5a+r5bir44CCXG4ke2NvbXBsaWFuY2VQcm9tcHQoKX1cbuWFp+Wuueimj+WJh++8muaWh+ahiOW/hemgiOWMheWQq+mWi+WgtOmJpOWtkOOAgeeXm+m7nuOAgeino+azleOAgeWFt+mrlOWgtOaZr+OAgUNUQeOAguiqnuawo+ipnuWPquS9lOWFqOaWhyAxMCUg5Lul5LiL44CC5qC85byP6YGp5ZCI55u05o6l6LK86YCy6Kqe6Z+z5ZCI5oiQ5bel5YW35pyX6K6A77yM5q+P5Y+l57WQ5bC+5b+F6aCI5pyJ5qiZ6bue44CCXG4ke2Nhc3VhbCA/ICfoqp7msKPvvJrntKDkurrpmqjogYrmhJ/vvIzlg4/lj7DngaPkurrlnKjoh6rnhLbogYrlpKnvvIzkvYbkuI3og73nqbrmtJ7jgIInIDogJ+iqnuawo++8muWNmuS4u+WwiOalreaEn++8jOacieingOm7nuOAgeaciemCj+i8r+OAgeacieS5vuiyqOOAgid9YDsKICAgIGNvbnN0IGV4dHJhID0gJCgnc2NyaXB0LWV4dHJhJykudmFsdWUudHJpbSgpIHx8ICfnhKEnOwogICAgY29uc3QgY2h1bmtzID0gYWlDb3N0Rm9yV29yZHMoY2ZnLndvcmRzKTsKICAgIGNvbnN0IGNodW5rVGFyZ2V0ID0gTWF0aC5jZWlsKGNmZy53b3JkcyAvIGNodW5rcyk7CiAgICBsZXQgY29tYmluZWQgPSAnJzsKICAgIGZvcihsZXQgaSA9IDA7IGkgPCBjaHVua3M7IGkrKyl7CiAgICAgIGNvbnN0IGRvbmUgPSBzY3JpcHRDaGFyQ291bnQoY29tYmluZWQpOwogICAgICBpZihkb25lID49IE1hdGgucm91bmQoY2ZnLndvcmRzICogMC45NikpIGJyZWFrOwogICAgICBjb25zdCByZW1haW5pbmcgPSBjZmcud29yZHMgLSBkb25lOwogICAgICBpZihyZW1haW5pbmcgPD0gODApIGJyZWFrOwogICAgICBjb25zdCB0aGlzVGFyZ2V0ID0gY2h1bmtzID09PSAxID8gY2ZnLndvcmRzIDogTWF0aC5taW4oY2h1bmtUYXJnZXQsIHJlbWFpbmluZyk7CiAgICAgIGNvbnN0IHVzZXIgPSBjb21iaW5lZAogICAgICAgID8gYOmBuOmhjO+8miR7c3RhdGUuc2VsZWN0ZWRUb3BpY31cbuijnOWFhe+8miR7ZXh0cmF9XG5cbuS7peS4i+aYr+WJjemdouW3suWujOaIkOeahOWPo+aSreaWh+ahiO+8jOiri+ebtOaOpemghuiRl+iqnuaEj+e6jOWvq++8jOS4jeimgemHjeikh+mWi+WgtO+8jOS4jeimgemHjeikh+WJjeaWh+OAglxuXG7lt7LlrozmiJDlhaflrrnvvJpcbiR7Y29tYmluZWR9XG5cbuaVtOevh+acgOe1guebruaome+8mue0hCAke2NmZy53b3Jkc30g5a2X77yM5YWB6Kix6Kqk5beu5pyA5aSa5q2j6LKgIDUl44CC54++5Zyo5bey5a6M5oiQ57SEICR7ZG9uZX0g5a2X77yM5pys5qyh5Y+q6KOc57SEICR7dGhpc1RhcmdldH0g5a2X77yM57WV5bCN5LiN6IO96LaF6YGOICR7TWF0aC5yb3VuZCh0aGlzVGFyZ2V0ICogMS4wMyl9IOWtl+OAgiR7aSA9PT0gY2h1bmtzIC0gMSB8fCByZW1haW5pbmcgPD0gY2h1bmtUYXJnZXQgPyAn6YCZ5piv5pyA5b6M5LiA5q6177yM6KuL6Ieq54S25pS25bC+5Lim5Yqg5YWlIENUQeOAgicgOiAn6YCZ5LiN5piv5pyA5b6M5LiA5q6177yM6KuL5YWI5LiN6KaB5pS25bC+77yM5LiN6KaB5Yqg5YWl5pyA57WCIENUQeOAgid9XG5cbuWPqui8uOWHuuWPo+aSreato+aWh++8jOS4jeimgSBNYXJrZG93bu+8jOS4jeimgeaomemhjO+8jOS4jeimgeWIhumalOe3muOAgmAKICAgICAgICA6IGDpgbjpoYzvvJoke3N0YXRlLnNlbGVjdGVkVG9waWN9XG7oo5zlhYXvvJoke2V4dHJhfVxuXG7oq4vnlJ/miJDntIQgJHt0aGlzVGFyZ2V0fSDlrZfnmoTlj6Pmkq3mlofmoYjnrKzkuIDmrrXjgILmlbTnr4fmnIDntYLnm67mqJnmmK/ntIQgJHtjZmcud29yZHN9IOWtl+OAgee0hCAke2NmZy5taW51dGVzfSDliIbpkJjvvIzlhYHoqLHoqqTlt67mnIDlpJrmraPosqAgNSXvvIzmiYDku6XmnKzmrKHntZXlsI3kuI3og73otoXpgY4gJHtNYXRoLnJvdW5kKHRoaXNUYXJnZXQgKiAxLjAzKX0g5a2X44CCXG5cbuWFp+WuueimgeacieWFt+mrlOWgtOaZr+OAgee0sOevgOOAgeS+i+WtkOiIh+i9ieaKmO+8jOS9huS4jeimgeeBjOawtOOAglxuJHtjaHVua3MgPT09IDEgPyAn57WQ5qeL77ya6ZaL5aC06Ymk5a2Q44CB55eb6bue44CB5Y6f5Zug5ouG6Kej44CB5YW36auU5aC05pmv44CB6Kej5rOV44CB5L6L5a2Q44CB57i957WQ44CBQ1RB44CCJyA6ICfntZDmp4vvvJrplovloLTpiaTlrZDjgIHnl5vpu57jgIHljp/lm6Dmi4bop6PjgIHlhbfpq5TloLTmma/jgILpgJnkuI3mmK/lrozmlbTplbfmlofvvIzlhYjkuI3opoHlgZrmnIDntYIgQ1RB44CCJ31cblxu5Y+q6Ly45Ye65Y+j5pKt5q2j5paH77yM5LiN6KaBIE1hcmtkb3du77yM5LiN6KaB5qiZ6aGM77yM5LiN6KaB5YiG6ZqU57ea44CCYDsKICAgICAgY29uc3QgbmV4dCA9IGF3YWl0IGFpQ2FsbCgnc2NyaXB0Jywgc3lzdGVtLCB1c2VyLCBjYXN1YWwgPyAnY2FzdWFsJyA6ICdwcm9mZXNzaW9uYWwnKTsKICAgICAgY29tYmluZWQgPSBmaXRTY3JpcHRUb1RhcmdldChjb21iaW5lZCArIChjb21iaW5lZCA/ICdcblxuJyA6ICcnKSArIG5leHQsIGNmZy53b3Jkcyk7CiAgICAgICQoJ2ZpbmFsLXNjcmlwdCcpLnZhbHVlID0gY29tYmluZWQ7CiAgICAgIHVwZGF0ZVJlbmRlclByZXZpZXcoKTsKICAgIH0KICAgIGNvbnN0IG1pblRhcmdldCA9IE1hdGgucm91bmQoY2ZnLndvcmRzICogMC45NSk7CiAgICBjb25zdCBjdXJyZW50Q291bnQgPSBzY3JpcHRDaGFyQ291bnQoY29tYmluZWQpOwogICAgaWYoY3VycmVudENvdW50ID4gMCAmJiBjdXJyZW50Q291bnQgPCBtaW5UYXJnZXQpewogICAgICBjb25zdCBuZWVkZWQgPSBNYXRoLm1heCgxMjAsIGNmZy53b3JkcyAtIGN1cnJlbnRDb3VudCk7CiAgICAgIGNvbnN0IHN1cHBsZW1lbnRQcm9tcHQgPSBg6YG46aGM77yaJHtzdGF0ZS5zZWxlY3RlZFRvcGljfQroo5zlhYXvvJoke2V4dHJhfQoK55uu5YmN5Y+j5pKt5paH5qGI57SEICR7Y3VycmVudENvdW50fSDlrZfvvIznm67mqJnmmK8gJHtjZmcud29yZHN9IOWtl++8jOWFgeioseevhOWcjeaYryAke21pblRhcmdldH0g5YiwICR7TWF0aC5yb3VuZChjZmcud29yZHMgKiAxLjA1KX0g5a2X44CCCuiri+WPquijnOS4gOautee0hCAke25lZWRlZH0g5a2X55qE5bu25Ly45YWn5a6577yM55u05o6l5o6l5Zyo5Y6f5paH5b6M6Z2i77yM5LiN6KaB6YeN6KSH6ZaL5aC077yM5LiN6KaB6YeN5paw5LiL5qiZ6aGM77yM5LiN6KaBIE1hcmtkb3du44CCYDsKICAgICAgY29uc3Qgc3VwcGxlbWVudCA9IGF3YWl0IGFpQ2FsbCgnc2NyaXB0Jywgc3lzdGVtLCBzdXBwbGVtZW50UHJvbXB0LCBjYXN1YWwgPyAnY2FzdWFsJyA6ICdwcm9mZXNzaW9uYWwnKTsKICAgICAgY29tYmluZWQgPSBmaXRTY3JpcHRUb1RhcmdldChjb21iaW5lZCArIChjb21iaW5lZCA/ICdcblxuJyA6ICcnKSArIHN1cHBsZW1lbnQsIGNmZy53b3Jkcyk7CiAgICAgICQoJ2ZpbmFsLXNjcmlwdCcpLnZhbHVlID0gY29tYmluZWQ7CiAgICAgIHVwZGF0ZVJlbmRlclByZXZpZXcoKTsKICAgIH0KICAgIGNvbWJpbmVkID0gYXdhaXQgZW5mb3JjZVNjcmlwdExlbmd0aChjb21iaW5lZCwgY2ZnLCBzeXN0ZW0sIGNhc3VhbCk7CiAgICBzdGF0ZS5zY3JpcHQgPSBjb21iaW5lZDsKICAgICQoJ2ZpbmFsLXNjcmlwdCcpLnZhbHVlID0gc3RhdGUuc2NyaXB0OwogICAgdXBkYXRlUmVuZGVyUHJldmlldygpOwogICAgc3RhdHVzKCdzY3JpcHQtc3RhdHVzJyxg5paH5qGI5bey55Sf5oiQ77yM55uu5qiZ57SEICR7Zm10KGNmZy53b3Jkcyl9IOWtl++8jOWvpumam+e0hCAke2ZtdChzY3JpcHRDaGFyQ291bnQoc3RhdGUuc2NyaXB0KSl9IOWtl++8jOWPr+aJi+WLleS/ruaUueW+jOmAgeiqnumfs+OAgmAsJ29rJyk7CiAgICBhd2FpdCByZWZyZXNoUHJvZmlsZSgpLmNhdGNoKCgpPT57fSk7CiAgfWNhdGNoKGUpeyBzdGF0dXMoJ3NjcmlwdC1zdGF0dXMnLCBlLm1lc3NhZ2UgfHwgJ+aWh+ahiOeUn+aIkOWkseaVlycsJ2VycicpOyB9CiAgJCgnYnRuLXNjcmlwdCcpLmRpc2FibGVkID0gZmFsc2U7CiAgJCgnYnRuLXNjcmlwdC1wcm8nKS5kaXNhYmxlZCA9IGZhbHNlOwp9CgpmdW5jdGlvbiBnZW5lcmF0ZVN1YnRpdGxlcygpewogIGNvbnN0IGN1cnJlbnRUZXh0ID0gJCgnZmluYWwtc2NyaXB0JykudmFsdWUudHJpbSgpOwogIGNvbnN0IHRleHQgPSAoc3RhdGUudm9pY2VTY3JpcHRUZXh0IHx8IGN1cnJlbnRUZXh0KS50cmltKCk7CiAgaWYoIXRleHQpewogICAgc3RhdGUuc3J0ID0gJyc7CiAgICBzdGF0ZS52dHQgPSAnJzsKICAgIHN0YXR1cygncmVuZGVyLXN0YXR1cycsJ+iri+WFiOeUn+aIkOaIluWhq+WFpeWPo+aSreaWh+ahiOOAgicsJ2VycicpOwogICAgcmV0dXJuOwogIH0KICBjb25zdCBjaHVua3MgPSBzdWJ0aXRsZUNodW5rcyh0ZXh0KTsKICBpZighY2h1bmtzLmxlbmd0aCl7CiAgICBzdGF0ZS5zcnQgPSAnJzsKICAgIHN0YXRlLnZ0dCA9ICcnOwogICAgc3RhdHVzKCdyZW5kZXItc3RhdHVzJywn55uu5YmN5rKS5pyJ5Y+v55Si55Sf5a2X5bmV55qE5Y+j5pKt5paH5a2X44CCJywnZXJyJyk7CiAgICByZXR1cm47CiAgfQogIGNvbnN0IHRvdGFsID0gTWF0aC5tYXgoMSwgTnVtYmVyKHN0YXRlLnZvaWNlQXVkaW9TZWNvbmRzIHx8IGNodW5rcy5sZW5ndGggKiAzKSk7CiAgY29uc3QgZHVyID0gdG90YWwgLyBNYXRoLm1heCgxLCBjaHVua3MubGVuZ3RoKTsKICBjb25zdCBzcnQgPSBbXTsKICBjb25zdCB2dHQgPSBbJ1dFQlZUVCcsICcnXTsKICBjaHVua3MuZm9yRWFjaCgobGluZSwgaSkgPT4gewogICAgY29uc3Qgc3RhcnQgPSBpICogZHVyOwogICAgY29uc3QgZW5kID0gTWF0aC5taW4odG90YWwsIChpICsgMSkgKiBkdXIpOwogICAgc3J0LnB1c2goYCR7aSArIDF9XG4ke3NydFRpbWUoc3RhcnQpfSAtLT4gJHtzcnRUaW1lKGVuZCl9XG4ke2xpbmV9XG5gKTsKICAgIHZ0dC5wdXNoKGAke3Z0dFRpbWUoc3RhcnQpfSAtLT4gJHt2dHRUaW1lKGVuZCl9XG4ke2xpbmV9XG5gKTsKICB9KTsKICBzdGF0ZS5zcnQgPSBzcnQuam9pbignXG4nKTsKICBzdGF0ZS52dHQgPSB2dHQuam9pbignXG4nKTsKICB1cGRhdGVSZW5kZXJQcmV2aWV3KCk7CiAgc2V0U3VidGl0bGVPdXRwdXQoYOaomemhjO+8miR7c3RyaXBMZWFkaW5nUHVuY3R1YXRpb24oJCgnZmluYWwtdGl0bGUnKT8udmFsdWUgfHwgc3RhdGUuc2VsZWN0ZWRUb3BpYyB8fCAnJyl9XG5cbuWtl+W5lemgkOimveiqquaYju+8muS4i+aWueaZgumWk+i7uOWPr+WFiOaqouafpeaWh+Wtl+WIhuaute+8m+ato+W8j+aIkOeJh+aZguacg+S+neeFp+esrOS4ieatpeW3sueiuuiqjeeahOiqnumfs+mHjeaWsOagoea6luWtl+W5leaZgumWk+OAguWtl+W5leaWh+Wtl+WPr+S7peWcqOmAmeijoeebtOaOpeS/ruaUueOAglxuXG5gICsgc3RhdGUuc3J0KTsKICAkKCdidG4tZG93bmxvYWQtc3J0JykuZGlzYWJsZWQgPSBmYWxzZTsKICAkKCdidG4tZG93bmxvYWQtdnR0JykuZGlzYWJsZWQgPSBmYWxzZTsKICAkKCdidG4tcmVuZGVyLWZpbmFsJykuZGlzYWJsZWQgPSAhKHN0YXRlLmF2YXRhclJlc3VsdCAmJiAoc3RhdGUuYXZhdGFyUmVzdWx0LnByZXZpZXdVcmwgfHwgc3RhdGUuYXZhdGFyUmVzdWx0LmRvd25sb2FkVXJsKSk7CiAgaWYoc3RhdGUudm9pY2VTY3JpcHRUZXh0ICYmIGN1cnJlbnRUZXh0ICYmIHN0YXRlLnZvaWNlU2NyaXB0VGV4dCAhPT0gY3VycmVudFRleHQpewogICAgc3RhdHVzKCdyZW5kZXItc3RhdHVzJywn5a2X5bmV6aCQ6Ka95bey5L6d54Wn5pys5qyh6Kqe6Z+z55Sf5oiQ5pmC5L2/55So55qE5Y+j5pKt5paH5qGI55Si55Sf44CC6Iul6KaB5L2/55So5paw54mI5paH5qGI77yM6KuL5YWI6YeN5paw55Sf5oiQ6Kqe6Z+z44CCJywnd2FybicpOwogIH1lbHNlewogICAgc3RhdHVzKCdyZW5kZXItc3RhdHVzJywn5a2X5bmV6aCQ6Ka95bey55Si55Sf44CC5q2j5byP5oiQ54mH5pyD5L6d54Wn5bey56K66KqN6Kqe6Z+z6YeN5paw5qCh5rqW5pmC6ZaT6Lu444CCJywnb2snKTsKICB9Cn0KCmFzeW5jIGZ1bmN0aW9uIHN1Ym1pdEZpbmFsUmVuZGVyKCl7CiAgaWYoaXNMb2NhbEZpbGVNb2RlKCkpewogICAgc3RhdHVzKCdyZW5kZXItc3RhdHVzJywn55uu5YmN5pys5qmf6aCQ6Ka95Y+q6IO95qqi5p+l55Wr6Z2i6IiH5rWB56iL44CC5q2j5byP5oiQ54mH6KuL5ZyoIGNoaXdhYWkuY29tIOeZu+WFpeW+jOWft+ihjOOAgicsJ2VycicpOwogICAgcmV0dXJuOwogIH0KICBpZighY3VycmVudEF2YXRhclJlbmRlclVybCgpKXsKICAgIHN0YXR1cygncmVuZGVyLXN0YXR1cycsJ+iri+WFiOWujOaIkOW9ouixoeWFi+mahuW9seeJh+OAgicsJ2VycicpOwogICAgcmV0dXJuOwogIH0KICBpZighc3RhdGUudm9pY2VJdGVtIHx8ICFzdGF0ZS52b2ljZUl0ZW0ucGxheVVybCl7CiAgICBzdGF0dXMoJ3JlbmRlci1zdGF0dXMnLCfnvLrlsJHlt7Lnorroqo3oqp7pn7PvvIznhKHms5XnlKLnlJ/nsr7mupblrZfluZXmmYLplpPou7jjgILoq4vlm57liLDnrKzkuInmraXph43mlrDnlJ/miJDkuKbnorroqo3oqp7pn7PjgIInLCdlcnInKTsKICAgIHJldHVybjsKICB9CiAgJCgnYnRuLXJlbmRlci1maW5hbCcpLmRpc2FibGVkID0gdHJ1ZTsKICBzdGF0dXMoJ3JlbmRlci1zdGF0dXMnLCfmraPlnKjnlKjlt7Lnorroqo3oqp7pn7PnlKLnlJ/nsr7mupblrZfluZXmmYLplpPou7jvvIzkuKbpgIHlh7rmiJDniYfmuLLmn5MuLi4nLCd3YXJuJyk7CiAgdHJ5ewogICAgc3RhdGUuc3J0ID0gZWRpdGFibGVTcnRUZXh0KCk7CiAgICBzdGF0ZS52dHQgPSB2dHRGcm9tU3J0KHN0YXRlLnNydCk7CiAgICBpZighc3RhdGUuc3J0KXsKICAgICAgc3RhdHVzKCdyZW5kZXItc3RhdHVzJywn6KuL5YWI55Si55Sf5a2X5bmV6aCQ6Ka977yM5oiW5Zyo5a2X5bmV5qGG5L+d55WZ5pyJ5pWIIFNSVCDmmYLplpPou7jjgIInLCdlcnInKTsKICAgICAgJCgnYnRuLXJlbmRlci1maW5hbCcpLmRpc2FibGVkID0gZmFsc2U7CiAgICAgIHJldHVybjsKICAgIH0KICAgIGNvbnN0IHJlbmRlclRlbXBsYXRlRm9yU3VibWl0ID0gKHN0YXRlLnJlbmRlclRlbXBsYXRlIHx8ICdnb2xkX2F1dGhvcml0eScpID09PSAnZ29sZF9hdXRob3JpdHknID8gJ3F1aWV0X2NhcHRpb24nIDogKHN0YXRlLnJlbmRlclRlbXBsYXRlIHx8ICdnb2xkX2F1dGhvcml0eScpOwogICAgY29uc3QgZGF0YSA9IGF3YWl0IGF1dGhlZEZldGNoKFZJREVPX1JFTkRFUl9BUElfVVJMLCB7CiAgICAgIGFjdGlvbjonc3VibWl0JywKICAgICAgdmlkZW9fdXJsOmN1cnJlbnRBdmF0YXJSZW5kZXJVcmwoKSwKICAgICAgYXVkaW9fdXJsOnN0YXRlLnZvaWNlSXRlbS5wbGF5VXJsLAogICAgICBzcnRfdGV4dDpzdGF0ZS5zcnQsCiAgICAgIHVzZV9zdHQ6dHJ1ZSwKICAgICAgcmVuZGVyX3RlbXBsYXRlOnJlbmRlclRlbXBsYXRlRm9yU3VibWl0LAogICAgICB0ZW1wbGF0ZV92ZXJzaW9uOidjaGl3YV9mb3JtYWxfdjEnLAogICAgICBzdWJ0aXRsZV9tb2RlOidzdHRfYWxpZ25lZCcsCiAgICAgIHRpdGxlX3Bvc2l0aW9uOnN0YXRlLnJlbmRlckNvbnRyb2xzLnRpdGxlUG9zaXRpb24sCiAgICAgIHRpdGxlX3NpemU6c3RhdGUucmVuZGVyQ29udHJvbHMudGl0bGVTaXplLAogICAgICB0aXRsZV9hbGlnbjpzdGF0ZS5yZW5kZXJDb250cm9scy50aXRsZUFsaWduIHx8ICdjZW50ZXInLAogICAgICB0aXRsZV93ZWlnaHQ6c3RhdGUucmVuZGVyQ29udHJvbHMudGl0bGVXZWlnaHQgfHwgJzkwMCcsCiAgICAgIHN1YnRpdGxlX3Bvc2l0aW9uOnN0YXRlLnJlbmRlckNvbnRyb2xzLnN1YnRpdGxlUG9zaXRpb24sCiAgICAgIHN1YnRpdGxlX3NpemU6c3RhdGUucmVuZGVyQ29udHJvbHMuc3VidGl0bGVTaXplLAogICAgICBzdWJ0aXRsZV9hbGlnbjpzdGF0ZS5yZW5kZXJDb250cm9scy5zdWJ0aXRsZUFsaWduIHx8ICdjZW50ZXInLAogICAgICBzdWJ0aXRsZV93ZWlnaHQ6c3RhdGUucmVuZGVyQ29udHJvbHMuc3VidGl0bGVXZWlnaHQgfHwgJzkwMCcsCiAgICAgIHRpdGxlX2JhY2tncm91bmRfb3BhY2l0eTpzdGF0ZS5yZW5kZXJDb250cm9scy50aXRsZUJhY2tncm91bmRPcGFjaXR5LAogICAgICBzdWJ0aXRsZV9iYWNrZ3JvdW5kX29wYWNpdHk6c3RhdGUucmVuZGVyQ29udHJvbHMuc3VidGl0bGVCYWNrZ3JvdW5kT3BhY2l0eSwKICAgICAgdGl0bGVfdGV4dF9zaGFkb3dfb3BhY2l0eTpzdGF0ZS5yZW5kZXJDb250cm9scy50aXRsZVRleHRTaGFkb3dPcGFjaXR5LAogICAgICBzdWJ0aXRsZV90ZXh0X3NoYWRvd19vcGFjaXR5OnN0YXRlLnJlbmRlckNvbnRyb2xzLnN1YnRpdGxlVGV4dFNoYWRvd09wYWNpdHksCiAgICAgIHRpdGxlX3NoYWRvd19vcGFjaXR5OnN0YXRlLnJlbmRlckNvbnRyb2xzLnRpdGxlQmFja2dyb3VuZE9wYWNpdHksCiAgICAgIHN1YnRpdGxlX3NoYWRvd19vcGFjaXR5OnN0YXRlLnJlbmRlckNvbnRyb2xzLnN1YnRpdGxlQmFja2dyb3VuZE9wYWNpdHksCiAgICAgIHN1YnRpdGxlX3RpbWluZ19vZmZzZXRfc2Vjb25kczotTWF0aC5tYXgoMCwgTWF0aC5taW4oMiwgTnVtYmVyKHN0YXRlLnJlbmRlckNvbnRyb2xzLnN1YnRpdGxlTGVhZFNlY29uZHMgPz8gMSkpKSwKICAgICAgdGl0bGU6c3RyaXBMZWFkaW5nUHVuY3R1YXRpb24oJCgnZmluYWwtdGl0bGUnKS52YWx1ZSB8fCBzdGF0ZS5zZWxlY3RlZFRvcGljIHx8ICdBSeiHquWqkumrlOezu+e1sScpLAogICAgICBkdXJhdGlvbl9zZWNvbmRzOnN0YXRlLnZvaWNlQXVkaW9TZWNvbmRzIHx8IDYwCiAgICB9KTsKICAgIHN0YXRlLnJlbmRlcklkID0gZGF0YS5yZW5kZXJJZDsKICAgIHN0YXR1cygncmVuZGVyLXN0YXR1cycsYOato+W8j+aIkOeJh+i8uOWHuuS4re+8miR7ZGF0YS5zdGF0dXMgfHwgJ1FVRVVFRCd977yM5a2X5bmV5L6G5rqQ77yaJHtkYXRhLnN1YnRpdGxlU291cmNlIHx8ICfoqp7pn7Pph43mlrDlsI3pvYonfe+8jDEwIOenkuW+jOiHquWLleafpeipouOAgmAsJ3dhcm4nKTsKICAgIHNldFRpbWVvdXQocG9sbEZpbmFsUmVuZGVyLCAxMDAwMCk7CiAgfWNhdGNoKGUpewogICAgc3RhdHVzKCdyZW5kZXItc3RhdHVzJywgZS5tZXNzYWdlIHx8ICfmraPlvI/miJDniYfpgIHlh7rlpLHmlZfvvIzoq4vnqI3lvozlho3oqabjgIInLCdlcnInKTsKICAgICQoJ2J0bi1yZW5kZXItZmluYWwnKS5kaXNhYmxlZCA9IGZhbHNlOwogIH0KfQo=';
-      code += new TextDecoder().decode(Uint8Array.from(atob(patchB64), function(c){ return c.charCodeAt(0); }));
-      new Function(code + '\n//# sourceURL=lazy-workflow-combined.js')();
-    }catch(err){
-      console.error(err);
-      showError(err && err.message || err);
+  return sb;
+}
+
+const state = {
+  user: null,
+  student: null,
+  topics: [],
+  selectedTopic: '',
+  script: '',
+  tiktokCaption: '',
+  marketingCopies: {},
+  voiceItem: null,
+  voiceAudioSeconds: 0,
+  voiceScriptText: '',
+  avatarVideoFile: null,
+  avatarTaskId: '',
+  avatarResult: null,
+  renderId: '',
+  finalVideo: null,
+  srt: '',
+  vtt: '',
+  renderTemplate: 'gold_authority',
+  scriptMinutes: 1,
+  renderControls: {
+    titlePosition: 'top',
+    titleSize: 'medium',
+    titleAlign: 'center',
+    titleWeight: '900',
+    subtitlePosition: 'standard',
+    subtitleSize: 'medium',
+    subtitleAlign: 'center',
+    subtitleWeight: '900',
+    titleBackgroundOpacity: 18,
+    subtitleBackgroundOpacity: 18,
+    titleTextShadowOpacity: 55,
+    subtitleTextShadowOpacity: 55,
+    subtitleLeadSeconds: 1
+  },
+  systemVoices: [],
+  customVoices: [],
+  recordingBlob: null,
+  recordingSeconds: 0,
+  recorder: null,
+  recordStream: null,
+  recordTimer: null,
+  recordChunks: [],
+};
+
+function $(id){ return document.getElementById(id); }
+function esc(value){ return String(value || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function status(id, text, cls){ const el=$(id); if(el){ el.className='status ' + (cls || ''); el.textContent=text || ''; } }
+function fmt(n){ return Math.max(0, Math.round(Number(n || 0))).toLocaleString('zh-TW'); }
+async function token(){ const { data } = await getSupabaseClient().auth.getSession(); return data && data.session ? data.session.access_token : ''; }
+function isLocalFileMode(){ return location.protocol === 'file:'; }
+function liveWorkflowUrl(){ return 'https://chiwaai.com/lazy-workflow.html'; }
+function authRedirectUrl(){
+  if(isLocalFileMode() || location.hostname !== 'chiwaai.com') return liveWorkflowUrl();
+  return location.href.split('#')[0];
+}
+async function authedFetch(url, body){
+  const t = await token();
+  if(!t) throw new Error('請先登入學員帳號。');
+  const res = await fetch(url, {
+    method:'POST',
+    headers:{ 'Authorization':'Bearer ' + t, 'Content-Type':'application/json' },
+    body: JSON.stringify(body || {})
+  });
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok) throw new Error(data.error || data.detail || `HTTP ${res.status}`);
+  return data;
+}
+async function aiCall(type, systemPrompt, userPrompt, tone){
+  const t = await token();
+  const res = await fetch(AI_BACKEND_URL, {
+    method:'POST',
+    headers:{ 'Authorization':'Bearer ' + t, 'Content-Type':'application/json' },
+    body: JSON.stringify({ type, systemPrompt, userPrompt, fmt:'simple', tone: tone || 'professional' })
+  });
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok || data.error) throw new Error('AI 服務暫時無法使用。');
+  return cleanScript(data.content && data.content[0] && data.content[0].text || '');
+}
+function cleanScript(text){
+  return String(text || '')
+    .replace(/#{1,6}\s/g,'')
+    .replace(/\*\*/g,'')
+    .replace(/---/g,'')
+    .replace(/[“”"]/g,'')
+    .replace(/；/g,'，')
+    .replace(/：/g,'，')
+    .replace(/\n{3,}/g,'\n\n')
+    .trim();
+}
+function stripLeadingPunctuation(value){
+  return String(value || '')
+    .replace(/^[\s，,、。．.：:；;！!？?]+/g, '')
+    .replace(/^[\s，,、。．.：:；;！!？?]+/g, '')
+    .trim();
+}
+function normalizePotential(value){
+  const text = stripLeadingPunctuation(value).replace(/潛力[：:\s]*/g, '').trim();
+  if(/高/.test(text)) return '高';
+  if(/中/.test(text)) return '中';
+  if(/低/.test(text)) return '低';
+  return text.slice(0, 8);
+}
+function targetWordsFromMinutes(minutes){
+  const m = Math.max(0.5, Math.min(10, Number(minutes || 1)));
+  return Math.round(m * 220);
+}
+function aiCostForWords(words){
+  return Math.max(1, Math.ceil(Number(words || 0) / 500));
+}
+function scriptCharCount(text){
+  return Array.from(String(text || '').replace(/\s+/g,'')).length;
+}
+function fitScriptToTarget(text, targetWords){
+  const raw = cleanScript(text);
+  const max = Math.round(Number(targetWords || 0) * 1.05);
+  if(!max || scriptCharCount(raw) <= max) return raw;
+  const parts = raw.match(/[^。！？!?；;]+[。！？!?；;]?/g) || [raw];
+  let output = '';
+  for(const part of parts){
+    const next = cleanScript(output + (output ? '' : '') + part);
+    if(scriptCharCount(next) > max) break;
+    output = next;
+  }
+  return cleanScript(output || Array.from(raw).slice(0, max).join(''));
+}
+function hardTrimScriptToMax(text, maxChars){
+  const max = Math.max(1, Number(maxChars || 0));
+  let output = '';
+  for(const part of String(text || '').match(/[^。！？!?]+[。！？!?]?/g) || [String(text || '')]){
+    const next = cleanScript(output + part);
+    if(scriptCharCount(next) > max) break;
+    output = next;
+  }
+  if(!output) output = Array.from(cleanScript(text)).slice(0, max).join('');
+  return cleanScript(output);
+}
+function scriptTargetRange(targetWords){
+  const target = Math.max(1, Number(targetWords || 0));
+  return {
+    min: Math.round(target * 0.95),
+    max: Math.round(target * 1.05)
+  };
+}
+async function enforceScriptLength(text, cfg, system, casual){
+  const range = scriptTargetRange(cfg.words);
+  let output = fitScriptToTarget(text, cfg.words);
+  let count = scriptCharCount(output);
+  if(count >= range.min && count <= range.max) return output;
+  const action = count > range.max ? '縮短並重整' : '補足並重整';
+  const prompt = `請把以下口播文案${action}成 ${range.min} 到 ${range.max} 字之間，目標約 ${cfg.words} 字。
+
+硬性規則：
+1. 只能輸出口播正文。
+2. 不要 Markdown、不要標題、不要條列。
+3. 不要新增誇大承諾，不要違反 TikTok 廣告政策與台灣法規。
+4. 字數一定要落在 ${range.min} 到 ${range.max} 字。
+5. 保留原本文案的台灣口語感、痛點、例子與 CTA。
+
+原文：
+${output}`;
+  try{
+    const revised = await aiCall('script', system, prompt, casual ? 'casual' : 'professional');
+    output = fitScriptToTarget(revised, cfg.words);
+  }catch(_e){}
+  count = scriptCharCount(output);
+  if(count > range.max) output = hardTrimScriptToMax(output, range.max);
+  if(scriptCharCount(output) > range.max) output = Array.from(cleanScript(output)).slice(0, range.max).join('');
+  return output;
+}
+function getScriptLengthConfig(){
+  const custom = Number(($('script-custom-minutes') && $('script-custom-minutes').value) || 0);
+  const minutes = custom > 0 ? custom : state.scriptMinutes;
+  const normalized = Math.max(0.5, Math.min(10, Number(minutes || 1)));
+  const words = targetWordsFromMinutes(normalized);
+  return { minutes: normalized, words, cost: aiCostForWords(words) };
+}
+function updateScriptLengthEstimate(){
+  const cfg = getScriptLengthConfig();
+  if($('script-target-words')) $('script-target-words').value = `約 ${fmt(cfg.words)} 字`;
+  if($('script-ai-cost')) $('script-ai-cost').value = `約 ${fmt(cfg.cost)} 次`;
+}
+function cleanAIFieldValue(line, key) {
+  return String(line || '')
+    .replace(new RegExp('^.*' + key + '[：:，,]\\*{0,2}\\s*'), '')
+    .replace(new RegExp('^(' + key + '[：:，,\\s]*)+', 'g'), '')
+    .replace(/^[，,、。．.：:；;！!？?\-*#>\s]+|[*\s）)]+$/g, '')
+    .trim();
+}
+function pickLabeledValue(lines, key) {
+  const idx = lines.findIndex(l => new RegExp('^\\s*(?:[-*#>]+\\s*)?' + key + '[：:，,]').test(String(l || '').trim()) || String(l || '').includes(key + '：') || String(l || '').includes(key + ':'));
+  if (idx === -1) return '';
+  const line = String(lines[idx] || '');
+  let value = /[：:，,]/.test(line) ? cleanAIFieldValue(line, key) : '';
+  if ((!value || value === '**') && lines[idx + 1]) {
+    value = String(lines[idx + 1]).replace(/^[，,、。．.：:；;！!？?\-*#>\s]+|[*\s]+$/g, '').trim();
+  }
+  return value === '**' ? '' : value;
+}
+function inferTopicTitle(block) {
+  const quoted = String(block || '').match(/[「『](.+?)[」』]/);
+  if (quoted) return quoted[1].trim();
+  const bold = String(block || '').match(/\*\*([^*]{6,80})\*\*/);
+  return bold ? bold[1].replace(/[「」『』]/g, '').trim() : '';
+}
+function firstUnlabeledLine(lines) {
+  return (lines || [])
+    .map(line => String(line || '').trim())
+    .filter(Boolean)
+    .find(line => !/^(類型|選題類型|方向|標題|選題標題|副標題|核心痛點|痛點|潛力)[：:，,]/.test(line) && !/^【選題\d+】/.test(line)) || '';
+}
+function fallbackSubtitle(lines) {
+  return (lines || [])
+    .map(line => String(line || '').trim())
+    .filter(Boolean)
+    .filter(line => !/^(類型|選題類型|方向|標題|選題標題|副標題|核心痛點|痛點|潛力)[：:，,]/.test(line))
+    .join(' ')
+    .slice(0, 80);
+}
+function normalizeTopicType(value, fallback) {
+  const allowed = ['痛點鏡子','知識降維','迷思破解','客戶故事','選擇指南','行動催化'];
+  let text = String(value || '')
+    .replace(/^(類型|選題類型|方向)[：:，,\s]*/g, '')
+    .replace(/^(類型\s*)+/g, '')
+    .replace(/[（）()]/g, '')
+    .replace(/^(類型|選題類型|方向)[：:，,\s]*/g, '')
+    .trim();
+  const found = allowed.find(type => text.includes(type));
+  if (found) return found;
+  return allowed.includes(fallback) ? fallback : '';
+}
+function cleanTopicText(value) {
+  let text = String(value || '')
+    .replace(/^(類型|選題類型|方向|標題|選題標題|副標題|核心痛點|痛點|潛力)[：:，,\s]*(類型|選題類型|方向|標題|選題標題|副標題|核心痛點|痛點|潛力)[：:，,\s]*/g, '')
+    .replace(/^(類型|選題類型|方向|標題|選題標題|副標題|核心痛點|痛點|潛力)[：:，,\s]*/g, '')
+    .replace(/^(類型\s*)+/g, '')
+    .replace(/類型[：:，,\s]*(?=痛點鏡子|知識降維|迷思破解|客戶故事|選擇指南|行動催化)/g, '')
+    .replace(/^(標題\s*)+/g, '')
+    .replace(/^(副標題\s*)+/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text;
+}
+function buildProfilePrompt(){
+  const p = state.student && state.student.profile || {};
+  const lines = [];
+  if(p.name || state.student?.name) lines.push(`身份：${p.name || state.student.name}`);
+  if(p.industry) lines.push(`行業：${p.industry}`);
+  if(p.service) lines.push(`主要服務：${p.service}`);
+  if(p.target_gender || p.target_age || p.target_identity) lines.push(`目標受眾：${[p.target_gender, [].concat(p.target_age || []).join('、'), [].concat(p.target_identity || []).join('、')].filter(Boolean).join('，')}`);
+  if(p.style) lines.push(`說話風格：${p.style}`);
+  if(p.personality) lines.push(`個性特質：${[].concat(p.personality || []).join('、')}`);
+  if(p.audience_feeling) lines.push(`希望觀眾感受：${[].concat(p.audience_feeling || []).join('、')}`);
+  if(p.differentiation) lines.push(`與同行差異：${[].concat(p.differentiation || []).join('、')}`);
+  if(p.extra_note) lines.push(`補充說明：${p.extra_note}`);
+  return lines.length ? `學員背景：\n- ${lines.join('\n- ')}\n\n生成原則：語氣和選題必須符合以上背景，不要生成與定位相反的內容。` : '';
+}
+function compliancePrompt(){
+  return `合規規則：使用台灣繁體中文。內容必須先有實質內容，不得只有語氣詞。避開絕對化成效、財務暗示、未經驗證數字、最高級與唯一性宣稱。具體成效必須避免未經驗證的聲稱。可以有說服力，但要符合 TikTok 廣告政策與台灣常見法規風險。不得使用 emoji 或表情符號。`;
+}
+function updateQuota(){
+  const s = state.student || {};
+  $('q-ai').textContent = fmt(s.ai_usage);
+  $('q-voice').textContent = fmt(s.voice_credits);
+  $('q-avatar').textContent = fmt(s.avatar_seconds);
+}
+function goStep(n){
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  const panel = $('step-' + n);
+  if(panel) panel.classList.add('on');
+  document.querySelectorAll('.stepnav button').forEach(b => b.classList.toggle('on', b.dataset.step === String(n)));
+}
+function initRenderTemplates(){
+  document.querySelectorAll('[data-template]').forEach(card => {
+    card.onclick = () => {
+      state.renderTemplate = card.getAttribute('data-template') || 'gold_authority';
+      document.querySelectorAll('[data-template]').forEach(el => el.classList.toggle('on', el === card));
+      updateRenderPreview();
+      status('render-status',`已選擇模板：${card.querySelector('b')?.textContent || state.renderTemplate}`,'ok');
+    };
+  });
+}
+function initScriptLengthControls(){
+  document.querySelectorAll('[data-minutes]').forEach(btn => {
+    btn.onclick = () => {
+      state.scriptMinutes = Number(btn.getAttribute('data-minutes') || 1);
+      if($('script-custom-minutes')) $('script-custom-minutes').value = '';
+      document.querySelectorAll('[data-minutes]').forEach(el => el.classList.toggle('on', el === btn));
+      updateScriptLengthEstimate();
+    };
+  });
+  if($('script-custom-minutes')){
+    $('script-custom-minutes').oninput = () => {
+      document.querySelectorAll('[data-minutes]').forEach(el => el.classList.remove('on'));
+      updateScriptLengthEstimate();
+    };
+  }
+  updateScriptLengthEstimate();
+}
+function clampPercent(value, fallback){
+  const number = Number(value);
+  if(!Number.isFinite(number)) return fallback;
+  return Math.max(0, Math.min(100, Math.round(number)));
+}
+function controlPercent(key, fallback){
+  return clampPercent(state.renderControls && state.renderControls[key], fallback);
+}
+function controlAlpha(key, fallback){
+  return clampPercent(state.renderControls && state.renderControls[key], fallback) / 100;
+}
+function rangeLabel(value, suffix){
+  return `${value}${suffix || '%'}`;
+}
+function renderControlGrid(){
+  return $('render-control-grid') ||
+    $('title-position')?.closest('.control-grid') ||
+    $('render-preview')?.closest('.render-lab')?.querySelector('.control-grid') ||
+    document.querySelector('#step-render .control-grid');
+}
+function moveControlFieldToRenderGrid(id){
+  const grid = renderControlGrid();
+  const el = $(id);
+  const field = el?.closest('.field');
+  if(grid && field && field.parentElement !== grid) grid.appendChild(field);
+}
+function ensureRenderRange(id, label, stateKey, fallback, suffix){
+  const existing = $(id);
+  if(existing){
+    moveControlFieldToRenderGrid(id);
+    return existing;
+  }
+  const grid = renderControlGrid();
+  if(!grid) return null;
+  const value = state.renderControls[stateKey] ?? fallback;
+  const field = document.createElement('div');
+  field.className = 'field';
+  field.innerHTML = `<div class="label">${label}</div><div class="range-row"><input id="${id}" type="range" min="0" max="100" value="${value}"><span id="${id}-value">${rangeLabel(value, suffix)}</span></div>`;
+  grid.appendChild(field);
+  return $(id);
+}
+function ensureRenderSelect(id, label, options, stateKey, fallback){
+  const existing = $(id);
+  if(existing){
+    moveControlFieldToRenderGrid(id);
+    return existing;
+  }
+  const grid = renderControlGrid();
+  if(!grid) return null;
+  const value = state.renderControls[stateKey] ?? fallback;
+  const field = document.createElement('div');
+  field.className = 'field';
+  field.innerHTML = `<div class="label">${label}</div><select id="${id}">${options.map(opt => `<option value="${esc(opt.value)}">${esc(opt.label)}</option>`).join('')}</select>`;
+  grid.appendChild(field);
+  const el = $(id);
+  if(el) el.value = value;
+  return el;
+}
+function ensureRenderFineControls(){
+  const titleSize = $('title-size');
+  if(titleSize && !Array.from(titleSize.options).some(opt => opt.value === 'xlarge')){
+    const option = document.createElement('option');
+    option.value = 'xlarge';
+    option.textContent = '特大';
+    titleSize.appendChild(option);
+  }
+  const oldTitle = $('title-shadow-opacity');
+  if(oldTitle){
+    oldTitle.id = 'title-background-opacity';
+    const label = oldTitle.closest('.field')?.querySelector('.label');
+    const value = oldTitle.closest('.field')?.querySelector('span');
+    if(label) label.textContent = '標題貼紙背景';
+    if(value) value.id = 'title-background-value';
+  }
+  moveControlFieldToRenderGrid('title-background-opacity');
+  const oldSubtitle = $('subtitle-shadow-opacity');
+  if(oldSubtitle){
+    oldSubtitle.id = 'subtitle-background-opacity';
+    const label = oldSubtitle.closest('.field')?.querySelector('.label');
+    const value = oldSubtitle.closest('.field')?.querySelector('span');
+    if(label) label.textContent = '字幕貼紙背景';
+    if(value) value.id = 'subtitle-background-value';
+  }
+  moveControlFieldToRenderGrid('subtitle-background-opacity');
+  ensureRenderRange('title-background-opacity', '標題貼紙背景', 'titleBackgroundOpacity', 18, '%');
+  ensureRenderRange('subtitle-background-opacity', '字幕貼紙背景', 'subtitleBackgroundOpacity', 18, '%');
+  ensureRenderRange('title-text-shadow-opacity', '標題字體陰影', 'titleTextShadowOpacity', 55, '%');
+  ensureRenderRange('subtitle-text-shadow-opacity', '字幕字體陰影', 'subtitleTextShadowOpacity', 55, '%');
+  ensureRenderSelect('title-align', '標題對齊', [
+    { value:'center', label:'置中' },
+    { value:'left', label:'靠左' },
+    { value:'right', label:'靠右' }
+  ], 'titleAlign', 'center');
+  ensureRenderSelect('title-weight', '標題粗細', [
+    { value:'700', label:'一般粗' },
+    { value:'800', label:'粗' },
+    { value:'900', label:'超粗' }
+  ], 'titleWeight', '900');
+  ensureRenderSelect('subtitle-align', '字幕對齊', [
+    { value:'center', label:'置中' },
+    { value:'left', label:'靠左' },
+    { value:'right', label:'靠右' }
+  ], 'subtitleAlign', 'center');
+  ensureRenderSelect('subtitle-weight', '字幕粗細', [
+    { value:'700', label:'一般粗' },
+    { value:'800', label:'粗' },
+    { value:'900', label:'超粗' }
+  ], 'subtitleWeight', '900');
+  const lead = ensureRenderRange('subtitle-lead-seconds', '字幕提前校正', 'subtitleLeadSeconds', 1, '秒');
+  if(lead){
+    lead.min = '0';
+    lead.max = '2';
+    lead.step = '0.1';
+  }
+  const subtitleBox = $('subtitle-output');
+  if(subtitleBox && subtitleBox.tagName !== 'TEXTAREA'){
+    const textarea = document.createElement('textarea');
+    textarea.id = 'subtitle-output';
+    textarea.className = subtitleBox.className || 'subtitle-box';
+    textarea.style.cssText = subtitleBox.style.cssText || 'margin-top:14px';
+    textarea.value = subtitleBox.textContent || '尚未產生字幕預覽。';
+    subtitleBox.replaceWith(textarea);
+  }
+  const editable = $('subtitle-output');
+  if(editable && 'value' in editable){
+    editable.removeAttribute('readonly');
+    editable.disabled = false;
+    editable.placeholder = '這裡可以直接修改字幕文字與 SRT 時間軸。';
+    editable.style.pointerEvents = 'auto';
+    editable.style.userSelect = 'text';
+  }
+}
+function setSubtitleOutput(value){
+  ensureRenderFineControls();
+  const box = $('subtitle-output');
+  if(!box) return;
+  if('value' in box) box.value = value;
+  else box.textContent = value;
+}
+function subtitleOutputValue(){
+  const box = $('subtitle-output');
+  if(!box) return '';
+  return 'value' in box ? box.value : box.textContent;
+}
+function editableSrtText(){
+  const raw = String(subtitleOutputValue() || '').replace(/\r\n/g, '\n').trim();
+  const firstCue = raw.search(/\n\s*1\s*\n\d{2}:\d{2}:\d{2}[,.]\d{3}\s*-->/);
+  if(firstCue >= 0) return raw.slice(firstCue).trim();
+  if(/^\s*1\s*\n\d{2}:\d{2}:\d{2}[,.]\d{3}\s*-->/.test(raw)) return raw;
+  return state.srt || '';
+}
+function vttFromSrt(srt){
+  return 'WEBVTT\n\n' + String(srt || '').replace(/\r\n/g, '\n').replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2').trim() + '\n';
+}
+function firstSubtitleLineFromSrt(srt){
+  const blocks = String(srt || '').replace(/\r\n/g, '\n').split(/\n\s*\n/);
+  for(const block of blocks){
+    const lines = block.split('\n').map(line => line.trim()).filter(Boolean);
+    const index = lines.findIndex(line => line.includes('-->'));
+    if(index >= 0 && lines[index + 1]) return lines.slice(index + 1).join(' ');
+  }
+  return '';
+}
+function renderTemplatePreviewStyle(){
+  const title = $('preview-title');
+  const subtitle = $('preview-subtitle');
+  if(!title || !subtitle) return;
+  const template = state.renderTemplate || 'gold_authority';
+  const titlePos = state.renderControls.titlePosition || 'top';
+  const subtitlePos = state.renderControls.subtitlePosition || 'standard';
+  const titleSize = state.renderControls.titleSize || 'medium';
+  const subtitleSize = state.renderControls.subtitleSize || 'medium';
+  const titleAlign = state.renderControls.titleAlign || 'center';
+  const subtitleAlign = state.renderControls.subtitleAlign || 'center';
+  const titleWeight = state.renderControls.titleWeight || '900';
+  const subtitleWeight = state.renderControls.subtitleWeight || '900';
+  const topMap = { top:'5.5%', upper:'11%', lower:'18%' };
+  const bottomMap = { standard:'18%', higher:'24%' };
+  const titleSizeMap = { small:'18px', medium:'24px', large:'30px', xlarge:'36px' };
+  const subtitleSizeMap = { small:'12px', medium:'14px', large:'16px' };
+  const titleBgAlpha = controlAlpha('titleBackgroundOpacity', 18);
+  const subtitleBgAlpha = controlAlpha('subtitleBackgroundOpacity', 18);
+  const titleTextAlpha = controlAlpha('titleTextShadowOpacity', 55);
+  const subtitleTextAlpha = controlAlpha('subtitleTextShadowOpacity', 55);
+  title.style.top = topMap[titlePos] || topMap.top;
+  title.style.fontSize = titleSizeMap[titleSize] || titleSizeMap.medium;
+  title.style.textAlign = titleAlign;
+  title.style.fontWeight = titleWeight;
+  subtitle.style.bottom = bottomMap[subtitlePos] || bottomMap.standard;
+  subtitle.style.fontSize = subtitleSizeMap[subtitleSize] || subtitleSizeMap.medium;
+  subtitle.style.textAlign = subtitleAlign;
+  subtitle.style.fontWeight = subtitleWeight;
+  title.style.background = `rgba(0,0,0,${titleBgAlpha})`;
+  title.style.color = '#fff';
+  title.style.border = titleBgAlpha > 0 ? '1px solid rgba(255,255,255,.18)' : '1px solid transparent';
+  title.style.boxShadow = titleBgAlpha > 0 ? `0 10px 28px rgba(0,0,0,${Math.min(.38, titleBgAlpha + .06)})` : 'none';
+  title.style.textShadow = titleTextAlpha > 0 ? `0 3px 10px rgba(0,0,0,${titleTextAlpha}), 0 1px 2px rgba(0,0,0,${Math.min(1, titleTextAlpha + .25)})` : 'none';
+  if(template === 'gold_authority'){
+    title.style.background = `rgba(0,0,0,${titleBgAlpha})`;
+    title.style.color = '#f7dc72';
+    title.style.border = titleBgAlpha > 0 ? '1px solid rgba(247,220,114,.34)' : '1px solid transparent';
+  }else if(template === 'tiktok_hook'){
+    title.style.background = `rgba(255,46,99,${titleBgAlpha})`;
+    title.style.color = '#fff';
+    title.style.border = titleBgAlpha > 0 ? '1px solid rgba(255,255,255,.45)' : '1px solid transparent';
+    title.style.textShadow = titleTextAlpha > 0 ? `2px 2px 0 rgba(0,0,0,${titleTextAlpha}), 0 4px 10px rgba(0,0,0,${titleTextAlpha})` : 'none';
+  }else if(template === 'quiet_caption'){
+    title.style.background = `rgba(0,0,0,${titleBgAlpha})`;
+    title.style.color = '#f6d66d';
+    title.style.border = titleBgAlpha > 0 ? '1px solid rgba(246,214,109,.28)' : '1px solid transparent';
+  }
+  subtitle.style.background = `rgba(0,0,0,${subtitleBgAlpha})`;
+  subtitle.style.boxShadow = subtitleBgAlpha > 0 ? `0 14px 34px rgba(0,0,0,${Math.min(.42, subtitleBgAlpha + .08)})` : 'none';
+  subtitle.style.textShadow = subtitleTextAlpha > 0 ? `0 3px 9px rgba(0,0,0,${subtitleTextAlpha}), 0 1px 2px rgba(0,0,0,${Math.min(1, subtitleTextAlpha + .25)})` : 'none';
+}
+function safeTitleLinesForPreview(value){
+  const raw = stripLeadingPunctuation(String(value || '').replace(/\r\n/g, '\n')).trim();
+  const sources = raw.split('\n').map(line => line.trim()).filter(Boolean);
+  const size = state.renderControls.titleSize || 'medium';
+  const maxChars = size === 'xlarge' ? 8 : size === 'large' ? 9 : size === 'small' ? 14 : 11;
+  const ellipsize = (line) => {
+    const chars = Array.from(String(line || '').trim());
+    if(chars.length <= maxChars) return chars.join('');
+    return chars.slice(0, Math.max(1, maxChars - 3)).join('') + '...';
+  };
+  if(sources.length){
+    return sources.slice(0, 2).map(ellipsize).join('\n') || '影片標題';
+  }
+  const lines = [];
+  [raw].forEach(source => {
+    const chars = Array.from(source.replace(/\s+/g, ' '));
+    for(let i = 0; i < chars.length; i += maxChars){
+      if(lines.length >= 2) return;
+      lines.push(chars.slice(i, i + maxChars).join('').trim());
     }
+  });
+  const tooLong = Array.from(raw).length > Array.from(lines.join('')).length;
+  if(tooLong && lines[1]) lines[1] = ellipsize(lines[1]);
+  return (lines.length ? lines : ['影片標題']).join('\n');
+}
+function currentAvatarPreviewUrl(){
+  return state.avatarResult && (state.avatarResult.previewUrl || state.avatarResult.downloadUrl || '');
+}
+function currentAvatarRenderUrl(){
+  return state.avatarResult && (state.avatarResult.downloadUrl || state.avatarResult.previewUrl || '');
+}
+function syncPreviewVideo(){
+  const box = $('render-preview');
+  if(!box) return;
+  const url = currentAvatarPreviewUrl();
+  let video = $('preview-video-bg');
+  if(url){
+    if(!video){
+      video = document.createElement('video');
+      video.id = 'preview-video-bg';
+      video.className = 'preview-video-bg';
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.preload = 'metadata';
+      box.insertBefore(video, box.firstChild);
+    }
+    if(video.getAttribute('src') !== url) video.setAttribute('src', url);
+    video.style.display = 'block';
+    box.classList.add('has-video');
+    video.play().catch(() => {});
+  }else{
+    if(video) video.style.display = 'none';
+    box.classList.remove('has-video');
   }
-  start();
-})();
-</script></body></html>
+}
+function updateRenderPreview(){
+  syncPreviewVideo();
+  if($('preview-title')){
+    const titleText = safeTitleLinesForPreview($('final-title')?.value || state.selectedTopic || '影片標題');
+    $('preview-title').textContent = titleText || '影片標題';
+  }
+  const text = ($('final-script')?.value || state.voiceScriptText || '').trim();
+  const editedLine = firstSubtitleLineFromSrt(editableSrtText());
+  if($('preview-subtitle')) $('preview-subtitle').textContent = editedLine || subtitleChunks(text)[0] || '字幕會出現在這裡';
+  renderTemplatePreviewStyle();
+}
+function initRenderControls(){
+  ensureRenderFineControls();
+  const bindings = [
+    ['title-position', 'titlePosition'],
+    ['title-size', 'titleSize'],
+    ['title-align', 'titleAlign'],
+    ['title-weight', 'titleWeight'],
+    ['subtitle-position', 'subtitlePosition'],
+    ['subtitle-size', 'subtitleSize'],
+    ['subtitle-align', 'subtitleAlign'],
+    ['subtitle-weight', 'subtitleWeight']
+  ];
+  bindings.forEach(([id, key]) => {
+    const el = $(id);
+    if(!el) return;
+    if(state.renderControls[key] != null) el.value = state.renderControls[key];
+    el.onchange = () => {
+      state.renderControls[key] = el.value;
+      updateRenderPreview();
+    };
+  });
+  const rangeBindings = [
+    ['title-background-opacity', 'titleBackgroundOpacity', 'title-background-value', 18, '%'],
+    ['subtitle-background-opacity', 'subtitleBackgroundOpacity', 'subtitle-background-value', 18, '%'],
+    ['title-text-shadow-opacity', 'titleTextShadowOpacity', 'title-text-shadow-value', 55, '%'],
+    ['subtitle-text-shadow-opacity', 'subtitleTextShadowOpacity', 'subtitle-text-shadow-value', 55, '%']
+  ];
+  rangeBindings.forEach(([id, key, labelId, fallback, suffix]) => {
+    const el = $(id);
+    if(!el) return;
+    const labels = [$(labelId), $(`${id}-value`)].filter(Boolean);
+    state.renderControls[key] = clampPercent(state.renderControls[key], fallback);
+    el.value = state.renderControls[key];
+    labels.forEach(label => label.textContent = rangeLabel(state.renderControls[key], suffix));
+    el.oninput = () => {
+      state.renderControls[key] = clampPercent(el.value, fallback);
+      [$(labelId), $(`${id}-value`)].filter(Boolean).forEach(label => label.textContent = rangeLabel(state.renderControls[key], suffix));
+      updateRenderPreview();
+    };
+  });
+  const lead = $('subtitle-lead-seconds');
+  if(lead){
+    const value = Math.max(0, Math.min(2, Number(state.renderControls.subtitleLeadSeconds ?? 1)));
+    state.renderControls.subtitleLeadSeconds = value;
+    lead.value = String(value);
+    [$('subtitle-lead-value'), $('subtitle-lead-seconds-value')].filter(Boolean).forEach(label => label.textContent = `${value.toFixed(1)}秒`);
+    lead.oninput = () => {
+      const next = Math.max(0, Math.min(2, Number(lead.value || 0)));
+      state.renderControls.subtitleLeadSeconds = next;
+      [$('subtitle-lead-value'), $('subtitle-lead-seconds-value')].filter(Boolean).forEach(label => label.textContent = `${next.toFixed(1)}秒`);
+    };
+  }
+  const subtitleBox = $('subtitle-output');
+  if(subtitleBox) subtitleBox.oninput = () => {
+    state.srt = editableSrtText();
+    state.vtt = vttFromSrt(state.srt);
+    updateRenderPreview();
+  };
+  updateRenderPreview();
+}
+async function refreshProfile(){
+  const data = await authedFetch(SECURE_API_URL, { action:'profile' });
+  state.student = data.student;
+  updateQuota();
+}
+function withTimeout(promise, ms, label){
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(label || 'request_timeout')), ms))
+  ]);
+}
+async function init(){
+  document.querySelectorAll('.stepnav button').forEach(btn => btn.onclick = () => goStep(btn.dataset.step));
+  initRenderTemplates();
+  initScriptLengthControls();
+  initRenderControls();
+  const client = getSupabaseClient();
+  $('login-btn').onclick = () => client.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: authRedirectUrl() } });
+  $('login-state').textContent = '讀取登入狀態中...';
+  const { data } = await withTimeout(client.auth.getSession(), 8000, '登入狀態讀取逾時，請重新整理或重新登入。');
+  state.user = data && data.session && data.session.user;
+  if(!state.user){
+    $('login-state').textContent = '尚未登入';
+    $('auth-box').style.display = 'block';
+    return;
+  }
+  $('login-state').textContent = `已登入：${state.user.email || ''}`;
+  $('app').style.display = 'grid';
+  $('auth-box').style.display = 'none';
+  refreshProfile().catch(e => {
+    status('topic-status', e.message || '會員額度暫時讀取失敗，功能仍可先操作。', 'warn');
+  });
+  loadVoices().catch(e => {
+    status('voice-status', e.message || '聲音清單暫時讀取失敗，請稍後按刷新聲音清單。', 'warn');
+  });
+  runRenderSelfTestIfRequested();
+}
+function parseTopics(text){
+  let blocks = String(text || '').split(/【選題\d+】/).map(s => s.trim()).filter(Boolean);
+  if(!blocks.length){
+    blocks = String(text || '')
+      .split(/\n(?=(?:#{1,3}\s*)?(?:📌\s*)?(?:選題標題|選題|標題)|(?:\d+[.、]\s*))/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+  return blocks.slice(0,8).map((b, i) => {
+    const lines = b.trim().split('\n');
+    const pick = label => pickLabeledValue(lines, label);
+    const selectedType = $('topic-type') ? $('topic-type').value : '';
+    const title = stripLeadingPunctuation(cleanTopicText(pick('標題') || pick('選題標題') || inferTopicTitle(b) || firstUnlabeledLine(lines).replace(/^\d+[.、]\s*/,'').slice(0,40)));
+    const subtitle = stripLeadingPunctuation(cleanTopicText(pick('副標題') || pick('核心痛點') || pick('痛點') || fallbackSubtitle(lines)));
+    return {
+      index: i + 1,
+      type: normalizeTopicType(pick('類型'), selectedType) || '短影音選題',
+      potential: normalizePotential(pick('潛力') || (b.includes('高潛力') ? '高' : '')),
+      title,
+      subtitle,
+      raw: b
+    };
+  });
+}
+function renderTopics(){
+  $('topic-list').innerHTML = state.topics.map(t => `
+    <div class="card ${state.selectedTopic === t.title ? 'selected' : ''}">
+      <span class="badge">${esc(t.type)}</span>${t.potential ? ` <span class="badge">潛力 ${esc(t.potential)}</span>` : ''}
+      <div class="card-title">${esc(t.title)}</div>
+      <div class="card-text">${esc(t.subtitle)}</div>
+      <button class="btn secondary" style="margin-top:10px" data-topic="${esc(t.title)}">選這個題目</button>
+    </div>`).join('');
+  document.querySelectorAll('[data-topic]').forEach(btn => btn.onclick = () => {
+    state.selectedTopic = btn.getAttribute('data-topic') || '';
+    $('selected-topic').value = state.selectedTopic;
+    $('final-title').value = state.selectedTopic;
+    renderTopics();
+    updateRenderPreview();
+    goStep(2);
+  });
+}
+async function generateTopics(){
+  status('topic-status','生成中...','warn');
+  $('btn-topics').disabled = true;
+  try{
+    const type = $('topic-type').value;
+    const extra = $('topic-extra').value.trim();
+    const typeInstruction = type === '隨機分配'
+      ? '選題類型：隨機分配。請從「痛點鏡子、知識降維、迷思破解、客戶故事、選擇指南、行動催化」這 6 種方向中，替 8 個選題隨機分配類型；每一種至少出現 1 次，另外 2 個可隨機重複。'
+      : '選題類型：' + type + '。8 個選題都要符合這個類型方向。';
+    const system = `${buildProfilePrompt()}\n\n你是專業短影音選題策略師。\n${compliancePrompt()}`;
+    const user = `補充方向：${extra || '無'}。\n${typeInstruction}\n\n請根據學員帳號定位、行業與選題方向，生成 8 個短影音文案選題。每個選題都要能直接展開成 1-2 分鐘口播文案。\n\n格式必須固定如下：\n【選題1】\n類型：（痛點鏡子/知識降維/迷思破解/客戶故事/選擇指南/行動催化）\n標題：（20字內）\n副標題：（30字內）\n潛力：高/中/低\n\n【選題2】...\n\n重要：欄位名稱只出現在冒號前，冒號後只放內容，不要輸出「類型類型」、「類型：類型」或把欄位名稱重複放進內容。\n\n請輸出到【選題8】。`;
+    const text = await aiCall('topics', system, user, 'professional');
+    state.topics = parseTopics(text);
+    renderTopics();
+    status('topic-status',`已生成 ${state.topics.length} 個選題。`,'ok');
+    await refreshProfile().catch(()=>{});
+  }catch(e){ status('topic-status', e.message || '生成失敗','err'); }
+  $('btn-topics').disabled = false;
+}
+async function generateScript(tone){
+  if(!state.selectedTopic){ status('script-status','請先選擇選題。','err'); return; }
+  const cfg = getScriptLengthConfig();
+  status('script-status',`文案生成中，目標約 ${fmt(cfg.words)} 字、${cfg.minutes} 分鐘...`,'warn');
+  $('btn-script').disabled = true;
+  $('btn-script-pro').disabled = true;
+  try{
+    const casual = tone !== 'professional';
+    const system = `${buildProfilePrompt()}\n\n你是專業台灣口播文案撰寫師。\n${compliancePrompt()}\n內容規則：文案必須包含開場鉤子、痛點、解法、具體場景、CTA。語氣詞只佔全文 10% 以下。格式適合直接貼進語音合成工具朗讀，每句結尾必須有標點。\n${casual ? '語氣：素人隨聊感，像台灣人在自然聊天，但不能空洞。' : '語氣：博主專業感，有觀點、有邏輯、有乾貨。'}`;
+    const extra = $('script-extra').value.trim() || '無';
+    const chunks = aiCostForWords(cfg.words);
+    const chunkTarget = Math.ceil(cfg.words / chunks);
+    let combined = '';
+    for(let i = 0; i < chunks; i++){
+      const done = scriptCharCount(combined);
+      if(done >= Math.round(cfg.words * 0.96)) break;
+      const remaining = cfg.words - done;
+      if(remaining <= 80) break;
+      const thisTarget = chunks === 1 ? cfg.words : Math.min(chunkTarget, remaining);
+      const user = combined
+        ? `選題：${state.selectedTopic}\n補充：${extra}\n\n以下是前面已完成的口播文案，請直接順著語意續寫，不要重複開場，不要重複前文。\n\n已完成內容：\n${combined}\n\n整篇最終目標：約 ${cfg.words} 字，允許誤差最多正負 5%。現在已完成約 ${done} 字，本次只補約 ${thisTarget} 字，絕對不能超過 ${Math.round(thisTarget * 1.03)} 字。${i === chunks - 1 || remaining <= chunkTarget ? '這是最後一段，請自然收尾並加入 CTA。' : '這不是最後一段，請先不要收尾，不要加入最終 CTA。'}\n\n只輸出口播正文，不要 Markdown，不要標題，不要分隔線。`
+        : `選題：${state.selectedTopic}\n補充：${extra}\n\n請生成約 ${thisTarget} 字的口播文案第一段。整篇最終目標是約 ${cfg.words} 字、約 ${cfg.minutes} 分鐘，允許誤差最多正負 5%，所以本次絕對不能超過 ${Math.round(thisTarget * 1.03)} 字。\n\n內容要有具體場景、細節、例子與轉折，但不要灌水。\n${chunks === 1 ? '結構：開場鉤子、痛點、原因拆解、具體場景、解法、例子、總結、CTA。' : '結構：開場鉤子、痛點、原因拆解、具體場景。這不是完整長文，先不要做最終 CTA。'}\n\n只輸出口播正文，不要 Markdown，不要標題，不要分隔線。`;
+      const next = await aiCall('script', system, user, casual ? 'casual' : 'professional');
+      combined = fitScriptToTarget(combined + (combined ? '\n\n' : '') + next, cfg.words);
+      $('final-script').value = combined;
+      updateRenderPreview();
+    }
+    const minTarget = Math.round(cfg.words * 0.95);
+    const currentCount = scriptCharCount(combined);
+    if(currentCount > 0 && currentCount < minTarget){
+      const needed = Math.max(120, cfg.words - currentCount);
+      const supplementPrompt = `選題：${state.selectedTopic}
+補充：${extra}
+
+目前口播文案約 ${currentCount} 字，目標是 ${cfg.words} 字，允許範圍是 ${minTarget} 到 ${Math.round(cfg.words * 1.05)} 字。
+請只補一段約 ${needed} 字的延伸內容，直接接在原文後面，不要重複開場，不要重新下標題，不要 Markdown。`;
+      const supplement = await aiCall('script', system, supplementPrompt, casual ? 'casual' : 'professional');
+      combined = fitScriptToTarget(combined + (combined ? '\n\n' : '') + supplement, cfg.words);
+      $('final-script').value = combined;
+      updateRenderPreview();
+    }
+    combined = await enforceScriptLength(combined, cfg, system, casual);
+    state.script = combined;
+    $('final-script').value = state.script;
+    updateRenderPreview();
+    status('script-status',`文案已生成，目標約 ${fmt(cfg.words)} 字，實際約 ${fmt(scriptCharCount(state.script))} 字，可手動修改後送語音。`,'ok');
+    await refreshProfile().catch(()=>{});
+  }catch(e){ status('script-status', e.message || '文案生成失敗','err'); }
+  $('btn-script').disabled = false;
+  $('btn-script-pro').disabled = false;
+}
+async function generateTikTokCaption(){
+  const text = $('final-script').value.trim();
+  if(!text){
+    status('caption-status','請先生成或填入口播文案。','err');
+    return;
+  }
+  status('caption-status','行銷文案生成中...','warn');
+  $('btn-tiktok-caption').disabled = true;
+  try{
+    const selectedDesc = [
+      'TikTok 影片說明文字（150字以內，結尾附帶最多5個黃金配置標籤）',
+      'LINE 私訊推廣文（100字以內）',
+      '5個行動呼籲 CTA 短語（每個10字以內）',
+      '精準 Hashtag 組合（3-5個黃金配置標籤）'
+    ].join('\n');
+    const system = `${buildProfilePrompt()}\n\n你是專業台灣數位行銷文案師，專門根據短影音腳本生成各類優質行銷文案。\n${compliancePrompt()}\n\n行銷文案規則：\n- 必須百分之百根據使用者提供的短影音腳本內容與學員背景生成。\n- 風格要口語、有服務力，只用繁體中文。\n- 每段都必須有實質商品、服務或專業內容，不能只寫語氣詞或空泛情緒。\n- 絕對不能使用任何 emoji 或表情符號。\n- 不論在 TikTok 說明文字還是 Hashtag 組合中，Hashtag 數量都要嚴格限制最多 5 個，通常為 3 到 5 個。\n- Hashtag 要貼合影片腳本行業主題與精準領域，不要過度泛用。\n- 每種類型前加上清楚的標題標示，格式固定為：【類型名稱】。\n- 只輸出要求的四種行銷文案，不要輸出分析、說明、表格、Markdown 或分隔線。`;
+    const user = `以下是一支短影音的腳本：\n\n${text}\n\n請根據這支影片內容，生成以下行銷文案：\n\n${selectedDesc}\n\n每種類型前加上清楚的標題標示，格式：【類型名稱】\n內容...\n\n重要：每段都必須有實質商品/服務內容，不能只寫語氣詞或空泛情緒。`;
+    const raw = await aiCall('marketing', system, user, 'professional');
+    state.marketingCopies = parseMarketingCopies(raw);
+    state.tiktokCaption = state.marketingCopies.caption || raw;
+    $('tiktok-caption').value = state.marketingCopies.caption || raw;
+    $('ad-primary-copy').value = state.marketingCopies.line || '';
+    $('ad-hook-title').value = state.marketingCopies.cta || '';
+    $('ad-cta-copy').value = state.marketingCopies.hashtags || '';
+    status('caption-status','行銷文案已生成。','ok');
+    await refreshProfile().catch(()=>{});
+  }catch(e){
+    status('caption-status', e.message || '行銷文案生成失敗','err');
+  }
+  $('btn-tiktok-caption').disabled = false;
+}
+function parseMarketingCopies(text){
+  const raw = String(text || '').trim();
+  const pick = (label) => {
+    const labels = ['TikTok 影片說明文字','TikTok影片說明文字','LINE 私訊推廣文','LINE私訊推廣文','5個行動呼籲 CTA 短語','5 個行動呼籲 CTA 短語','精準 Hashtag 組合'];
+    const next = labels.filter(x => x !== label).map(x => `【${x}】`).join('|');
+    const pattern = new RegExp(`【${label}】\\s*([\\s\\S]*?)(?=${next ? next + '|' : ''}$)`);
+    const match = raw.match(pattern);
+    return match ? match[1].trim() : '';
+  };
+  return {
+    caption: pick('TikTok 影片說明文字') || pick('TikTok影片說明文字'),
+    line: pick('LINE 私訊推廣文') || pick('LINE私訊推廣文'),
+    cta: pick('5個行動呼籲 CTA 短語') || pick('5 個行動呼籲 CTA 短語'),
+    hashtags: pick('精準 Hashtag 組合')
+  };
+}
+async function copyTikTokCaption(){
+  return copyMarketingField('tiktok-caption', 'TikTok 影片說明文字');
+}
+async function copyMarketingField(id, label){
+  const text = $(id).value.trim();
+  if(!text){
+    status('caption-status',`目前沒有可複製的${label}。`,'err');
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(text);
+    status('caption-status',`已複製${label}。`,'ok');
+  }catch(e){
+    status('caption-status','複製失敗，請手動選取文字。','err');
+  }
+}
+async function copyMarketingAll(){
+  const blocks = [
+    ['TikTok影片說明文字', $('tiktok-caption').value.trim()],
+    ['LINE私訊推廣文', $('ad-primary-copy').value.trim()],
+    ['5個行動呼籲 CTA 短語', $('ad-hook-title').value.trim()],
+    ['精準 Hashtag 組合', $('ad-cta-copy').value.trim()]
+  ].filter(([, value]) => value);
+  if(!blocks.length){
+    status('caption-status','目前沒有可複製的行銷文案。','err');
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(blocks.map(([label, value]) => `【${label}】\n${value}`).join('\n\n'));
+    status('caption-status','已複製全部行銷文案。','ok');
+  }catch(e){
+    status('caption-status','複製失敗，請手動選取文字。','err');
+  }
+}
+async function loadVoices(){
+  try{
+    const data = await authedFetch(VOICE_API_URL, { action:'list' });
+    state.systemVoices = data.systemVoices || [];
+    state.customVoices = data.voices || [];
+    fillVoiceSelect();
+    renderVoiceList();
+    if(data.student){ state.student = data.student; updateQuota(); }
+  }catch(e){
+    state.systemVoices = [{ id:'def-female', name:'吉娃 AI 官方台灣女聲', duration:'系統預置聲音' }];
+    state.customVoices = [];
+    fillVoiceSelect();
+    renderVoiceList();
+  }
+}
+function fillVoiceSelect(){
+  const select = $('voice-select');
+  if(!select) return;
+  const previous = select.value;
+  const voices = [].concat(state.systemVoices || [], state.customVoices || []);
+  select.innerHTML = voices.map(v => {
+    const mine = (state.customVoices || []).some(x => x.id === v.id);
+    return `<option value="${esc(v.id)}">${esc(v.name || '未命名聲音')}${mine ? '（我的克隆）' : '（系統預置）'}</option>`;
+  }).join('') || '<option value="def-female">吉娃 AI 官方台灣女聲</option>';
+  if(previous && Array.from(select.options).some(o => o.value === previous)) select.value = previous;
+}
+function renderVoiceList(){
+  const box = $('voice-list');
+  if(!box) return;
+  const voices = (state.customVoices || []).filter(v => v && v.id);
+  if(!voices.length){
+    box.innerHTML = '<div class="status">目前還沒有克隆聲音。你可以在右側錄音或上傳音檔建立。</div>';
+    return;
+  }
+  box.innerHTML = voices.map(v => `
+    <div class="voice-card">
+      <div><b>${esc(v.name || '我的克隆聲音')}</b><small>${esc(v.duration || '')}${v.date ? '｜' + esc(v.date) : ''}</small></div>
+      <div class="btns">
+        <button class="btn secondary" type="button" data-use-voice="${esc(v.id)}">選用</button>
+        <button class="btn secondary danger" type="button" data-delete-voice="${esc(v.id)}">刪除</button>
+      </div>
+    </div>`).join('');
+  box.querySelectorAll('[data-use-voice]').forEach(btn => btn.onclick = () => {
+    $('voice-select').value = btn.getAttribute('data-use-voice') || '';
+    status('voice-status','已選擇克隆聲音。','ok');
+  });
+  box.querySelectorAll('[data-delete-voice]').forEach(btn => btn.onclick = () => deleteVoice(btn.getAttribute('data-delete-voice') || ''));
+}
+async function deleteVoice(id){
+  if(!id) return;
+  if(!confirm('確定要刪除這個克隆聲音嗎？刪除後不能復原。')) return;
+  try{
+    await authedFetch(VOICE_API_URL, { action:'delete', voice_id:id });
+    state.customVoices = (state.customVoices || []).filter(v => v.id !== id);
+    fillVoiceSelect();
+    renderVoiceList();
+    status('clone-status','克隆聲音已刪除。','ok');
+  }catch(e){
+    status('clone-status', e.message || '刪除聲音失敗','err');
+  }
+}
+function selectedVoiceAudioFile(){
+  const fileInput = $('voice-file');
+  return fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+}
+function validateAudioFile(file){
+  if(!file) return false;
+  const okExt = /\.(mp3|wav|m4a|aac|webm|ogg|flac)$/i.test(file.name || '');
+  return (file.type && file.type.startsWith('audio/')) || okExt;
+}
+function setRecordStatus(text, cls){ status('record-status', text, cls); }
+function resetRecordingUi(){
+  const btn = $('record-voice-btn');
+  if(btn) btn.classList.remove('recording');
+  if(btn) btn.textContent = '錄';
+}
+async function toggleVoiceRecording(){
+  if(state.recorder && state.recorder.state === 'recording'){
+    state.recorder.stop();
+    return;
+  }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder){
+    setRecordStatus('這個瀏覽器不支援即時錄音，請改用上傳音檔。','err');
+    return;
+  }
+  try{
+    state.recordingBlob = null;
+    state.recordingSeconds = 0;
+    state.recordChunks = [];
+    state.recordStream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : '';
+    state.recorder = new MediaRecorder(state.recordStream, mime ? { mimeType:mime } : undefined);
+    state.recorder.ondataavailable = e => { if(e.data && e.data.size) state.recordChunks.push(e.data); };
+    state.recorder.onstop = () => {
+      if(state.recordTimer) clearInterval(state.recordTimer);
+      state.recordTimer = null;
+      state.recordingBlob = new Blob(state.recordChunks, { type:state.recorder.mimeType || 'audio/webm' });
+      if(state.recordStream) state.recordStream.getTracks().forEach(track => track.stop());
+      state.recordStream = null;
+      resetRecordingUi();
+      setRecordStatus(`錄音完成：${state.recordingSeconds} 秒。可以命名後建立克隆聲音。`,'ok');
+    };
+    state.recorder.start();
+    $('record-voice-btn').classList.add('recording');
+    $('record-voice-btn').textContent = '停';
+    setRecordStatus('錄音中，再按一次停止。','warn');
+    state.recordTimer = setInterval(() => {
+      state.recordingSeconds += 1;
+      const m = String(Math.floor(state.recordingSeconds / 60)).padStart(2,'0');
+      const s = String(state.recordingSeconds % 60).padStart(2,'0');
+      $('record-timer').textContent = `${m}:${s}`;
+      if(state.recordingSeconds >= 120 && state.recorder && state.recorder.state === 'recording') state.recorder.stop();
+    }, 1000);
+  }catch(e){
+    resetRecordingUi();
+    setRecordStatus('無法啟用麥克風，請確認瀏覽器授權或改用上傳音檔。','err');
+  }
+}
+async function cloneVoice(){
+  const name = $('voice-name').value.trim();
+  const uploaded = selectedVoiceAudioFile();
+  const audio = uploaded || state.recordingBlob;
+  if(!name){ status('clone-status','請先幫聲音命名。','err'); return; }
+  if(!audio){ status('clone-status','請先錄音或上傳音檔。','err'); return; }
+  if(uploaded && !validateAudioFile(uploaded)){ status('clone-status','請上傳音檔格式，例如 mp3、wav、m4a。','err'); return; }
+  $('btn-clone-voice').disabled = true;
+  status('clone-status','正在建立克隆聲音...','warn');
+  try{
+    const t = await token();
+    if(!t) throw new Error('請先登入學員帳號。');
+    const form = new FormData();
+    form.append('name', name);
+    form.append('recording_seconds', String(state.recordingSeconds || 30));
+    form.append('audio', audio, uploaded ? uploaded.name : `chiwa-voice-${Date.now()}.webm`);
+    const res = await fetch(VOICE_API_URL, { method:'POST', headers:{ Authorization:'Bearer ' + t }, body:form });
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok) throw new Error(data.error || data.detail || '聲音克隆失敗，請稍後再試。');
+    await loadVoices();
+    const createdId = data.voice && data.voice.id || data.model && data.model.id || '';
+    if(createdId && $('voice-select')) $('voice-select').value = createdId;
+    $('voice-name').value = '';
+    if($('voice-file')) $('voice-file').value = '';
+    state.recordingBlob = null;
+    state.recordingSeconds = 0;
+    $('record-timer').textContent = '00:00';
+    status('clone-status','克隆聲音已建立，已放回發音人選單。','ok');
+  }catch(e){
+    status('clone-status', e.message || '聲音克隆失敗','err');
+  }
+  $('btn-clone-voice').disabled = false;
+}
+function estimateChars(text){ return Array.from(String(text || '').replace(/\s+/g,'')).length; }
+async function generateVoice(){
+  const text = $('final-script').value.trim();
+  if(!text){ status('voice-status','請先確認文案。','err'); return; }
+  const chars = estimateChars(text);
+  if(!confirm(`即將生成語音\n文案長度：約 ${chars} 字\n即使只是試聽也會消耗語音額度。\n\n確認生成？`)) return;
+  status('voice-status','語音生成中...','warn');
+  $('btn-voice').disabled = true;
+  try{
+    const data = await authedFetch(VOICE_API_URL, {
+      action:'tts',
+      voice_id:$('voice-select').value || 'def-female',
+      text,
+      language:$('voice-lang').value || 'zh'
+    });
+    state.voiceScriptText = text;
+    state.script = text;
+    state.voiceItem = data.item;
+    state.voiceAudioSeconds = Math.max(1, Math.round(Number(data.item && data.item.audioSeconds || Math.ceil(chars / 4.2))));
+    $('voice-result').innerHTML = `<audio controls src="${esc(data.item && data.item.playUrl || '')}"></audio><div class="status ok">語音已生成。請完整試聽，確認沒有念錯字或停頓問題後再送形象克隆。</div>`;
+    $('btn-to-avatar').disabled = false;
+    if(data.student){ state.student = data.student; updateQuota(); }
+    generateSubtitles();
+    updateRenderPreview();
+    status('voice-status',`已生成語音，約 ${state.voiceAudioSeconds} 秒。`,'ok');
+  }catch(e){ status('voice-status', e.message || '語音生成失敗','err'); }
+  $('btn-voice').disabled = false;
+}
+function fileExt(file, fallback){ const m=String(file && file.name || '').match(/\.([a-z0-9]+)$/i); return (m ? m[1] : fallback).toLowerCase(); }
+function fileMime(file, kind){ return file && file.type || (kind === 'video' ? 'video/mp4' : 'audio/wav'); }
+async function r2Json(path, options){
+  const res = await fetch(AVATAR_R2_URL + path, options);
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok) throw new Error(data.error || `upload_${res.status}`);
+  return data;
+}
+function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
+async function uploadVideoToR2(file, onProgress){
+  const t = await token();
+  const create = await r2Json('/avatar/multipart/create', {
+    method:'POST',
+    headers:{ 'Authorization':'Bearer ' + t, 'Content-Type':'application/json' },
+    body: JSON.stringify({ kind:'video', fileName:file.name || 'avatar-video.mp4', contentType:fileMime(file,'video'), size:file.size })
+  });
+  const partSize = Math.max(5 * 1024 * 1024, Math.min(Number(create.partSize || 10 * 1024 * 1024), 20 * 1024 * 1024));
+  const totalParts = Math.ceil(file.size / partSize);
+  const parts = [];
+  let uploaded = 0;
+  try{
+    for(let i=0;i<totalParts;i++){
+      const chunk = file.slice(i * partSize, Math.min(file.size, (i + 1) * partSize));
+      let lastError = null;
+      for(let attempt=0;attempt<4;attempt++){
+        try{
+          const part = await r2Json(`/avatar/multipart/part?key=${encodeURIComponent(create.key)}&uploadId=${encodeURIComponent(create.uploadId)}&partNumber=${i + 1}`, {
+            method:'PUT',
+            headers:{ 'Authorization':'Bearer ' + t, 'Content-Type':'application/octet-stream', 'x-chiwa-upload':'workflow-video-part' },
+            body: chunk
+          });
+          parts.push({ partNumber:Number(part.partNumber), etag:part.etag });
+          uploaded += chunk.size;
+          if(onProgress) onProgress(Math.min(100, uploaded / file.size * 100), uploaded, file.size);
+          lastError = null;
+          break;
+        }catch(err){ lastError = err; await sleep(800 * (attempt + 1)); }
+      }
+      if(lastError) throw lastError;
+    }
+    return await r2Json('/avatar/multipart/complete', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer ' + t, 'Content-Type':'application/json' },
+      body: JSON.stringify({ key:create.key, uploadId:create.uploadId, parts })
+    });
+  }catch(err){
+    await fetch(AVATAR_R2_URL + '/avatar/multipart/abort', {
+      method:'DELETE',
+      headers:{ 'Authorization':'Bearer ' + t, 'Content-Type':'application/json' },
+      body: JSON.stringify({ key:create.key, uploadId:create.uploadId })
+    }).catch(()=>{});
+    throw err;
+  }
+}
+async function submitAvatar(){
+  if(!state.voiceItem || !state.voiceItem.playUrl){ status('avatar-status','請先完成語音並確認。','err'); return; }
+  if(!state.avatarVideoFile){ status('avatar-status','請先選擇形象影片。','err'); return; }
+  if(!confirm(`確認送出形象克隆？\n語音長度：約 ${state.voiceAudioSeconds} 秒\n成功完成後才會扣影像克隆秒數。`)) return;
+  $('btn-avatar').disabled = true;
+  try{
+    status('avatar-status','形象影片上傳中 0%...','warn');
+    const uploaded = await uploadVideoToR2(state.avatarVideoFile, (pct, done, total) => {
+      status('avatar-status', `形象影片上傳中 ${pct.toFixed(1)}%（${(done/1024/1024).toFixed(1)}MB / ${(total/1024/1024).toFixed(1)}MB）`, 'warn');
+    });
+    status('avatar-status','素材已上傳，正在送出形象克隆任務...','warn');
+    const data = await authedFetch(AVATAR_API_URL, {
+      action:'submit_urls',
+      video_url:uploaded.signedUrl,
+      audio_url:state.voiceItem.playUrl,
+      video_path:uploaded.key,
+      audio_path:state.voiceItem.id || 'workflow-tts',
+      duration_seconds:state.voiceAudioSeconds
+    });
+    state.avatarTaskId = data.taskId;
+    status('avatar-status','任務已送出，正在查詢結果...','warn');
+    pollAvatar();
+  }catch(e){
+    status('avatar-status', e.message || '形象克隆送出失敗','err');
+    $('btn-avatar').disabled = false;
+  }
+}
+async function pollAvatar(){
+  try{
+    const data = await authedFetch(AVATAR_API_URL, { action:'query', taskId:state.avatarTaskId });
+    if(data.student){ state.student = data.student; updateQuota(); }
+    if(data.status === 'SUCCESS' && (data.previewUrl || data.downloadUrl)){
+      state.avatarResult = data;
+      $('avatar-result').innerHTML = `<video class="video-frame" controls src="${esc(data.previewUrl || data.downloadUrl)}"></video><div class="btns" style="margin-top:10px"><a class="btn secondary" href="${esc(data.downloadUrl || data.previewUrl)}" download>下載影片</a></div>`;
+      status('avatar-status','形象克隆影片已生成。','ok');
+      $('btn-avatar').disabled = false;
+      updateRenderPreview();
+      goStep(5);
+      return;
+    }
+    if(data.status === 'FAILED'){
+      status('avatar-status','形象克隆生成失敗，請稍後再試。','err');
+      $('btn-avatar').disabled = false;
+      return;
+    }
+    status('avatar-status',`生成中：${data.status || 'RUNNING'}，8 秒後自動查詢。`,'warn');
+    setTimeout(pollAvatar, 8000);
+  }catch(e){
+    status('avatar-status', e.message || '查詢失敗','err');
+    $('btn-avatar').disabled = false;
+  }
+}
+function selectVideo(file){
+  state.avatarVideoFile = file || null;
+  $('video-status').textContent = file ? `已選擇：${file.name}（${(file.size/1024/1024).toFixed(1)}MB）` : '尚未選擇影片';
+  $('btn-avatar').disabled = !(state.voiceItem && state.avatarVideoFile);
+}
+function srtTime(sec){
+  const ms = Math.floor((sec % 1) * 1000);
+  const t = Math.floor(sec);
+  const h = Math.floor(t / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  const s = t % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(ms).padStart(3,'0')}`;
+}
+function vttTime(sec){ return srtTime(sec).replace(',', '.'); }
+function subtitleChunks(text){
+  const normalized = String(text || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  const sentences = normalized.split(/(?<=[。！？?!])/).map(s => s.trim()).filter(Boolean);
+  return (sentences.length ? sentences : [normalized]).filter(Boolean).flatMap(s => {
+    const chars = Array.from(s);
+    if(chars.length <= 24) return [s];
+    const parts = [];
+    for(let i=0;i<chars.length;i+=22) parts.push(chars.slice(i,i+22).join(''));
+    return parts;
+  });
+}
+function generateSubtitles(){
+  const currentText = $('final-script').value.trim();
+  const text = (state.voiceScriptText || currentText).trim();
+  if(!text){
+    state.srt = '';
+    state.vtt = '';
+    status('render-status','請先生成或填入口播文案。','err');
+    return;
+  }
+  const chunks = subtitleChunks(text);
+  if(!chunks.length){
+    state.srt = '';
+    state.vtt = '';
+    status('render-status','目前沒有可產生字幕的口播文字。','err');
+    return;
+  }
+  const total = Math.max(1, Number(state.voiceAudioSeconds || chunks.length * 3));
+  const dur = total / Math.max(1, chunks.length);
+  const srt = [];
+  const vtt = ['WEBVTT', ''];
+  chunks.forEach((line, i) => {
+    const start = i * dur;
+    const end = Math.min(total, (i + 1) * dur);
+    srt.push(`${i + 1}\n${srtTime(start)} --> ${srtTime(end)}\n${line}\n`);
+    vtt.push(`${vttTime(start)} --> ${vttTime(end)}\n${line}\n`);
+  });
+  state.srt = srt.join('\n');
+  state.vtt = vtt.join('\n');
+  updateRenderPreview();
+  setSubtitleOutput(`標題：${stripLeadingPunctuation($('final-title')?.value || state.selectedTopic || '')}\n\n字幕預覽說明：下方時間軸可先檢查文字分段；正式成片時會依照第三步已確認的語音重新校準字幕時間。字幕文字可以在這裡直接修改。\n\n` + state.srt);
+  $('btn-download-srt').disabled = false;
+  $('btn-download-vtt').disabled = false;
+  $('btn-render-final').disabled = !(state.avatarResult && (state.avatarResult.previewUrl || state.avatarResult.downloadUrl));
+  if(state.voiceScriptText && currentText && state.voiceScriptText !== currentText){
+    status('render-status','字幕預覽已依照本次語音生成時使用的口播文案產生。若要使用新版文案，請先重新生成語音。','warn');
+  }else{
+    status('render-status','字幕預覽已產生。正式成片會依照已確認語音重新校準時間軸。','ok');
+  }
+}
+async function submitFinalRender(){
+  if(isLocalFileMode()){
+    status('render-status','目前本機預覽只能檢查畫面與流程。正式成片請在 chiwaai.com 登入後執行。','err');
+    return;
+  }
+  if(!currentAvatarRenderUrl()){
+    status('render-status','請先完成形象克隆影片。','err');
+    return;
+  }
+  if(!state.voiceItem || !state.voiceItem.playUrl){
+    status('render-status','缺少已確認語音，無法產生精準字幕時間軸。請回到第三步重新生成並確認語音。','err');
+    return;
+  }
+  $('btn-render-final').disabled = true;
+  status('render-status','正在用已確認語音產生精準字幕時間軸，並送出成片渲染...','warn');
+  try{
+    state.srt = editableSrtText();
+    state.vtt = vttFromSrt(state.srt);
+    if(!state.srt){
+      status('render-status','請先產生字幕預覽，或在字幕框保留有效 SRT 時間軸。','err');
+      $('btn-render-final').disabled = false;
+      return;
+    }
+    const renderTemplateForSubmit = (state.renderTemplate || 'gold_authority') === 'gold_authority' ? 'quiet_caption' : (state.renderTemplate || 'gold_authority');
+    const data = await authedFetch(VIDEO_RENDER_API_URL, {
+      action:'submit',
+      video_url:currentAvatarRenderUrl(),
+      audio_url:state.voiceItem.playUrl,
+      srt_text:state.srt,
+      use_stt:true,
+      render_template:renderTemplateForSubmit,
+      template_version:'chiwa_formal_v1',
+      subtitle_mode:'stt_aligned',
+      title_position:state.renderControls.titlePosition,
+      title_size:state.renderControls.titleSize,
+      title_align:state.renderControls.titleAlign || 'center',
+      title_weight:state.renderControls.titleWeight || '900',
+      subtitle_position:state.renderControls.subtitlePosition,
+      subtitle_size:state.renderControls.subtitleSize,
+      subtitle_align:state.renderControls.subtitleAlign || 'center',
+      subtitle_weight:state.renderControls.subtitleWeight || '900',
+      title_background_opacity:state.renderControls.titleBackgroundOpacity,
+      subtitle_background_opacity:state.renderControls.subtitleBackgroundOpacity,
+      title_text_shadow_opacity:state.renderControls.titleTextShadowOpacity,
+      subtitle_text_shadow_opacity:state.renderControls.subtitleTextShadowOpacity,
+      title_shadow_opacity:state.renderControls.titleBackgroundOpacity,
+      subtitle_shadow_opacity:state.renderControls.subtitleBackgroundOpacity,
+      subtitle_timing_offset_seconds:-Math.max(0, Math.min(2, Number(state.renderControls.subtitleLeadSeconds ?? 1))),
+      title:stripLeadingPunctuation($('final-title').value || state.selectedTopic || 'AI自媒體系統'),
+      duration_seconds:state.voiceAudioSeconds || 60
+    });
+    state.renderId = data.renderId;
+    status('render-status',`正式成片輸出中：${data.status || 'QUEUED'}，字幕來源：${data.subtitleSource || '語音重新對齊'}，10 秒後自動查詢。`,'warn');
+    setTimeout(pollFinalRender, 10000);
+  }catch(e){
+    status('render-status', e.message || '正式成片送出失敗，請稍後再試。','err');
+    $('btn-render-final').disabled = false;
+  }
+}
+async function pollFinalRender(){
+  if(!state.renderId){
+    status('render-status','缺少成片輸出任務 ID。','err');
+    $('btn-render-final').disabled = false;
+    return;
+  }
+  try{
+    const data = await authedFetch(VIDEO_RENDER_API_URL, {
+      action:'query',
+      render_id:state.renderId
+    });
+    if(data.status === 'SUCCESS' && (data.previewUrl || data.downloadUrl)){
+      state.finalVideo = data;
+      $('final-video-result').innerHTML = `<video class="video-frame" controls src="${esc(data.previewUrl || data.downloadUrl)}"></video><div class="btns" style="margin-top:10px"><a class="btn secondary" href="${esc(data.downloadUrl || data.previewUrl)}" download>下載成片</a></div><div class="status ok">成片已完成，檔案會暫存 24 小時，請及時下載保存。</div>`;
+      status('render-status','標題與字幕已燒進影片，正式成片可以下載。','ok');
+      $('btn-render-final').disabled = false;
+      return;
+    }
+    if(data.status === 'FAILED'){
+      status('render-status','正式成片輸出失敗：' + renderFailureReason(data),'err');
+      $('btn-render-final').disabled = false;
+      return;
+    }
+    status('render-status',`正式成片輸出中：${data.status || 'RUNNING'}，10 秒後自動查詢。`,'warn');
+    setTimeout(pollFinalRender, 10000);
+  }catch(e){
+    status('render-status', e.message || '正式成片查詢失敗','err');
+    $('btn-render-final').disabled = false;
+  }
+}
+function renderFailureReason(data){
+  if(!data) return 'video_render_failed';
+  const reason = data.error || data.message || data.reason || data.detail || data.shotstackError || data.shotstack_status || data.status;
+  return String(reason || 'video_render_failed').slice(0, 500);
+}
+async function runRenderSelfTestIfRequested(){
+  const params = new URLSearchParams(location.search);
+  if(params.get('render-self-test') !== '1') return;
+  if((state.user && state.user.email || '').toLowerCase() !== 'tony0928932688@gmail.com') return;
+  status('render-status','內部成片檢查中：送出範例影片與中文字幕...','warn');
+  try{
+    const sampleSrt = [
+      '1\n00:00:00,000 --> 00:00:02,500\n這是一段測試字幕。\n',
+      '2\n00:00:02,500 --> 00:00:05,000\n確認中文可以燒進影片。\n'
+    ].join('\n');
+    const submit = await authedFetch(VIDEO_RENDER_API_URL, {
+      action:'submit',
+      video_url:'https://shotstack-assets.s3.ap-southeast-2.amazonaws.com/footage/beach-overhead.mp4',
+      srt_text:sampleSrt,
+      title:'成片輸出內部檢查',
+      duration_seconds:5
+    });
+    state.renderId = submit.renderId;
+    status('render-status',`內部成片檢查已送出：${submit.status || 'QUEUED'}，正在查詢結果...`,'warn');
+    for(let i=0;i<36;i++){
+      await sleep(5000);
+      const data = await authedFetch(VIDEO_RENDER_API_URL, { action:'query', render_id:state.renderId });
+      if(data.status === 'SUCCESS' && (data.previewUrl || data.downloadUrl)){
+        state.finalVideo = data;
+        $('final-video-result').innerHTML = `<video class="video-frame" controls src="${esc(data.previewUrl || data.downloadUrl)}"></video><div class="btns" style="margin-top:10px"><a class="btn secondary" href="${esc(data.downloadUrl || data.previewUrl)}" download>下載成片</a></div><div class="status ok">內部檢查完成：標題與字幕已燒進影片。</div>`;
+        status('render-status','內部成片檢查成功：成片已完成並匯入暫存庫。','ok');
+        goStep(5);
+        return;
+      }
+      if(data.status === 'FAILED') throw new Error(renderFailureReason(data));
+      status('render-status',`內部成片檢查查詢中：${data.status || 'RUNNING'} (${i + 1}/36)`,'warn');
+    }
+    throw new Error('video_render_timeout');
+  }catch(e){
+    status('render-status', e.message || '內部成片檢查失敗','err');
+  }
+}
+function downloadText(name, text, type){
+  const blob = new Blob([text], { type:type || 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 800);
+}
+
+$('btn-topics').onclick = generateTopics;
+$('btn-script').onclick = () => generateScript((document.querySelector('input[name="script-tone"]:checked') || {}).value || 'casual');
+$('btn-script-pro').onclick = () => generateScript('professional');
+$('btn-tiktok-caption').onclick = generateTikTokCaption;
+$('btn-copy-tiktok-caption').onclick = copyTikTokCaption;
+$('btn-copy-ad-primary').onclick = () => copyMarketingField('ad-primary-copy', 'LINE 私訊推廣文');
+$('btn-copy-ad-title').onclick = () => copyMarketingField('ad-hook-title', 'CTA 短語');
+$('btn-copy-ad-cta').onclick = () => copyMarketingField('ad-cta-copy', 'Hashtag 組合');
+$('btn-copy-marketing-all').onclick = copyMarketingAll;
+$('final-script').oninput = updateRenderPreview;
+$('final-title').oninput = updateRenderPreview;
+$('btn-to-voice').onclick = () => { state.script = $('final-script').value.trim(); updateRenderPreview(); goStep(3); };
+$('btn-voice').onclick = generateVoice;
+$('btn-refresh-voices').onclick = loadVoices;
+$('record-voice-btn').onclick = toggleVoiceRecording;
+$('btn-clone-voice').onclick = cloneVoice;
+$('voice-file').onchange = e => {
+  const file = e.target.files && e.target.files[0];
+  if(file && validateAudioFile(file)){
+    state.recordingBlob = null;
+    state.recordingSeconds = 0;
+    $('record-timer').textContent = '00:00';
+    setRecordStatus(`已選擇音檔：${file.name}`,'ok');
+  }else if(file){
+    setRecordStatus('檔案格式不正確，請選擇音檔。','err');
+  }
+};
+$('btn-to-avatar').onclick = () => { goStep(4); $('btn-avatar').disabled = !(state.voiceItem && state.avatarVideoFile); };
+$('btn-avatar').onclick = submitAvatar;
+$('btn-subtitles').onclick = generateSubtitles;
+$('btn-download-srt').onclick = () => downloadText('chiwa-workflow-subtitles.srt', editableSrtText(), 'text/plain;charset=utf-8');
+$('btn-download-vtt').onclick = () => downloadText('chiwa-workflow-subtitles.vtt', vttFromSrt(editableSrtText()), 'text/vtt;charset=utf-8');
+$('btn-render-final').onclick = submitFinalRender;
+$('video-drop').onclick = () => $('avatar-video').click();
+$('avatar-video').onchange = e => selectVideo(e.target.files && e.target.files[0]);
+['dragenter','dragover'].forEach(evt => $('video-drop').addEventListener(evt, e => { e.preventDefault(); $('video-drop').classList.add('drag'); }));
+['dragleave','drop'].forEach(evt => $('video-drop').addEventListener(evt, e => { e.preventDefault(); $('video-drop').classList.remove('drag'); }));
+$('video-drop').addEventListener('drop', e => selectVideo(e.dataTransfer.files && e.dataTransfer.files[0]));
+
+init().catch(e => {
+  $('login-state').textContent = e && e.message === 'supabase_js_not_loaded'
+    ? '登入模組載入失敗，請重新整理'
+    : '初始化失敗';
+  $('auth-box').style.display = 'block';
+  status('topic-status', e && e.message === 'supabase_js_not_loaded'
+    ? '登入模組沒有載入完成，請重新整理一次。'
+    : (e && e.message || '初始化失敗'), 'err');
+  console.error(e);
+});
+</script>
+</body>
+</html>
+
