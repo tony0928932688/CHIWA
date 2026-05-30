@@ -1029,6 +1029,7 @@ function vttFromSrt(srt){
   return 'WEBVTT\n\n' + String(srt || '').replace(/\r\n/g, '\n').replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2').trim() + '\n';
 }
 function subtitleSourceLabel(source){
+  if(source === 'cartesia_ink_stt_traditional_text') return '音軌自動對齊（繁中字幕）';
   if(source === 'cartesia_ink_stt') return '音軌自動對齊';
   if(source === 'manual_fallback') return '手動字幕備援';
   if(source === 'manual') return '手動字幕';
