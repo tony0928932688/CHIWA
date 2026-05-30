@@ -436,8 +436,8 @@ textarea.subtitle-box{display:block;width:100%;min-height:260px;resize:vertical;
                 <div class="range-row"><input id="subtitle-text-shadow-opacity" type="range" min="0" max="100" value="55"><span id="subtitle-text-shadow-value">55%</span></div>
               </div>
               <div class="field">
-                <div class="label">字幕提前校正</div>
-                <div class="range-row"><input id="subtitle-lead-seconds" type="range" min="0" max="2" step="0.1" value="1"><span id="subtitle-lead-value">1.0秒</span></div>
+                <div class="label">字幕延後校正</div>
+                <div class="range-row"><input id="subtitle-lead-seconds" type="range" min="0" max="3" step="0.1" value="1"><span id="subtitle-lead-value">1.0秒</span></div>
               </div>
             </div>
             <div class="hint">第一版先做簡單可控，不做剪輯軟體級自由拖曳；之後要做拖曳也可以接在這個面板上。</div>
@@ -886,10 +886,10 @@ function ensureRenderFineControls(){
     { value:'800', label:'粗' },
     { value:'900', label:'超粗' }
   ], 'subtitleWeight', '900');
-  const lead = ensureRenderRange('subtitle-lead-seconds', '字幕提前校正', 'subtitleLeadSeconds', 1, '秒');
+  const lead = ensureRenderRange('subtitle-lead-seconds', '字幕延後校正', 'subtitleLeadSeconds', 1, '秒');
   if(lead){
     lead.min = '0';
-    lead.max = '2';
+    lead.max = '3';
     lead.step = '0.1';
   }
   const subtitleBox = $('subtitle-output');
@@ -1106,12 +1106,12 @@ function initRenderControls(){
   });
   const lead = $('subtitle-lead-seconds');
   if(lead){
-    const value = Math.max(0, Math.min(2, Number(state.renderControls.subtitleLeadSeconds ?? 1)));
+    const value = Math.max(0, Math.min(3, Number(state.renderControls.subtitleLeadSeconds ?? 1)));
     state.renderControls.subtitleLeadSeconds = value;
     lead.value = String(value);
     [$('subtitle-lead-value'), $('subtitle-lead-seconds-value')].filter(Boolean).forEach(label => label.textContent = `${value.toFixed(1)}秒`);
     lead.oninput = () => {
-      const next = Math.max(0, Math.min(2, Number(lead.value || 0)));
+      const next = Math.max(0, Math.min(3, Number(lead.value || 0)));
       state.renderControls.subtitleLeadSeconds = next;
       [$('subtitle-lead-value'), $('subtitle-lead-seconds-value')].filter(Boolean).forEach(label => label.textContent = `${next.toFixed(1)}秒`);
     };
@@ -1753,7 +1753,7 @@ async function submitFinalRender(){
       subtitle_text_shadow_opacity:state.renderControls.subtitleTextShadowOpacity,
       title_shadow_opacity:state.renderControls.titleBackgroundOpacity,
       subtitle_shadow_opacity:state.renderControls.subtitleBackgroundOpacity,
-      subtitle_timing_offset_seconds:-Math.max(0, Math.min(2, Number(state.renderControls.subtitleLeadSeconds ?? 1))),
+      subtitle_timing_offset_seconds:Math.max(0, Math.min(3, Number(state.renderControls.subtitleLeadSeconds ?? 1))),
       title:stripLeadingPunctuation($('final-title').value || state.selectedTopic || 'AI自媒體系統'),
       duration_seconds:state.voiceAudioSeconds || 60
     });
