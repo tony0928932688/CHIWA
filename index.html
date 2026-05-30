@@ -283,6 +283,10 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .sb-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;cursor:pointer;color:var(--t2);transition:all .15s;margin-bottom:2px;font-size:13px;border:1px solid transparent}
 .sb-item:hover{background:var(--card2);color:var(--t1);border-color:rgba(245,224,160,.42)}
 .sb-item.on{background:rgba(74,158,255,.08);color:var(--blue);border-left:3px solid var(--blue);border-color:rgba(74,158,255,.45)}
+body.oneclick-mode .sb-item.legacy-tool{display:none}
+body.oneclick-mode.admin-mode .sb-item.legacy-tool{display:flex}
+body.oneclick-mode .mn-item.legacy-tool{display:none}
+body.oneclick-mode.admin-mode .mn-item.legacy-tool{display:flex}
 .sb-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0}
 .sb-usage{margin:8px;background:rgba(232,197,90,.05);border:1px solid rgba(232,197,90,.15);border-radius:10px;padding:10px 12px}
 .sb-ul{font-size:10px;color:var(--t3)}
@@ -1722,6 +1726,11 @@ function setWorkspaceHash(active) {
   } catch(e) {}
 }
 
+function applyWorkspaceMode(){
+  document.body.classList.add('oneclick-mode');
+  document.body.classList.toggle('admin-mode', !!(currentUserData && currentUserData.is_admin));
+}
+
 async function callChiwaSecure(action, payload) {
   const token = await getVoiceSessionToken();
   if (!token) throw new Error('請使用 Google 帳號登入後再操作。');
@@ -1741,6 +1750,7 @@ async function callChiwaSecure(action, payload) {
 async function finishStudentLogin(data, loginId) {
   currentUser = data.id || loginId;
   currentUserData = data;
+  applyWorkspaceMode();
   chiwaTrack('login_success', {
     login_method: 'google',
     student_id: currentUser,
@@ -2927,23 +2937,27 @@ async function decrAvatar(secs) {
     </div>
 
     <div class="sb-nav">
-      <div class="sb-item on" data-panel="profile" onclick="swP('profile', this)">
+      <div class="sb-item on" data-panel="oneclick" onclick="location.href='lazy-workflow.html'">
+        <span class="sb-icon">🎞️</span>
+        <span>AI短影音一鍵成片</span>
+      </div>
+      <div class="sb-item legacy-tool" data-panel="profile" onclick="swP('profile', this)">
         <span class="sb-icon">🧭</span>
         <span>帳號定位</span>
       </div>
-      <div class="sb-item" data-panel="topic" onclick="swP('topic', this)">
+      <div class="sb-item legacy-tool" data-panel="topic" onclick="swP('topic', this)">
         <span class="sb-icon">🎯</span>
         <span>選題生成</span>
       </div>
-      <div class="sb-item" data-panel="script" onclick="swP('script', this)">
+      <div class="sb-item legacy-tool" data-panel="script" onclick="swP('script', this)">
         <span class="sb-icon">🎬</span>
         <span>口播文案</span>
       </div>
-      <div class="sb-item" data-panel="marketing" onclick="swP('marketing', this)">
+      <div class="sb-item legacy-tool" data-panel="marketing" onclick="swP('marketing', this)">
         <span class="sb-icon">✍️</span>
         <span>行銷文案</span>
       </div>
-      <div class="sb-item" data-panel="compliance" onclick="swP('compliance', this)">
+      <div class="sb-item legacy-tool" data-panel="compliance" onclick="swP('compliance', this)">
         <span class="sb-icon">✅</span>
         <span>文案合規</span>
       </div>
@@ -2951,15 +2965,15 @@ async function decrAvatar(secs) {
         <span class="sb-icon">🗂️</span>
         <span>生成紀錄</span>
       </div>
-      <div class="sb-item" data-panel="voice" onclick="swP('voice', this)">
+      <div class="sb-item legacy-tool" data-panel="voice" onclick="swP('voice', this)">
         <span class="sb-icon">🎙️</span>
         <span>語音克隆</span>
       </div>
-      <div class="sb-item" data-panel="avatar" onclick="swP('avatar', this)">
+      <div class="sb-item legacy-tool" data-panel="avatar" onclick="swP('avatar', this)">
         <span class="sb-icon">🧑‍💼</span>
         <span>形象克隆</span>
       </div>
-      <div class="sb-item" data-panel="materials" onclick="openMaterialGenerator()">
+      <div class="sb-item legacy-tool" data-panel="materials" onclick="openMaterialGenerator()">
         <span class="sb-icon">🎨</span>
         <span>圖片&影片素材生成</span>
       </div>
@@ -3000,8 +3014,18 @@ async function decrAvatar(secs) {
   </div>
   <div class="ws-main">
 
+    <!-- 一鍵成片主入口 -->
+  <div class="panel on" id="p-oneclick">
+    <div class="sec-title">🎞️ AI短影音一鍵成片</div>
+    <div class="card" style="padding:24px;max-width:760px">
+      <h3 style="margin:0 0 10px;color:var(--gold);font-size:22px">AI短影音一鍵成片工作流</h3>
+      <p style="margin:0 0 18px;color:var(--t2);line-height:1.8">一般學員主入口已收斂到一鍵成片；舊的選題、文案、語音、形象克隆工具保留在後台與進階維護用途。</p>
+      <button class="btn" type="button" onclick="location.href='lazy-workflow.html'">開啟一鍵成片工作流</button>
+    </div>
+  </div>
+
     <!-- 選題生成 -->
-  <div class="panel on" id="p-topic">
+  <div class="panel" id="p-topic">
     <div class="sec-title">🎯 選題生成</div>
     <div class="sec-sub">選擇類型 + 輸入行業，讓 AI 生成精準選題</div>
     <div class="label mb14">選題類型</div>
@@ -3691,25 +3715,28 @@ async function decrAvatar(secs) {
 
 <!-- 手機版底部導覽列 -->
 <div id="mobile-nav" style="display:none">
-  <div class="mn-item on" id="mn-profile" onclick="swPM('profile',0)">
+  <div class="mn-item on" id="mn-oneclick" onclick="location.href='lazy-workflow.html'">
+    <span class="mn-icon">🎞️</span><span>成片</span>
+  </div>
+  <div class="mn-item legacy-tool" id="mn-profile" onclick="swPM('profile',0)">
     <span class="mn-icon">🧭</span><span>定位</span>
   </div>
   <div class="mn-item" id="mn-history" onclick="swPM('history',1)">
     <span class="mn-icon">🗂️</span><span>紀錄</span>
   </div>
-  <div class="mn-item" id="mn-topic" onclick="swPM('topic',2)">
+  <div class="mn-item legacy-tool" id="mn-topic" onclick="swPM('topic',2)">
     <span class="mn-icon">🎯</span><span>選題</span>
   </div>
-  <div class="mn-item" id="mn-script" onclick="swPM('script',3)">
+  <div class="mn-item legacy-tool" id="mn-script" onclick="swPM('script',3)">
     <span class="mn-icon">🎬</span><span>口播</span>
   </div>
-  <div class="mn-item" id="mn-marketing" onclick="swPM('marketing',4)">
+  <div class="mn-item legacy-tool" id="mn-marketing" onclick="swPM('marketing',4)">
     <span class="mn-icon">✍️</span><span>文案</span>
   </div>
-  <div class="mn-item" id="mn-voice" onclick="swPM('voice',5)">
+  <div class="mn-item legacy-tool" id="mn-voice" onclick="swPM('voice',5)">
     <span class="mn-icon">🎙️</span><span>語音</span>
   </div>
-  <div class="mn-item" id="mn-avatar" onclick="swPM('avatar',6)">
+  <div class="mn-item legacy-tool" id="mn-avatar" onclick="swPM('avatar',6)">
     <span class="mn-icon">🧑‍💼</span><span>形象</span>
   </div>
   <div class="mn-item" id="mn-course" onclick="swPM('course',7)">
@@ -3989,7 +4016,8 @@ function goPage(pageId) {
   if (targetPage) {
     targetPage.classList.add('active');
       if (pageId === 'workspace') {
-      swP('profile', sidebarItemFor('profile'));
+      const defaultPanel = currentUserData && currentUserData.is_admin ? 'profile' : 'oneclick';
+      swP(defaultPanel, sidebarItemFor(defaultPanel));
     }
   } else {
     toast('🚧 頁面開發中：' + pageId);
@@ -4011,6 +4039,7 @@ async function doLogout(options) {
   // 清空全域登入狀態
   currentUser = '';
   currentUserData = null;
+  document.body.classList.remove('oneclick-mode', 'admin-mode');
   aiUse = 0;
   // 清空側邊欄顯示
   const un = document.getElementById('unum');
