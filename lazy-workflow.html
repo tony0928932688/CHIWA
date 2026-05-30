@@ -42,6 +42,22 @@ h1{font-size:28px;line-height:1.2;margin:2px 0 6px}
 .profile-form{display:none;border-top:1px solid var(--bdr);margin-top:14px;padding-top:14px}
 .profile-form.open{display:block}
 .profile-form textarea{min-height:74px}
+.grid.utility-mode{grid-template-columns:1fr}
+.grid.utility-mode .rail{display:none}
+.workspace-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+.workspace-tab{border:1.5px solid var(--bdr2);background:rgba(255,255,255,.025);color:var(--t2);border-radius:999px;padding:9px 15px;font-weight:900;cursor:pointer}
+.workspace-tab.on{background:rgba(232,197,90,.12);border-color:var(--gold);color:var(--gold2)}
+.utility-section{background:rgba(17,17,24,.82);border:1px solid var(--bdr);border-radius:16px;padding:18px;margin-bottom:14px}
+.utility-section h2{font-size:20px;margin:0 0 4px}
+.utility-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.asset-card,.history-card{border:1px solid var(--bdr);background:rgba(255,255,255,.025);border-radius:12px;padding:12px}
+.asset-card h3{font-size:16px;margin:0 0 4px;color:var(--gold2)}
+.asset-list,.history-list{display:grid;gap:10px;margin-top:10px}
+.asset-item,.history-item{border:1px solid rgba(245,224,160,.22);border-radius:12px;padding:12px;background:#0f0f17}
+.asset-item-head,.history-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.item-title{font-size:13px;font-weight:900;color:var(--t1)}
+.item-meta{font-size:11px;color:var(--t3);margin-top:4px}
+.history-output{white-space:pre-wrap;max-height:260px;overflow:auto;font-size:12px;color:var(--t2);margin-top:8px}
 .panel{display:none;background:rgba(17,17,24,.82);border:1px solid var(--bdr);border-radius:16px;padding:18px;margin-bottom:14px}
 .panel.on{display:block}
 .panel h2{font-size:20px;margin:0 0 4px}
@@ -113,7 +129,7 @@ textarea.subtitle-box{display:block;width:100%;min-height:260px;resize:vertical;
 .preview-subtitle{position:absolute;left:9%;right:9%;bottom:18%;border-radius:12px;padding:7px 10px;text-align:center;font-weight:900;line-height:1.12;color:#fff;background:rgba(0,0,0,.68);box-shadow:0 14px 40px rgba(0,0,0,.45);max-height:58px;overflow:hidden;z-index:4}
 .template-card.on .template-preview{box-shadow:0 0 0 2px rgba(232,197,90,.2)}
 @keyframes pulse{50%{transform:scale(1.04);box-shadow:0 0 0 8px rgba(255,107,107,.08)}}
-@media(max-width:860px){.grid{grid-template-columns:1fr}.rail{position:static}.cards,.row,.marketing-grid,.length-grid,.control-grid,.render-lab,.profile-summary{grid-template-columns:1fr}.top{display:block}.pill{margin-top:12px}.marketing-grid .wide{grid-column:auto}.profile-head{display:block}.profile-head .btns{margin-top:10px}}
+@media(max-width:860px){.grid{grid-template-columns:1fr}.rail{position:static}.cards,.row,.marketing-grid,.length-grid,.control-grid,.render-lab,.profile-summary,.utility-grid{grid-template-columns:1fr}.top{display:block}.pill{margin-top:12px}.marketing-grid .wide{grid-column:auto}.profile-head{display:block}.profile-head .btns{margin-top:10px}}
 </style>
 </head>
 <body>
@@ -238,6 +254,55 @@ textarea.subtitle-box{display:block;width:100%;min-height:260px;resize:vertical;
             <button class="btn secondary" id="btn-profile-cancel" type="button">取消</button>
             <span class="status" id="profile-status"></span>
           </div>
+        </div>
+      </section>
+
+      <div class="workspace-tabs" aria-label="一鍵成片工作區">
+        <button class="workspace-tab on" type="button" data-workspace-tab="workflow">一鍵成片</button>
+        <button class="workspace-tab" type="button" data-workspace-tab="assets">素材管理</button>
+        <button class="workspace-tab" type="button" data-workspace-tab="history">生成紀錄</button>
+      </div>
+
+      <section class="utility-section" id="assets-section" style="display:none">
+        <h2>素材管理</h2>
+        <div class="hint">集中查看這個帳號已生成的語音檔與數字人影片；下載、刪除仍走原本的安全後端。</div>
+        <div class="btns">
+          <button class="btn secondary" id="btn-refresh-assets" type="button">刷新素材</button>
+          <span class="status" id="asset-status"></span>
+        </div>
+        <div class="utility-grid" style="margin-top:12px">
+          <div class="asset-card">
+            <h3>語音檔庫</h3>
+            <div class="hint">由第三步語音合成產生，可在 24 小時保存期內下載。</div>
+            <div class="asset-list" id="asset-voice-list">
+              <div class="status">切到素材管理後會自動讀取。</div>
+            </div>
+          </div>
+          <div class="asset-card">
+            <h3>數字人影片庫</h3>
+            <div class="hint">由第四步形象克隆產生，可在 24 小時保存期內下載。</div>
+            <div class="asset-list" id="asset-avatar-list">
+              <div class="status">切到素材管理後會自動讀取。</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="utility-section" id="history-section" style="display:none">
+        <h2>生成紀錄</h2>
+        <div class="hint">一鍵成片產生的選題、口播文案、行銷文案會自動保存，可複製或帶回工作流接續使用。</div>
+        <div class="btns">
+          <select id="history-type-filter" style="max-width:180px">
+            <option value="">全部紀錄</option>
+            <option value="topics">選題生成</option>
+            <option value="script">口播文案</option>
+            <option value="marketing">行銷文案</option>
+          </select>
+          <button class="btn secondary" id="btn-refresh-history" type="button">刷新紀錄</button>
+          <span class="status" id="history-status"></span>
+        </div>
+        <div class="history-list" id="history-list">
+          <div class="status">切到生成紀錄後會自動讀取。</div>
         </div>
       </section>
 
@@ -558,6 +623,7 @@ const SECURE_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-secure-api`;
 const PROFILE_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-profile`;
 const VOICE_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-voice`;
 const AVATAR_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-avatar`;
+const HISTORY_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-history`;
 const VIDEO_RENDER_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-video-render`;
 const AVATAR_R2_URL = 'https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev';
 const AI_BACKEND_URL = 'https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev/';
@@ -617,6 +683,9 @@ const state = {
   recordStream: null,
   recordTimer: null,
   recordChunks: [],
+  ttsItems: [],
+  avatarItems: [],
+  generationHistory: [],
 };
 
 function $(id){ return document.getElementById(id); }
@@ -1020,6 +1089,292 @@ function goStep(n){
   if(panel) panel.classList.add('on');
   document.querySelectorAll('.stepnav button').forEach(b => b.classList.toggle('on', b.dataset.step === String(n)));
 }
+function setWorkspaceTab(tab){
+  const next = tab === 'assets' || tab === 'history' ? tab : 'workflow';
+  document.querySelectorAll('[data-workspace-tab]').forEach(btn => btn.classList.toggle('on', btn.dataset.workspaceTab === next));
+  const app = $('app');
+  if(app) app.classList.toggle('utility-mode', next !== 'workflow');
+  document.querySelectorAll('section[id^="step-"]').forEach(section => { section.style.display = next === 'workflow' ? '' : 'none'; });
+  if($('assets-section')) $('assets-section').style.display = next === 'assets' ? '' : 'none';
+  if($('history-section')) $('history-section').style.display = next === 'history' ? '' : 'none';
+  if(next === 'assets') loadAssetManager();
+  if(next === 'history') loadGenerationHistory();
+}
+function assetDateText(value){
+  if(!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString('zh-TW');
+}
+function generationTypeLabel(type){
+  return ({ topics:'選題生成', script:'口播文案', marketing:'行銷文案', compliance:'文案合規', other:'AI 生成' })[type] || 'AI 生成';
+}
+function generationTitleFor(type, inputText){
+  const text = String(inputText || '').replace(/\s+/g, ' ').trim();
+  const label = generationTypeLabel(type);
+  return text ? `${label}｜${text.slice(0, 46)}` : label;
+}
+async function saveGenerationHistory(record){
+  if(!state.user || !record || !record.outputText) return null;
+  try{
+    const type = record.type || 'other';
+    const data = await authedFetch(HISTORY_API_URL, {
+      action:'save',
+      type,
+      title: record.title || generationTitleFor(type, record.inputText),
+      inputText: record.inputText || '',
+      outputText: record.outputText || '',
+      meta: record.meta || {}
+    });
+    if(data.item){
+      state.generationHistory = [data.item].concat((state.generationHistory || []).filter(item => item.id !== data.item.id)).slice(0, 80);
+      renderGenerationHistory(state.generationHistory);
+    }
+    return data.item || null;
+  }catch(e){
+    console.warn('generation_history_save_skipped', e.message || e);
+    return null;
+  }
+}
+async function loadGenerationHistory(){
+  const list = $('history-list');
+  if(list) list.innerHTML = '<div class="status">正在讀取生成紀錄...</div>';
+  status('history-status','讀取中...','warn');
+  try{
+    const data = await authedFetch(HISTORY_API_URL, {
+      action:'list',
+      type: $('history-type-filter')?.value || '',
+      limit: 60
+    });
+    state.generationHistory = Array.isArray(data.items) ? data.items : [];
+    renderGenerationHistory(state.generationHistory);
+    status('history-status',`已讀取 ${state.generationHistory.length} 筆紀錄。`,'ok');
+  }catch(e){
+    if(list) list.innerHTML = `<div class="history-item"><div class="status err">${esc(e.message || '暫時無法讀取生成紀錄。')}</div></div>`;
+    status('history-status','讀取失敗。','err');
+  }
+}
+function renderGenerationHistory(items){
+  const list = $('history-list');
+  if(!list) return;
+  const rows = Array.isArray(items) ? items : [];
+  if(!rows.length){
+    list.innerHTML = '<div class="history-item"><div class="status">目前還沒有生成紀錄。之後產生選題、口播文案與行銷文案會自動保存在這裡。</div></div>';
+    return;
+  }
+  list.innerHTML = rows.map(item => {
+    const id = esc(item.id || '');
+    const type = item.type || 'other';
+    const created = assetDateText(item.createdAt || item.created_at);
+    const input = String(item.inputText || item.input_text || '');
+    const output = String(item.outputText || item.output_text || '');
+    return `<div class="history-item">
+      <div class="history-head">
+        <div>
+          <span class="badge">${esc(generationTypeLabel(type))}</span>
+          <div class="item-title">${esc(item.title || generationTypeLabel(type))}</div>
+          <div class="item-meta">${esc(created || '')}</div>
+        </div>
+        <div class="btns">
+          <button class="btn secondary" type="button" data-history-copy="${id}">複製</button>
+          <button class="btn secondary" type="button" data-history-reuse="${id}">帶回工作流</button>
+          <button class="btn secondary danger" type="button" data-history-delete="${id}">刪除</button>
+        </div>
+      </div>
+      ${input ? `<div class="item-meta">輸入：${esc(input.slice(0, 180))}${input.length > 180 ? '...' : ''}</div>` : ''}
+      <div class="history-output">${esc(output)}</div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('[data-history-copy]').forEach(btn => btn.onclick = () => copyHistoryItem(btn.getAttribute('data-history-copy') || ''));
+  list.querySelectorAll('[data-history-reuse]').forEach(btn => btn.onclick = () => reuseHistoryItem(btn.getAttribute('data-history-reuse') || ''));
+  list.querySelectorAll('[data-history-delete]').forEach(btn => btn.onclick = () => deleteGenerationHistory(btn.getAttribute('data-history-delete') || ''));
+}
+async function copyHistoryItem(id){
+  const item = (state.generationHistory || []).find(row => row.id === id);
+  const text = item && (item.outputText || item.output_text);
+  if(!text) return;
+  try{
+    await navigator.clipboard.writeText(text);
+    status('history-status','已複製紀錄內容。','ok');
+  }catch(e){
+    status('history-status','複製失敗，請手動選取文字。','err');
+  }
+}
+function reuseHistoryItem(id){
+  const item = (state.generationHistory || []).find(row => row.id === id);
+  if(!item) return;
+  const output = item.outputText || item.output_text || '';
+  setWorkspaceTab('workflow');
+  if(item.type === 'topics'){
+    state.topics = parseTopics(output);
+    renderTopics();
+    goStep(1);
+  }else if(item.type === 'script'){
+    state.script = output;
+    if($('final-script')) $('final-script').value = output;
+    updateRenderPreview();
+    saveWorkflowProgress();
+    goStep(2);
+  }else if(item.type === 'marketing'){
+    state.marketingCopies = parseMarketingCopies(output);
+    if($('tiktok-caption')) $('tiktok-caption').value = state.marketingCopies.caption || output;
+    if($('ad-primary-copy')) $('ad-primary-copy').value = state.marketingCopies.line || '';
+    if($('ad-hook-title')) $('ad-hook-title').value = state.marketingCopies.cta || '';
+    if($('ad-cta-copy')) $('ad-cta-copy').value = state.marketingCopies.hashtags || '';
+    goStep(2);
+  }
+  status('history-status','已帶回工作流。','ok');
+}
+async function deleteGenerationHistory(id){
+  if(!id) return;
+  if(!confirm('確定要刪除這筆生成紀錄嗎？')) return;
+  try{
+    await authedFetch(HISTORY_API_URL, { action:'delete', id });
+    state.generationHistory = (state.generationHistory || []).filter(item => item.id !== id);
+    renderGenerationHistory(state.generationHistory);
+    status('history-status','已刪除生成紀錄。','ok');
+  }catch(e){
+    status('history-status', e.message || '刪除失敗，請稍後再試。','err');
+  }
+}
+async function loadAssetManager(){
+  status('asset-status','讀取中...','warn');
+  const [tts, avatar] = await Promise.allSettled([loadTtsItems(), loadAvatarItems()]);
+  const okCount = [tts, avatar].filter(r => r.status === 'fulfilled').length;
+  status('asset-status', okCount === 2 ? '素材已更新。' : '部分素材暫時無法讀取。', okCount === 2 ? 'ok' : 'warn');
+}
+async function loadTtsItems(){
+  const box = $('asset-voice-list');
+  if(box) box.innerHTML = '<div class="status">正在讀取語音檔...</div>';
+  try{
+    const data = await authedFetch(VOICE_API_URL, { action:'list_tts' });
+    state.ttsItems = Array.isArray(data.items) ? data.items : [];
+    if(data.student){ state.student = data.student; updateQuota(); }
+    renderTtsItems(state.ttsItems);
+  }catch(e){
+    if(box) box.innerHTML = `<div class="asset-item"><div class="status err">${esc(e.message || '語音檔讀取失敗。')}</div></div>`;
+    throw e;
+  }
+}
+function renderTtsItems(items){
+  const box = $('asset-voice-list');
+  if(!box) return;
+  const rows = Array.isArray(items) ? items : [];
+  if(!rows.length){
+    box.innerHTML = '<div class="asset-item"><div class="status">目前沒有已生成的語音檔。</div></div>';
+    return;
+  }
+  box.innerHTML = rows.map(item => {
+    const id = esc(item.id || item.generation_id || '');
+    const text = String(item.text || item.inputText || '').trim();
+    const created = assetDateText(item.createdAt || item.created_at);
+    const voiceName = item.voiceName || item.voice_name || item.voice_id || '語音';
+    return `<div class="asset-item">
+      <div class="asset-item-head">
+        <div>
+          <div class="item-title">${esc(text ? text.slice(0, 42) + (text.length > 42 ? '...' : '') : '語音檔')}</div>
+          <div class="item-meta">${esc(voiceName)}${created ? '｜' + esc(created) : ''}</div>
+        </div>
+        <div class="btns">
+          <button class="btn secondary" type="button" data-tts-download="${id}">下載</button>
+          <button class="btn secondary danger" type="button" data-tts-delete="${id}">刪除</button>
+        </div>
+      </div>
+      ${item.playUrl ? `<audio controls preload="metadata" src="${esc(item.playUrl)}"></audio>` : ''}
+    </div>`;
+  }).join('');
+  box.querySelectorAll('[data-tts-download]').forEach(btn => btn.onclick = () => downloadTtsItem(btn.getAttribute('data-tts-download') || ''));
+  box.querySelectorAll('[data-tts-delete]').forEach(btn => btn.onclick = () => deleteTtsItem(btn.getAttribute('data-tts-delete') || ''));
+}
+async function downloadTtsItem(id){
+  if(!id) return;
+  try{
+    const data = await authedFetch(VOICE_API_URL, { action:'download_tts', generation_id:id });
+    if(data.student){ state.student = data.student; updateQuota(); }
+    if(!data.downloadUrl) throw new Error('下載連結建立失敗，請稍後再試。');
+    const a = document.createElement('a');
+    a.href = data.downloadUrl;
+    a.download = data.fileName || `chiwa-voice-${Date.now()}.wav`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    status('asset-status','已開始下載語音檔。','ok');
+  }catch(e){
+    status('asset-status', e.message || '語音檔下載失敗。','err');
+  }
+}
+async function deleteTtsItem(id){
+  if(!id) return;
+  if(!confirm('確定要刪除這個語音檔嗎？刪除後不能再下載；已使用的語音字數不會退回。')) return;
+  try{
+    await authedFetch(VOICE_API_URL, { action:'delete_tts', generation_id:id });
+    state.ttsItems = (state.ttsItems || []).filter(item => (item.id || item.generation_id) !== id);
+    renderTtsItems(state.ttsItems);
+    status('asset-status','語音檔已刪除。','ok');
+  }catch(e){
+    status('asset-status', e.message || '語音檔刪除失敗。','err');
+  }
+}
+async function loadAvatarItems(){
+  const box = $('asset-avatar-list');
+  if(box) box.innerHTML = '<div class="status">正在讀取數字人影片...</div>';
+  try{
+    const data = await authedFetch(AVATAR_API_URL, { action:'list' });
+    state.avatarItems = Array.isArray(data.items) ? data.items : [];
+    if(data.student){ state.student = data.student; updateQuota(); }
+    renderAvatarItems(state.avatarItems);
+  }catch(e){
+    if(box) box.innerHTML = `<div class="asset-item"><div class="status err">${esc(e.message || '數字人影片讀取失敗。')}</div></div>`;
+    throw e;
+  }
+}
+function avatarStatusText(value){
+  const statusText = String(value || '').toUpperCase();
+  if(statusText === 'SUCCESS') return '已完成';
+  if(statusText === 'FAILED') return '生成失敗';
+  if(statusText === 'EXPIRED') return '已過期';
+  return '生成中';
+}
+function renderAvatarItems(items){
+  const box = $('asset-avatar-list');
+  if(!box) return;
+  const rows = (Array.isArray(items) ? items : []).filter(item => item && (item.taskId || item.id));
+  if(!rows.length){
+    box.innerHTML = '<div class="asset-item"><div class="status">目前沒有數字人影片。</div></div>';
+    return;
+  }
+  box.innerHTML = rows.map(item => {
+    const taskId = esc(item.taskId || item.id || '');
+    const url = item.previewUrl || item.downloadUrl || '';
+    const created = assetDateText(item.createdAt || item.created_at);
+    const expires = assetDateText(item.outputExpiresAt || item.output_expires_at);
+    return `<div class="asset-item">
+      <div class="asset-item-head">
+        <div>
+          <div class="item-title">${esc(item.title || '數字人影片')}</div>
+          <div class="item-meta">${esc(avatarStatusText(item.status))}${created ? '｜建立：' + esc(created) : ''}${expires ? '｜保存至：' + esc(expires) : ''}</div>
+        </div>
+        <div class="btns">
+          ${url ? `<a class="btn secondary" href="${esc(item.downloadUrl || url)}" download>下載</a>` : ''}
+          <button class="btn secondary danger" type="button" data-avatar-delete="${taskId}">刪除</button>
+        </div>
+      </div>
+      ${url ? `<video controls preload="metadata" src="${esc(url)}"></video>` : '<div class="status">影片尚未完成，稍後刷新即可查看。</div>'}
+    </div>`;
+  }).join('');
+  box.querySelectorAll('[data-avatar-delete]').forEach(btn => btn.onclick = () => deleteAvatarItem(btn.getAttribute('data-avatar-delete') || ''));
+}
+async function deleteAvatarItem(taskId){
+  if(!taskId) return;
+  if(!confirm('確定要刪除這支數字人影片嗎？刪除後不能再下載；已使用的影像克隆秒數不會退回。')) return;
+  try{
+    await authedFetch(AVATAR_API_URL, { action:'delete', taskId });
+    state.avatarItems = (state.avatarItems || []).filter(item => (item.taskId || item.id) !== taskId);
+    renderAvatarItems(state.avatarItems);
+    status('asset-status','數字人影片已刪除。','ok');
+  }catch(e){
+    status('asset-status', e.message || '數字人影片刪除失敗。','err');
+  }
+}
 function initRenderTemplates(){
   document.querySelectorAll('[data-template]').forEach(card => {
     card.onclick = () => {
@@ -1418,7 +1773,11 @@ function withTimeout(promise, ms, label){
   ]);
 }
 async function init(){
-  document.querySelectorAll('.stepnav button').forEach(btn => btn.onclick = () => goStep(btn.dataset.step));
+  document.querySelectorAll('.stepnav button').forEach(btn => btn.onclick = () => { setWorkspaceTab('workflow'); goStep(btn.dataset.step); });
+  document.querySelectorAll('[data-workspace-tab]').forEach(btn => btn.onclick = () => setWorkspaceTab(btn.dataset.workspaceTab));
+  if($('btn-refresh-assets')) $('btn-refresh-assets').onclick = loadAssetManager;
+  if($('btn-refresh-history')) $('btn-refresh-history').onclick = loadGenerationHistory;
+  if($('history-type-filter')) $('history-type-filter').onchange = loadGenerationHistory;
   initRenderTemplates();
   initScriptLengthControls();
   initRenderControls();
@@ -1507,6 +1866,12 @@ async function generateTopics(){
     state.topics = parseTopics(text);
     renderTopics();
     status('topic-status',`已生成 ${state.topics.length} 個選題。`,'ok');
+    await saveGenerationHistory({
+      type:'topics',
+      inputText:`${type}${extra ? '｜' + extra : ''}`,
+      outputText:text,
+      meta:{ topicType:type, extra }
+    });
     await refreshProfile().catch(()=>{});
   }catch(e){ status('topic-status', e.message || '生成失敗','err'); }
   $('btn-topics').disabled = false;
@@ -1558,6 +1923,12 @@ async function generateScript(tone){
     updateRenderPreview();
     saveWorkflowProgress();
     status('script-status',`文案已生成，目標約 ${fmt(cfg.words)} 字，實際約 ${fmt(scriptCharCount(state.script))} 字，可手動修改後送語音。`,'ok');
+    await saveGenerationHistory({
+      type:'script',
+      inputText:state.selectedTopic,
+      outputText:state.script,
+      meta:{ tone: casual ? 'casual' : 'professional', minutes: cfg.minutes, targetWords: cfg.words }
+    });
     await refreshProfile().catch(()=>{});
   }catch(e){ status('script-status', e.message || '文案生成失敗','err'); }
   $('btn-script').disabled = false;
@@ -1588,6 +1959,12 @@ async function generateTikTokCaption(){
     $('ad-hook-title').value = state.marketingCopies.cta || '';
     $('ad-cta-copy').value = state.marketingCopies.hashtags || '';
     status('caption-status','行銷文案已生成。','ok');
+    await saveGenerationHistory({
+      type:'marketing',
+      inputText:text.slice(0, 500),
+      outputText:raw,
+      meta:{ source:'lazy-workflow' }
+    });
     await refreshProfile().catch(()=>{});
   }catch(e){
     status('caption-status', e.message || '行銷文案生成失敗','err');
