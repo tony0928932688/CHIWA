@@ -1720,14 +1720,13 @@ async function submitFinalRender(){
       $('btn-render-final').disabled = false;
       return;
     }
-    const renderTemplateForSubmit = (state.renderTemplate || 'gold_authority') === 'gold_authority' ? 'quiet_caption' : (state.renderTemplate || 'gold_authority');
     const data = await authedFetch(VIDEO_RENDER_API_URL, {
       action:'submit',
       video_url:currentAvatarRenderUrl(),
       audio_url:state.voiceItem.playUrl,
       srt_text:state.srt,
       use_stt:true,
-      render_template:renderTemplateForSubmit,
+      render_template:state.renderTemplate || 'gold_authority',
       template_version:'chiwa_formal_v1',
       subtitle_mode:'stt_aligned',
       title_position:state.renderControls.titlePosition,
