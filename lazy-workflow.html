@@ -32,6 +32,16 @@ h1{font-size:28px;line-height:1.2;margin:2px 0 6px}
 .stepnav button.on{border-color:var(--gold);color:var(--t1);background:rgba(232,197,90,.1)}
 .quota{margin-top:14px;border-top:1px solid var(--bdr);padding-top:14px;display:grid;gap:9px;font-size:12px;color:var(--t2)}
 .quota b{color:var(--t1);font-family:'Space Mono',monospace}
+.profile-card{background:rgba(17,17,24,.82);border:1px solid var(--bdr);border-radius:16px;padding:16px;margin-bottom:14px}
+.profile-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.profile-head h2{font-size:19px;margin:0 0 4px}
+.profile-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.profile-item{border:1px solid var(--bdr);background:rgba(255,255,255,.025);border-radius:12px;padding:10px;min-height:74px}
+.profile-item span{display:block;color:var(--gold2);font-size:11px;font-weight:900;margin-bottom:4px}
+.profile-item b{display:block;color:var(--t1);font-size:13px;line-height:1.45;word-break:break-word}
+.profile-form{display:none;border-top:1px solid var(--bdr);margin-top:14px;padding-top:14px}
+.profile-form.open{display:block}
+.profile-form textarea{min-height:74px}
 .panel{display:none;background:rgba(17,17,24,.82);border:1px solid var(--bdr);border-radius:16px;padding:18px;margin-bottom:14px}
 .panel.on{display:block}
 .panel h2{font-size:20px;margin:0 0 4px}
@@ -103,7 +113,7 @@ textarea.subtitle-box{display:block;width:100%;min-height:260px;resize:vertical;
 .preview-subtitle{position:absolute;left:9%;right:9%;bottom:18%;border-radius:12px;padding:7px 10px;text-align:center;font-weight:900;line-height:1.12;color:#fff;background:rgba(0,0,0,.68);box-shadow:0 14px 40px rgba(0,0,0,.45);max-height:58px;overflow:hidden;z-index:4}
 .template-card.on .template-preview{box-shadow:0 0 0 2px rgba(232,197,90,.2)}
 @keyframes pulse{50%{transform:scale(1.04);box-shadow:0 0 0 8px rgba(255,107,107,.08)}}
-@media(max-width:860px){.grid{grid-template-columns:1fr}.rail{position:static}.cards,.row,.marketing-grid,.length-grid,.control-grid,.render-lab{grid-template-columns:1fr}.top{display:block}.pill{margin-top:12px}.marketing-grid .wide{grid-column:auto}}
+@media(max-width:860px){.grid{grid-template-columns:1fr}.rail{position:static}.cards,.row,.marketing-grid,.length-grid,.control-grid,.render-lab,.profile-summary{grid-template-columns:1fr}.top{display:block}.pill{margin-top:12px}.marketing-grid .wide{grid-column:auto}.profile-head{display:block}.profile-head .btns{margin-top:10px}}
 </style>
 </head>
 <body>
@@ -147,6 +157,90 @@ textarea.subtitle-box{display:block;width:100%;min-height:260px;resize:vertical;
     </aside>
 
     <main>
+      <section class="profile-card" id="profile-card">
+        <div class="profile-head">
+          <div>
+            <h2>帳號定位 / 品牌設定</h2>
+            <div class="hint">一鍵成片的選題、文案、語氣會自動套用這份定位。</div>
+          </div>
+          <div class="btns">
+            <button class="btn secondary" id="btn-profile-edit" type="button">編輯帳號定位</button>
+          </div>
+        </div>
+        <div class="profile-summary" id="profile-summary"></div>
+        <div class="profile-form" id="profile-form">
+          <div class="row">
+            <div class="field">
+              <div class="label">名字 / 品牌名</div>
+              <input id="pf-name" placeholder="例：吉娃、王小明律師">
+            </div>
+            <div class="field">
+              <div class="label">產業</div>
+              <input id="pf-industry" placeholder="例：法律顧問、醫美、房仲、財商教育">
+            </div>
+          </div>
+          <div class="field">
+            <div class="label">主要服務</div>
+            <textarea id="pf-service" placeholder="你主要賣什麼服務、課程、產品，越具體越好。"></textarea>
+          </div>
+          <div class="row">
+            <div class="field">
+              <div class="label">目標性別</div>
+              <select id="pf-target-gender">
+                <option value="">不限</option>
+                <option>女性</option>
+                <option>男性</option>
+                <option>男女皆可</option>
+              </select>
+            </div>
+            <div class="field">
+              <div class="label">說話風格</div>
+              <select id="pf-style">
+                <option value="">未設定</option>
+                <option>專業可信</option>
+                <option>溫暖陪伴</option>
+                <option>犀利直接</option>
+                <option>幽默親近</option>
+                <option>高級顧問感</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <div class="label">目標年齡（用頓號分隔）</div>
+              <input id="pf-target-age" placeholder="例：25-35歲、35-45歲">
+            </div>
+            <div class="field">
+              <div class="label">目標身份（用頓號分隔）</div>
+              <input id="pf-target-identity" placeholder="例：企業主/老闆、高階主管、專業人士">
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <div class="label">個性特質（用頓號分隔）</div>
+              <input id="pf-personality" placeholder="例：理性分析、重視細節、溫暖有耐心">
+            </div>
+            <div class="field">
+              <div class="label">希望觀眾感受（用頓號分隔）</div>
+              <input id="pf-audience-feeling" placeholder="例：覺得你很專業、覺得你懂他的痛點">
+            </div>
+          </div>
+          <div class="field">
+            <div class="label">與同行差異</div>
+            <input id="pf-differentiation" placeholder="例：流程清楚透明、能把複雜問題講簡單">
+          </div>
+          <div class="field">
+            <div class="label">補充說明</div>
+            <textarea id="pf-extra-note" placeholder="不能碰的話題、品牌語氣、特殊客群、近期主打服務。"></textarea>
+          </div>
+          <div class="btns">
+            <button class="btn" id="btn-profile-save" type="button">儲存帳號定位</button>
+            <button class="btn secondary" id="btn-profile-cancel" type="button">取消</button>
+            <span class="status" id="profile-status"></span>
+          </div>
+        </div>
+      </section>
+
       <section class="panel on" id="step-1">
         <h2>第一步：生成 8 個可拍選題</h2>
         <div class="hint">學員自己挑選題。選題會套用帳號定位、TikTok 廣告合規與台灣法規風險規則。</div>
@@ -461,6 +555,7 @@ textarea.subtitle-box{display:block;width:100%;min-height:260px;resize:vertical;
 const SUPABASE_URL = 'https://nsauscojruqjcprvsfsn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zYXVzY29qcnVxamNwcnZzZnNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjAzMTksImV4cCI6MjA5NDU5NjMxOX0.gXX7cBcqohoHqvPkZM-FFrnZVDS59g5OBJPBqH73H_w';
 const SECURE_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-secure-api`;
+const PROFILE_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-profile`;
 const VOICE_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-voice`;
 const AVATAR_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-avatar`;
 const VIDEO_RENDER_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-video-render`;
@@ -527,6 +622,8 @@ const state = {
 function $(id){ return document.getElementById(id); }
 function esc(value){ return String(value || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function status(id, text, cls){ const el=$(id); if(el){ el.className='status ' + (cls || ''); el.textContent=text || ''; } }
+function arrText(value){ return Array.isArray(value) ? value.filter(Boolean).join('、') : String(value || '').trim(); }
+function splitProfileList(value){ return String(value || '').split(/[、,，\n]/).map(v => v.trim()).filter(Boolean).slice(0,3); }
 function lockWorkflowAccess(message){
   const app = $('app');
   const auth = $('auth-box');
@@ -833,6 +930,80 @@ function buildProfilePrompt(){
   if(p.differentiation) lines.push(`與同行差異：${[].concat(p.differentiation || []).join('、')}`);
   if(p.extra_note) lines.push(`補充說明：${p.extra_note}`);
   return lines.length ? `學員背景：\n- ${lines.join('\n- ')}\n\n生成原則：語氣和選題必須符合以上背景，不要生成與定位相反的內容。` : '';
+}
+function profileValue(id, value){
+  const el = $(id);
+  if(el) el.value = Array.isArray(value) ? value.filter(Boolean).join('、') : String(value || '');
+}
+function readProfileForm(){
+  return {
+    name: $('pf-name')?.value.trim() || '',
+    industry: $('pf-industry')?.value.trim() || '',
+    service: $('pf-service')?.value.trim() || '',
+    target_gender: $('pf-target-gender')?.value || '',
+    target_age: splitProfileList($('pf-target-age')?.value),
+    target_identity: splitProfileList($('pf-target-identity')?.value),
+    style: $('pf-style')?.value || '',
+    personality: splitProfileList($('pf-personality')?.value),
+    audience_feeling: splitProfileList($('pf-audience-feeling')?.value),
+    differentiation: splitProfileList($('pf-differentiation')?.value),
+    extra_note: $('pf-extra-note')?.value.trim() || ''
+  };
+}
+function fillProfileForm(){
+  const p = state.student && state.student.profile && typeof state.student.profile === 'object' ? state.student.profile : {};
+  profileValue('pf-name', p.name || state.student?.name || '');
+  profileValue('pf-industry', p.industry);
+  profileValue('pf-service', p.service);
+  profileValue('pf-target-gender', p.target_gender);
+  profileValue('pf-style', p.style);
+  profileValue('pf-target-age', p.target_age);
+  profileValue('pf-target-identity', p.target_identity);
+  profileValue('pf-personality', p.personality);
+  profileValue('pf-audience-feeling', p.audience_feeling);
+  profileValue('pf-differentiation', p.differentiation);
+  profileValue('pf-extra-note', p.extra_note);
+}
+function renderProfileSummary(){
+  const p = state.student && state.student.profile && typeof state.student.profile === 'object' ? state.student.profile : {};
+  const rows = [
+    ['品牌/身份', p.name || state.student?.name || '尚未設定'],
+    ['產業', p.industry || '尚未設定'],
+    ['主要服務', p.service || '尚未設定'],
+    ['目標受眾', [p.target_gender, arrText(p.target_age), arrText(p.target_identity)].filter(Boolean).join('，') || '尚未設定'],
+    ['說話風格', p.style || '尚未設定'],
+    ['差異與補充', [arrText(p.differentiation), p.extra_note].filter(Boolean).join('；') || '尚未設定']
+  ];
+  const summary = $('profile-summary');
+  if(summary){
+    summary.innerHTML = rows.map(([label, value]) => `<div class="profile-item"><span>${esc(label)}</span><b>${esc(value)}</b></div>`).join('');
+  }
+  fillProfileForm();
+}
+function setProfileEditor(open){
+  const form = $('profile-form');
+  if(form) form.classList.toggle('open', !!open);
+  const btn = $('btn-profile-edit');
+  if(btn) btn.textContent = open ? '收起帳號定位' : '編輯帳號定位';
+  status('profile-status','');
+}
+async function saveProfile(){
+  const btn = $('btn-profile-save');
+  if(btn) btn.disabled = true;
+  status('profile-status','正在儲存...','warn');
+  try{
+    const profile = readProfileForm();
+    const data = await authedFetch(PROFILE_API_URL, { action:'save', profile });
+    if(data.student) state.student = data.student;
+    else state.student = { ...(state.student || {}), profile };
+    renderProfileSummary();
+    setProfileEditor(false);
+    status('profile-status','帳號定位已儲存，一鍵成片會套用新設定。','ok');
+  }catch(e){
+    status('profile-status', e.message || '帳號定位儲存失敗。','err');
+  }finally{
+    if(btn) btn.disabled = false;
+  }
 }
 function compliancePrompt(){
   return `合規規則：使用台灣繁體中文。內容必須先有實質內容，不得只有語氣詞。避開絕對化成效、財務暗示、未經驗證數字、最高級與唯一性宣稱。具體成效必須避免未經驗證的聲稱。可以有說服力，但要符合 TikTok 廣告政策與台灣常見法規風險。不得使用 emoji 或表情符號。`;
@@ -1238,6 +1409,7 @@ async function refreshProfile(){
   const data = await authedFetch(SECURE_API_URL, { action:'profile' });
   state.student = data.student;
   updateQuota();
+  renderProfileSummary();
 }
 function withTimeout(promise, ms, label){
   return Promise.race([
@@ -1250,6 +1422,9 @@ async function init(){
   initRenderTemplates();
   initScriptLengthControls();
   initRenderControls();
+  if($('btn-profile-edit')) $('btn-profile-edit').onclick = () => setProfileEditor(!$('profile-form')?.classList.contains('open'));
+  if($('btn-profile-cancel')) $('btn-profile-cancel').onclick = () => { fillProfileForm(); setProfileEditor(false); };
+  if($('btn-profile-save')) $('btn-profile-save').onclick = saveProfile;
   const client = getSupabaseClient();
   $('login-btn').onclick = () => client.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: authRedirectUrl() } });
   $('login-state').textContent = '讀取登入狀態中...';
