@@ -436,8 +436,8 @@ textarea.subtitle-box{display:block;width:100%;min-height:260px;resize:vertical;
                 <div class="range-row"><input id="subtitle-text-shadow-opacity" type="range" min="0" max="100" value="55"><span id="subtitle-text-shadow-value">55%</span></div>
               </div>
               <div class="field">
-                <div class="label">字幕延後校正</div>
-                <div class="range-row"><input id="subtitle-lead-seconds" type="range" min="0" max="3" step="0.1" value="1"><span id="subtitle-lead-value">1.0秒</span></div>
+                <div class="label">字幕進階微調</div>
+                <div class="range-row"><input id="subtitle-lead-seconds" type="range" min="-1.5" max="1.5" step="0.1" value="0"><span id="subtitle-lead-value">0.0秒</span></div>
               </div>
             </div>
             <div class="hint">第一版先做簡單可控，不做剪輯軟體級自由拖曳；之後要做拖曳也可以接在這個面板上。</div>
@@ -512,7 +512,7 @@ const state = {
     subtitleBackgroundOpacity: 18,
     titleTextShadowOpacity: 55,
     subtitleTextShadowOpacity: 55,
-    subtitleLeadSeconds: 1
+    subtitleLeadSeconds: 0
   },
   systemVoices: [],
   customVoices: [],
@@ -539,7 +539,7 @@ function saveWorkflowProgress(){
   if(!state.user || !window.localStorage) return;
   try{
     const draft = {
-      version: 1,
+      version: 2,
       savedAt: Date.now(),
       selectedTopic: state.selectedTopic,
       script: $('final-script')?.value || state.script || '',
@@ -584,6 +584,9 @@ function restoreWorkflowProgress(){
     state.vtt = draft.vtt || '';
     state.renderTemplate = draft.renderTemplate || state.renderTemplate;
     state.renderControls = { ...state.renderControls, ...(draft.renderControls || {}) };
+    if(Number(draft.version || 1) < 2 && Number(state.renderControls.subtitleLeadSeconds) === 1){
+      state.renderControls.subtitleLeadSeconds = 0;
+    }
     if($('selected-topic')) $('selected-topic').value = state.selectedTopic || '';
     if($('final-script') && state.script) $('final-script').value = state.script;
     if($('final-title')) $('final-title').value = draft.finalTitle || state.selectedTopic || '';
@@ -975,10 +978,10 @@ function ensureRenderFineControls(){
     { value:'800', label:'粗' },
     { value:'900', label:'超粗' }
   ], 'subtitleWeight', '900');
-  const lead = ensureRenderRange('subtitle-lead-seconds', '字幕延後校正', 'subtitleLeadSeconds', 1, '秒');
+  const lead = ensureRenderRange('subtitle-lead-seconds', '字幕進階微調', 'subtitleLeadSeconds', 0, '秒');
   if(lead){
-    lead.min = '0';
-    lead.max = '3';
+    lead.min = '-1.5';
+    lead.max = '1.5';
     lead.step = '0.1';
   }
   const subtitleBox = $('subtitle-output');
@@ -1024,6 +1027,12 @@ function editableSrtText(){
 }
 function vttFromSrt(srt){
   return 'WEBVTT\n\n' + String(srt || '').replace(/\r\n/g, '\n').replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2').trim() + '\n';
+}
+function subtitleSourceLabel(source){
+  if(source === 'cartesia_ink_stt') return '音軌自動對齊';
+  if(source === 'manual_fallback') return '手動字幕備援';
+  if(source === 'manual') return '手動字幕';
+  return '音軌自動對齊';
 }
 function firstSubtitleLineFromSrt(srt){
   const blocks = String(srt || '').replace(/\r\n/g, '\n').split(/\n\s*\n/);
@@ -1197,12 +1206,12 @@ function initRenderControls(){
   });
   const lead = $('subtitle-lead-seconds');
   if(lead){
-    const value = Math.max(0, Math.min(3, Number(state.renderControls.subtitleLeadSeconds ?? 1)));
+    const value = Math.max(-1.5, Math.min(1.5, Number(state.renderControls.subtitleLeadSeconds ?? 0)));
     state.renderControls.subtitleLeadSeconds = value;
     lead.value = String(value);
     [$('subtitle-lead-value'), $('subtitle-lead-seconds-value')].filter(Boolean).forEach(label => label.textContent = `${value.toFixed(1)}秒`);
     lead.oninput = () => {
-      const next = Math.max(0, Math.min(3, Number(lead.value || 0)));
+      const next = Math.max(-1.5, Math.min(1.5, Number(lead.value || 0)));
       state.renderControls.subtitleLeadSeconds = next;
       [$('subtitle-lead-value'), $('subtitle-lead-seconds-value')].filter(Boolean).forEach(label => label.textContent = `${next.toFixed(1)}秒`);
       saveWorkflowProgress();
@@ -1853,12 +1862,12 @@ async function submitFinalRender(){
       subtitle_text_shadow_opacity:state.renderControls.subtitleTextShadowOpacity,
       title_shadow_opacity:state.renderControls.titleBackgroundOpacity,
       subtitle_shadow_opacity:state.renderControls.subtitleBackgroundOpacity,
-      subtitle_timing_offset_seconds:Math.max(0, Math.min(3, Number(state.renderControls.subtitleLeadSeconds ?? 1))),
+      subtitle_timing_offset_seconds:Math.max(-1.5, Math.min(1.5, Number(state.renderControls.subtitleLeadSeconds ?? 0))),
       title:stripLeadingPunctuation($('final-title').value || state.selectedTopic || 'AI自媒體系統'),
       duration_seconds:state.voiceAudioSeconds || 60
     });
     state.renderId = data.renderId;
-    status('render-status',`正式成片輸出中：${data.status || 'QUEUED'}，字幕來源：${data.subtitleSource || '語音重新對齊'}，10 秒後自動查詢。`,'warn');
+    status('render-status',`正式成片輸出中：${data.status || 'QUEUED'}，字幕來源：${subtitleSourceLabel(data.subtitleSource)}，10 秒後自動查詢。`,'warn');
     setTimeout(pollFinalRender, 10000);
   }catch(e){
     status('render-status', e.message || '正式成片送出失敗，請稍後再試。','err');
