@@ -924,9 +924,13 @@ function subtitleOutputValue(){
 }
 function editableSrtText(){
   const raw = String(subtitleOutputValue() || '').replace(/\r\n/g, '\n').trim();
-  const firstCue = raw.search(/\n\s*1\s*\n\d{2}:\d{2}:\d{2}[,.]\d{3}\s*-->/);
-  if(firstCue >= 0) return raw.slice(firstCue).trim();
-  if(/^\s*1\s*\n\d{2}:\d{2}:\d{2}[,.]\d{3}\s*-->/.test(raw)) return raw;
+  const lines = raw.split('\n');
+  const timeIndex = lines.findIndex(line => /\d{2}:\d{2}:\d{2}[,.]\d{3}\s*-->\s*\d{2}:\d{2}:\d{2}[,.]\d{3}/.test(line));
+  if(timeIndex >= 0){
+    let start = timeIndex;
+    if(timeIndex > 0 && /^\s*\d+\s*$/.test(lines[timeIndex - 1])) start = timeIndex - 1;
+    return lines.slice(start).join('\n').trim();
+  }
   return state.srt || '';
 }
 function vttFromSrt(srt){
@@ -954,10 +958,10 @@ function renderTemplatePreviewStyle(){
   const subtitleAlign = state.renderControls.subtitleAlign || 'center';
   const titleWeight = state.renderControls.titleWeight || '900';
   const subtitleWeight = state.renderControls.subtitleWeight || '900';
-  const topMap = { top:'5.5%', upper:'11%', lower:'18%' };
-  const bottomMap = { standard:'18%', higher:'24%' };
-  const titleSizeMap = { small:'18px', medium:'24px', large:'30px', xlarge:'36px' };
-  const subtitleSizeMap = { small:'12px', medium:'14px', large:'16px' };
+  const topMap = { top:'5.5%', upper:'12%', lower:'20%' };
+  const bottomMap = { standard:'14.5%', higher:'22%' };
+  const titleSizeMap = { small:'17px', medium:'22px', large:'26px', xlarge:'30px' };
+  const subtitleSizeMap = { small:'10px', medium:'12px', large:'14px' };
   const titleBgAlpha = controlAlpha('titleBackgroundOpacity', 18);
   const subtitleBgAlpha = controlAlpha('subtitleBackgroundOpacity', 18);
   const titleTextAlpha = controlAlpha('titleTextShadowOpacity', 55);
