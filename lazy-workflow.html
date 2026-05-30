@@ -527,6 +527,13 @@ const state = {
 function $(id){ return document.getElementById(id); }
 function esc(value){ return String(value || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function status(id, text, cls){ const el=$(id); if(el){ el.className='status ' + (cls || ''); el.textContent=text || ''; } }
+function lockWorkflowAccess(message){
+  const app = $('app');
+  const auth = $('auth-box');
+  if(app) app.style.display = 'none';
+  if(auth) auth.style.display = 'block';
+  $('login-state').textContent = message || '此帳號尚未開通，請聯繫管理員。';
+}
 function fmt(n){ return Math.max(0, Math.round(Number(n || 0))).toLocaleString('zh-TW'); }
 async function token(){ const { data } = await getSupabaseClient().auth.getSession(); return data && data.session ? data.session.access_token : ''; }
 function isLocalFileMode(){ return location.protocol === 'file:'; }
@@ -1256,9 +1263,12 @@ async function init(){
   $('login-state').textContent = `已登入：${state.user.email || ''}`;
   $('app').style.display = 'grid';
   $('auth-box').style.display = 'none';
-  refreshProfile().catch(e => {
-    status('topic-status', e.message || '會員額度暫時讀取失敗，功能仍可先操作。', 'warn');
-  });
+  try{
+    await refreshProfile();
+  }catch(e){
+    lockWorkflowAccess(e.message || '此帳號尚未開通，請聯繫管理員。');
+    return;
+  }
   loadVoices().catch(e => {
     status('voice-status', e.message || '聲音清單暫時讀取失敗，請稍後按刷新聲音清單。', 'warn');
   });
