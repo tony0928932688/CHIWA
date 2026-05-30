@@ -531,6 +531,94 @@ function fmt(n){ return Math.max(0, Math.round(Number(n || 0))).toLocaleString('
 async function token(){ const { data } = await getSupabaseClient().auth.getSession(); return data && data.session ? data.session.access_token : ''; }
 function isLocalFileMode(){ return location.protocol === 'file:'; }
 function liveWorkflowUrl(){ return 'https://chiwaai.com/lazy-workflow.html'; }
+function workflowDraftKey(){
+  const userKey = state.user && (state.user.email || state.user.id) || 'anonymous';
+  return `chiwa-lazy-workflow-draft:${userKey}`;
+}
+function saveWorkflowProgress(){
+  if(!state.user || !window.localStorage) return;
+  try{
+    const draft = {
+      version: 1,
+      savedAt: Date.now(),
+      selectedTopic: state.selectedTopic,
+      script: $('final-script')?.value || state.script || '',
+      finalTitle: $('final-title')?.value || state.selectedTopic || '',
+      voiceItem: state.voiceItem,
+      voiceAudioSeconds: state.voiceAudioSeconds,
+      voiceScriptText: state.voiceScriptText,
+      avatarTaskId: state.avatarTaskId,
+      avatarResult: state.avatarResult,
+      renderId: state.renderId,
+      finalVideo: state.finalVideo,
+      srt: state.srt,
+      vtt: state.vtt,
+      renderTemplate: state.renderTemplate,
+      renderControls: state.renderControls
+    };
+    localStorage.setItem(workflowDraftKey(), JSON.stringify(draft));
+  }catch(e){
+    console.warn('workflow_progress_save_failed', e);
+  }
+}
+function restoreWorkflowProgress(){
+  if(!state.user || !window.localStorage) return false;
+  try{
+    const raw = localStorage.getItem(workflowDraftKey());
+    if(!raw) return false;
+    const draft = JSON.parse(raw);
+    if(!draft || Date.now() - Number(draft.savedAt || 0) > 26 * 60 * 60 * 1000){
+      localStorage.removeItem(workflowDraftKey());
+      return false;
+    }
+    state.selectedTopic = draft.selectedTopic || state.selectedTopic;
+    state.script = draft.script || state.script;
+    state.voiceItem = draft.voiceItem || null;
+    state.voiceAudioSeconds = Number(draft.voiceAudioSeconds || 0);
+    state.voiceScriptText = draft.voiceScriptText || '';
+    state.avatarTaskId = draft.avatarTaskId || '';
+    state.avatarResult = draft.avatarResult || null;
+    state.renderId = draft.renderId || '';
+    state.finalVideo = draft.finalVideo || null;
+    state.srt = draft.srt || '';
+    state.vtt = draft.vtt || '';
+    state.renderTemplate = draft.renderTemplate || state.renderTemplate;
+    state.renderControls = { ...state.renderControls, ...(draft.renderControls || {}) };
+    if($('selected-topic')) $('selected-topic').value = state.selectedTopic || '';
+    if($('final-script') && state.script) $('final-script').value = state.script;
+    if($('final-title')) $('final-title').value = draft.finalTitle || state.selectedTopic || '';
+    if(state.voiceItem && state.voiceItem.playUrl){
+      $('voice-result').innerHTML = `<audio controls src="${esc(state.voiceItem.playUrl)}"></audio><div class="status ok">已還原剛才生成的語音，可繼續送形象克隆。</div>`;
+      $('btn-to-avatar').disabled = false;
+      status('voice-status',`已還原語音，約 ${state.voiceAudioSeconds || '--'} 秒。`,'ok');
+    }
+    if(state.avatarResult && (state.avatarResult.previewUrl || state.avatarResult.downloadUrl)){
+      const videoUrl = state.avatarResult.previewUrl || state.avatarResult.downloadUrl;
+      $('avatar-result').innerHTML = `<video class="video-frame" controls src="${esc(videoUrl)}"></video><div class="btns" style="margin-top:10px"><a class="btn secondary" href="${esc(state.avatarResult.downloadUrl || videoUrl)}" download>下載影片</a></div>`;
+      $('btn-avatar').disabled = false;
+      status('avatar-status','已還原剛才生成的數字人影片。','ok');
+    }
+    initRenderControls();
+    if(state.srt){
+      setSubtitleOutput(`標題：${stripLeadingPunctuation($('final-title')?.value || state.selectedTopic || '')}\n\n字幕預覽說明：下方時間軸可先檢查文字分段；正式成片時會依照第三步已確認的語音重新校準字幕時間。字幕文字可以在這裡直接修改。\n\n` + state.srt);
+      $('btn-download-srt').disabled = false;
+      $('btn-download-vtt').disabled = false;
+    }else if(state.voiceScriptText || state.script){
+      generateSubtitles();
+    }
+    $('btn-render-final').disabled = !(state.avatarResult && (state.avatarResult.previewUrl || state.avatarResult.downloadUrl) && state.srt);
+    updateRenderPreview();
+    if(state.avatarResult) goStep(5);
+    else if(state.voiceItem) goStep(4);
+    else if(state.script) goStep(3);
+    status('render-status','已還原重新整理前的工作進度。','ok');
+    if(state.avatarTaskId && !state.avatarResult) pollAvatar();
+    return true;
+  }catch(e){
+    console.warn('workflow_progress_restore_failed', e);
+    return false;
+  }
+}
 function authRedirectUrl(){
   if(isLocalFileMode() || location.hostname !== 'chiwaai.com') return liveWorkflowUrl();
   return location.href.split('#')[0];
@@ -757,6 +845,7 @@ function initRenderTemplates(){
       state.renderTemplate = card.getAttribute('data-template') || 'gold_authority';
       document.querySelectorAll('[data-template]').forEach(el => el.classList.toggle('on', el === card));
       updateRenderPreview();
+      saveWorkflowProgress();
       status('render-status',`已選擇模板：${card.querySelector('b')?.textContent || state.renderTemplate}`,'ok');
     };
   });
@@ -1083,6 +1172,7 @@ function initRenderControls(){
     el.onchange = () => {
       state.renderControls[key] = el.value;
       updateRenderPreview();
+      saveWorkflowProgress();
     };
   });
   const rangeBindings = [
@@ -1102,6 +1192,7 @@ function initRenderControls(){
       state.renderControls[key] = clampPercent(el.value, fallback);
       [$(labelId), $(`${id}-value`)].filter(Boolean).forEach(label => label.textContent = rangeLabel(state.renderControls[key], suffix));
       updateRenderPreview();
+      saveWorkflowProgress();
     };
   });
   const lead = $('subtitle-lead-seconds');
@@ -1114,6 +1205,7 @@ function initRenderControls(){
       const next = Math.max(0, Math.min(3, Number(lead.value || 0)));
       state.renderControls.subtitleLeadSeconds = next;
       [$('subtitle-lead-value'), $('subtitle-lead-seconds-value')].filter(Boolean).forEach(label => label.textContent = `${next.toFixed(1)}秒`);
+      saveWorkflowProgress();
     };
   }
   const subtitleBox = $('subtitle-output');
@@ -1121,6 +1213,7 @@ function initRenderControls(){
     state.srt = editableSrtText();
     state.vtt = vttFromSrt(state.srt);
     updateRenderPreview();
+    saveWorkflowProgress();
   };
   updateRenderPreview();
 }
@@ -1159,6 +1252,7 @@ async function init(){
   loadVoices().catch(e => {
     status('voice-status', e.message || '聲音清單暫時讀取失敗，請稍後按刷新聲音清單。', 'warn');
   });
+  restoreWorkflowProgress();
   runRenderSelfTestIfRequested();
 }
 function parseTopics(text){
@@ -1199,6 +1293,7 @@ function renderTopics(){
     $('final-title').value = state.selectedTopic;
     renderTopics();
     updateRenderPreview();
+    saveWorkflowProgress();
     goStep(2);
   });
 }
@@ -1266,6 +1361,7 @@ async function generateScript(tone){
     state.script = combined;
     $('final-script').value = state.script;
     updateRenderPreview();
+    saveWorkflowProgress();
     status('script-status',`文案已生成，目標約 ${fmt(cfg.words)} 字，實際約 ${fmt(scriptCharCount(state.script))} 字，可手動修改後送語音。`,'ok');
     await refreshProfile().catch(()=>{});
   }catch(e){ status('script-status', e.message || '文案生成失敗','err'); }
@@ -1529,6 +1625,7 @@ async function generateVoice(){
     if(data.student){ state.student = data.student; updateQuota(); }
     generateSubtitles();
     updateRenderPreview();
+    saveWorkflowProgress();
     status('voice-status',`已生成語音，約 ${state.voiceAudioSeconds} 秒。`,'ok');
   }catch(e){ status('voice-status', e.message || '語音生成失敗','err'); }
   $('btn-voice').disabled = false;
@@ -1607,6 +1704,7 @@ async function submitAvatar(){
       duration_seconds:state.voiceAudioSeconds
     });
     state.avatarTaskId = data.taskId;
+    saveWorkflowProgress();
     status('avatar-status','任務已送出，正在查詢結果...','warn');
     pollAvatar();
   }catch(e){
@@ -1624,6 +1722,7 @@ async function pollAvatar(){
       status('avatar-status','形象克隆影片已生成。','ok');
       $('btn-avatar').disabled = false;
       updateRenderPreview();
+      saveWorkflowProgress();
       goStep(5);
       return;
     }
@@ -1706,6 +1805,7 @@ function generateSubtitles(){
   }else{
     status('render-status','字幕預覽已產生。正式成片會依照已確認語音重新校準時間軸。','ok');
   }
+  saveWorkflowProgress();
 }
 async function submitFinalRender(){
   if(isLocalFileMode()){
@@ -1781,6 +1881,7 @@ async function pollFinalRender(){
       $('final-video-result').innerHTML = `<video class="video-frame" controls src="${esc(data.previewUrl || data.downloadUrl)}"></video><div class="btns" style="margin-top:10px"><a class="btn secondary" href="${esc(data.downloadUrl || data.previewUrl)}" download>下載成片</a></div><div class="status ok">成片已完成，檔案會暫存 24 小時，請及時下載保存。</div>`;
       status('render-status','標題與字幕已燒進影片，正式成片可以下載。','ok');
       $('btn-render-final').disabled = false;
+      saveWorkflowProgress();
       return;
     }
     if(data.status === 'FAILED'){
@@ -1858,9 +1959,9 @@ $('btn-copy-ad-primary').onclick = () => copyMarketingField('ad-primary-copy', '
 $('btn-copy-ad-title').onclick = () => copyMarketingField('ad-hook-title', 'CTA 短語');
 $('btn-copy-ad-cta').onclick = () => copyMarketingField('ad-cta-copy', 'Hashtag 組合');
 $('btn-copy-marketing-all').onclick = copyMarketingAll;
-$('final-script').oninput = updateRenderPreview;
-$('final-title').oninput = updateRenderPreview;
-$('btn-to-voice').onclick = () => { state.script = $('final-script').value.trim(); updateRenderPreview(); goStep(3); };
+$('final-script').oninput = () => { state.script = $('final-script').value.trim(); updateRenderPreview(); saveWorkflowProgress(); };
+$('final-title').oninput = () => { updateRenderPreview(); saveWorkflowProgress(); };
+$('btn-to-voice').onclick = () => { state.script = $('final-script').value.trim(); updateRenderPreview(); saveWorkflowProgress(); goStep(3); };
 $('btn-voice').onclick = generateVoice;
 $('btn-refresh-voices').onclick = loadVoices;
 $('voice-speed').oninput = () => {
