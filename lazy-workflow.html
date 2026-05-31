@@ -836,6 +836,14 @@ async function authedFetch(url, body){
   if(!res.ok) throw new Error(data.error || data.detail || `HTTP ${res.status}`);
   return data;
 }
+function avatarErrorText(error, fallback = '形象克隆送出失敗，請稍後再試。'){
+  const raw = String(error && error.message || error || fallback);
+  if(/avatar_student_task_already_running/i.test(raw)) return '你目前已有一個數字人任務正在生成，系統會完成後才能送出下一支。請稍後到素材管理刷新，或等待本頁自動查詢。';
+  if(/avatar_system_busy/i.test(raw)) return '目前數字人生成同時使用人數較多，請稍後再送出。';
+  if(/avatar_quota_not_enough/i.test(raw)) return '影像克隆額度不足，請聯繫管理員調整額度。';
+  if(/video_url_invalid|audio_url_invalid|invalid_url/i.test(raw)) return '影片或語音連結暫時無法讀取，請重新上傳後再試。';
+  return raw || fallback;
+}
 async function aiCall(type, systemPrompt, userPrompt, tone){
   const t = await token();
   const res = await fetch(AI_BACKEND_URL, {
@@ -2396,10 +2404,10 @@ async function submitAvatar(){
     });
     state.avatarTaskId = data.taskId;
     saveWorkflowProgress();
-    status('avatar-status','任務已送出，正在查詢結果...','warn');
+    status('avatar-status', data.activeTask ? '已有數字人任務正在生成，已自動接回查詢，不需要重新上傳。' : '任務已送出，正在查詢結果...','warn');
     pollAvatar();
   }catch(e){
-    status('avatar-status', e.message || '形象克隆送出失敗','err');
+    status('avatar-status', avatarErrorText(e, '形象克隆送出失敗'), 'err');
     $('btn-avatar').disabled = false;
   }
 }
@@ -2425,7 +2433,7 @@ async function pollAvatar(){
     status('avatar-status',`生成中：${data.status || 'RUNNING'}，8 秒後自動查詢。`,'warn');
     setTimeout(pollAvatar, 8000);
   }catch(e){
-    status('avatar-status', e.message || '查詢失敗','err');
+    status('avatar-status', avatarErrorText(e, '查詢失敗'), 'err');
     $('btn-avatar').disabled = false;
   }
 }
