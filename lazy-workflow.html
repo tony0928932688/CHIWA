@@ -395,7 +395,13 @@ textarea.subtitle-box{display:block;width:100%;min-height:260px;resize:vertical;
         <div class="row" style="margin-top:14px;align-items:start">
           <div class="field" style="margin-bottom:0">
             <div class="label">確認版口播文案</div>
+            <div class="hint" style="margin-bottom:8px">這裡只保留會送去語音生成的口播正文；畫面、剪輯、秒數、括號提示會自動移到下方說明框。</div>
             <textarea id="final-script" style="min-height:300px" placeholder="生成後會出現在這裡，也可以手動修改。"></textarea>
+            <div class="btns" style="margin-top:8px">
+              <button class="btn secondary" id="btn-clean-script" type="button">整理成純口播</button>
+            </div>
+            <div class="label" style="margin-top:14px">非口播說明（不會送語音）</div>
+            <textarea id="script-notes" style="min-height:120px" readonly placeholder="如果 AI 產生畫面、剪輯提示、秒數、CTA 格式說明，會自動放到這裡，不會送去語音生成。"></textarea>
           </div>
           <div class="field" style="margin-bottom:0">
             <div class="label">行銷文案輸出區</div>
@@ -646,6 +652,7 @@ const state = {
   topics: [],
   selectedTopic: '',
   script: '',
+  scriptNotes: '',
   tiktokCaption: '',
   marketingCopies: {},
   voiceItem: null,
@@ -718,6 +725,7 @@ function saveWorkflowProgress(){
       savedAt: Date.now(),
       selectedTopic: state.selectedTopic,
       script: $('final-script')?.value || state.script || '',
+      scriptNotes: $('script-notes')?.value || state.scriptNotes || '',
       finalTitle: $('final-title')?.value || state.selectedTopic || '',
       voiceItem: state.voiceItem,
       voiceAudioSeconds: state.voiceAudioSeconds,
@@ -750,6 +758,7 @@ function restoreWorkflowProgress(){
     }
     state.selectedTopic = draft.selectedTopic || state.selectedTopic;
     state.script = draft.script || state.script;
+    state.scriptNotes = draft.scriptNotes || state.scriptNotes || '';
     state.voiceItem = draft.voiceItem || null;
     state.voiceAudioSeconds = Number(draft.voiceAudioSeconds || 0);
     state.voiceScriptText = draft.voiceScriptText || '';
@@ -768,6 +777,8 @@ function restoreWorkflowProgress(){
     }
     if($('selected-topic')) $('selected-topic').value = state.selectedTopic || '';
     if($('final-script') && state.script) $('final-script').value = state.script;
+    if($('script-notes')) $('script-notes').value = state.scriptNotes || '';
+    if($('final-script') && $('final-script').value) separateScriptNotesFromTextarea();
     if($('final-title')) $('final-title').value = draft.finalTitle || state.selectedTopic || '';
     if(state.voiceItem && state.voiceItem.playUrl){
       $('voice-result').innerHTML = `<audio controls src="${esc(state.voiceItem.playUrl)}"></audio><div class="status ok">已還原剛才生成的語音，可繼續送形象克隆。</div>`;
@@ -839,6 +850,70 @@ function cleanScript(text){
     .replace(/\n{3,}/g,'\n\n')
     .trim();
 }
+function mergeTextBlocks(current, next){
+  const lines = [];
+  const seen = new Set();
+  [current, next].forEach(block => {
+    String(block || '').split(/\n+/).map(v => v.trim()).filter(Boolean).forEach(line => {
+      const key = line.replace(/\s+/g, '');
+      if(!seen.has(key)){
+        seen.add(key);
+        lines.push(line);
+      }
+    });
+  });
+  return lines.join('\n');
+}
+function stripScriptLabel(line){
+  return String(line || '')
+    .replace(/^[\s\-*#>]+/g, '')
+    .replace(/^口說\s*[：:，,]\s*/g, '')
+    .replace(/^旁白\s*[：:，,]\s*/g, '')
+    .replace(/^口播\s*[：:，,]\s*/g, '')
+    .trim();
+}
+function splitScriptForVoice(text){
+  const source = cleanScript(text);
+  const voice = [];
+  const notes = [];
+  const noteLabel = /^(畫面|畫面提示|畫面建議|剪輯|剪輯提示|剪輯建議|視覺|鏡頭|字幕|字幕提示|B[- ]?roll|Hashtag|標籤|TikTok|LINE|說明|提醒)\s*[：:，,]/i;
+  const metaBracket = /^【[^】]*(畫面|剪輯|行動呼籲|CTA|秒數|鏡頭|字幕|說明|提醒)[^】]*】/i;
+  const timingLine = /（[^）]*(秒數|秒|0?\d+\s*-\s*\d+)[^）]*）/;
+  source.split(/\n+/).forEach(rawLine => {
+    const line = String(rawLine || '').trim();
+    if(!line) return;
+    if(noteLabel.test(line) || metaBracket.test(line) || timingLine.test(line)){
+      notes.push(line);
+      return;
+    }
+    const oral = stripScriptLabel(line);
+    if(!oral){
+      notes.push(line);
+      return;
+    }
+    if(/^(秒數|時間|剪輯|畫面|視覺|鏡頭|字幕)\s*[：:，,]/.test(oral)){
+      notes.push(line);
+      return;
+    }
+    voice.push(oral);
+  });
+  return {
+    script: cleanScript(voice.join('\n\n')),
+    notes: notes.join('\n')
+  };
+}
+function setScriptNotes(value){
+  state.scriptNotes = String(value || '').trim();
+  if($('script-notes')) $('script-notes').value = state.scriptNotes;
+}
+function separateScriptNotesFromTextarea(){
+  const raw = $('final-script')?.value || state.script || '';
+  const split = splitScriptForVoice(raw);
+  if(split.notes) setScriptNotes(mergeTextBlocks(state.scriptNotes, split.notes));
+  state.script = split.script || cleanScript(raw);
+  if($('final-script')) $('final-script').value = state.script;
+  return state.script;
+}
 function stripLeadingPunctuation(value){
   return String(value || '')
     .replace(/^[\s，,、。．.：:；;！!？?]+/g, '')
@@ -863,7 +938,9 @@ function scriptCharCount(text){
   return Array.from(String(text || '').replace(/\s+/g,'')).length;
 }
 function fitScriptToTarget(text, targetWords){
-  const raw = cleanScript(text);
+  const split = splitScriptForVoice(text);
+  if(split.notes) setScriptNotes(mergeTextBlocks(state.scriptNotes, split.notes));
+  const raw = split.script || cleanScript(text);
   const max = Math.round(Number(targetWords || 0) * 1.05);
   if(!max || scriptCharCount(raw) <= max) return raw;
   const parts = raw.match(/[^。！？!?；;]+[。！？!?；;]?/g) || [raw];
@@ -1215,8 +1292,10 @@ function reuseHistoryItem(id){
     renderTopics();
     goStep(1);
   }else if(item.type === 'script'){
-    state.script = output;
-    if($('final-script')) $('final-script').value = output;
+    const split = splitScriptForVoice(output);
+    state.script = split.script || output;
+    if(split.notes) setScriptNotes(mergeTextBlocks(state.scriptNotes, split.notes));
+    if($('final-script')) $('final-script').value = state.script;
     updateRenderPreview();
     saveWorkflowProgress();
     goStep(2);
@@ -1889,6 +1968,7 @@ async function generateScript(tone){
   $('btn-script').disabled = true;
   $('btn-script-pro').disabled = true;
   try{
+    setScriptNotes('');
     const casual = tone !== 'professional';
     const system = `${buildProfilePrompt()}\n\n你是專業台灣口播文案撰寫師。\n${compliancePrompt()}\n內容規則：文案必須包含開場鉤子、痛點、解法、具體場景、CTA。語氣詞只佔全文 10% 以下。格式適合直接貼進語音合成工具朗讀，每句結尾必須有標點。\n${casual ? '語氣：素人隨聊感，像台灣人在自然聊天，但不能空洞。' : '語氣：博主專業感，有觀點、有邏輯、有乾貨。'}`;
     const extra = $('script-extra').value.trim() || '無';
@@ -1924,6 +2004,9 @@ async function generateScript(tone){
       updateRenderPreview();
     }
     combined = await enforceScriptLength(combined, cfg, system, casual);
+    const finalSplit = splitScriptForVoice(combined);
+    combined = finalSplit.script || combined;
+    if(finalSplit.notes) setScriptNotes(mergeTextBlocks(state.scriptNotes, finalSplit.notes));
     state.script = combined;
     $('final-script').value = state.script;
     updateRenderPreview();
@@ -1941,7 +2024,7 @@ async function generateScript(tone){
   $('btn-script-pro').disabled = false;
 }
 async function generateTikTokCaption(){
-  const text = $('final-script').value.trim();
+  const text = separateScriptNotesFromTextarea().trim();
   if(!text){
     status('caption-status','請先生成或填入口播文案。','err');
     return;
@@ -2180,7 +2263,7 @@ async function cloneVoice(){
 }
 function estimateChars(text){ return Array.from(String(text || '').replace(/\s+/g,'')).length; }
 async function generateVoice(){
-  const text = $('final-script').value.trim();
+  const text = separateScriptNotesFromTextarea().trim();
   if(!text){ status('voice-status','請先確認文案。','err'); return; }
   const chars = estimateChars(text);
   if(!confirm(`即將生成語音\n文案長度：約 ${chars} 字\n即使只是試聽也會消耗語音額度。\n\n確認生成？`)) return;
@@ -2346,7 +2429,7 @@ function subtitleChunks(text){
   });
 }
 function generateSubtitles(){
-  const currentText = $('final-script').value.trim();
+  const currentText = separateScriptNotesFromTextarea().trim();
   const text = (state.voiceScriptText || currentText).trim();
   if(!text){
     state.srt = '';
@@ -2399,6 +2482,7 @@ async function submitFinalRender(){
     return;
   }
   $('btn-render-final').disabled = true;
+  separateScriptNotesFromTextarea();
   state.renderStartedAt = Date.now();
   state.renderPollCount = 0;
   state.finalVideo = null;
@@ -2556,8 +2640,9 @@ $('btn-copy-ad-title').onclick = () => copyMarketingField('ad-hook-title', 'CTA 
 $('btn-copy-ad-cta').onclick = () => copyMarketingField('ad-cta-copy', 'Hashtag 組合');
 $('btn-copy-marketing-all').onclick = copyMarketingAll;
 $('final-script').oninput = () => { state.script = $('final-script').value.trim(); updateRenderPreview(); saveWorkflowProgress(); };
+$('btn-clean-script').onclick = () => { separateScriptNotesFromTextarea(); updateRenderPreview(); saveWorkflowProgress(); status('script-status','已整理成純口播；非口播提示已移到下方框框。','ok'); };
 $('final-title').oninput = () => { updateRenderPreview(); saveWorkflowProgress(); };
-$('btn-to-voice').onclick = () => { state.script = $('final-script').value.trim(); updateRenderPreview(); saveWorkflowProgress(); goStep(3); };
+$('btn-to-voice').onclick = () => { state.script = separateScriptNotesFromTextarea().trim(); updateRenderPreview(); saveWorkflowProgress(); goStep(3); };
 $('btn-voice').onclick = generateVoice;
 $('btn-refresh-voices').onclick = loadVoices;
 $('voice-speed').oninput = () => {
