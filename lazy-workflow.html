@@ -1762,12 +1762,18 @@ function currentAvatarRenderUrl(){
 }
 function finalRenderQuotaEstimate(){
   const seconds = Math.max(1, Number(state.voiceAudioSeconds || 60));
-  const minutes = Math.max(1, Math.ceil(seconds / 60));
-  return { minutes, quotaMinutes: minutes * 3 };
+  return { videoSeconds: Math.round(seconds), quotaSeconds: Math.round(seconds * 3) };
+}
+function formatQuotaDuration(seconds){
+  const total = Math.max(1, Math.round(Number(seconds || 0)));
+  const minutes = Math.floor(total / 60);
+  const remain = total % 60;
+  if(minutes <= 0) return `${remain} 秒`;
+  return remain ? `${minutes} 分 ${String(remain).padStart(2, '0')} 秒` : `${minutes} 分鐘`;
 }
 function confirmFinalRenderQuota(){
-  const { minutes, quotaMinutes } = finalRenderQuotaEstimate();
-  return confirm(`本影片約 ${minutes} 分鐘，將扣除 ${quotaMinutes} 分鐘影像額度。\n原因：標題字幕需租用外部雲端渲染，會產生實際成本，所以以 1 分鐘折抵 3 分鐘計算。\n是否繼續輸出？`);
+  const { videoSeconds, quotaSeconds } = finalRenderQuotaEstimate();
+  return confirm(`本影片約 ${formatQuotaDuration(videoSeconds)}，將扣除 ${formatQuotaDuration(quotaSeconds)} 影像額度。\n原因：標題字幕需使用外部雲端正式渲染，會產生實際成本，所以按影片秒數 x3 精算。\n是否繼續輸出？`);
 }
 function syncPreviewVideo(){
   const box = $('render-preview');
@@ -2545,7 +2551,9 @@ async function submitFinalRender(){
       subtitle_shadow_opacity:state.renderControls.subtitleBackgroundOpacity,
       subtitle_timing_offset_seconds:Math.max(-1.5, Math.min(1.5, Number(state.renderControls.subtitleLeadSeconds ?? 0))),
       title:stripLeadingPunctuation($('final-title').value || state.selectedTopic || 'AI自媒體系統'),
-      duration_seconds:state.voiceAudioSeconds || 60
+      duration_seconds:state.voiceAudioSeconds || 60,
+      render_quota_seconds:finalRenderQuotaEstimate().quotaSeconds,
+      render_quota_multiplier:3
     });
     state.renderId = data.renderId;
     state.renderStartedAt = Date.now();
