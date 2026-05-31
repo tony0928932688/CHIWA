@@ -223,8 +223,16 @@ textarea.subtitle-box{display:block;width:100%;min-height:260px;resize:vertical;
           </div>
           <div class="row">
             <div class="field">
-              <div class="label">目標年齡（用頓號分隔）</div>
-              <input id="pf-target-age" placeholder="例：25-35歲、35-45歲">
+              <div class="label">目標年齡</div>
+              <select id="pf-target-age">
+                <option value="">未設定</option>
+                <option>18-25歲</option>
+                <option>25-35歲</option>
+                <option>35-45歲</option>
+                <option>45-55歲</option>
+                <option>55-65歲</option>
+                <option>65-75歲</option>
+              </select>
             </div>
             <div class="field">
               <div class="label">目標身份（用頓號分隔）</div>
@@ -1085,7 +1093,14 @@ function buildProfilePrompt(){
 }
 function profileValue(id, value){
   const el = $(id);
-  if(el) el.value = Array.isArray(value) ? value.filter(Boolean).join('、') : String(value || '');
+  if(!el) return;
+  if(id === 'pf-target-age'){
+    const allowed = ['18-25歲','25-35歲','35-45歲','45-55歲','55-65歲','65-75歲'];
+    const values = Array.isArray(value) ? value.filter(Boolean) : [String(value || '')];
+    el.value = values.find(v => allowed.includes(v)) || '';
+    return;
+  }
+  el.value = Array.isArray(value) ? value.filter(Boolean).join('、') : String(value || '');
 }
 function readProfileForm(){
   return {
