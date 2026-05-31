@@ -655,6 +655,8 @@ const state = {
   avatarTaskId: '',
   avatarResult: null,
   renderId: '',
+  renderStartedAt: 0,
+  renderPollCount: 0,
   finalVideo: null,
   srt: '',
   vtt: '',
@@ -723,6 +725,8 @@ function saveWorkflowProgress(){
       avatarTaskId: state.avatarTaskId,
       avatarResult: state.avatarResult,
       renderId: state.renderId,
+      renderStartedAt: state.renderStartedAt,
+      renderPollCount: state.renderPollCount,
       finalVideo: state.finalVideo,
       srt: state.srt,
       vtt: state.vtt,
@@ -752,6 +756,8 @@ function restoreWorkflowProgress(){
     state.avatarTaskId = draft.avatarTaskId || '';
     state.avatarResult = draft.avatarResult || null;
     state.renderId = draft.renderId || '';
+    state.renderStartedAt = Number(draft.renderStartedAt || 0);
+    state.renderPollCount = Number(draft.renderPollCount || 0);
     state.finalVideo = draft.finalVideo || null;
     state.srt = draft.srt || '';
     state.vtt = draft.vtt || '';
@@ -2393,6 +2399,10 @@ async function submitFinalRender(){
     return;
   }
   $('btn-render-final').disabled = true;
+  state.renderStartedAt = Date.now();
+  state.renderPollCount = 0;
+  state.finalVideo = null;
+  if($('final-video-result')) $('final-video-result').innerHTML = '';
   status('render-status','正在用已確認語音產生精準字幕時間軸，並送出成片渲染...','warn');
   try{
     state.srt = editableSrtText();
@@ -2430,6 +2440,9 @@ async function submitFinalRender(){
       duration_seconds:state.voiceAudioSeconds || 60
     });
     state.renderId = data.renderId;
+    state.renderStartedAt = Date.now();
+    state.renderPollCount = 0;
+    saveWorkflowProgress();
     status('render-status',`正式成片輸出中：${data.status || 'QUEUED'}，字幕來源：${subtitleSourceLabel(data.subtitleSource)}，10 秒後自動查詢。`,'warn');
     setTimeout(pollFinalRender, 10000);
   }catch(e){
@@ -2444,10 +2457,12 @@ async function pollFinalRender(){
     return;
   }
   try{
+    state.renderPollCount = Number(state.renderPollCount || 0) + 1;
     const data = await authedFetch(VIDEO_RENDER_API_URL, {
       action:'query',
       render_id:state.renderId
     });
+    const elapsed = Date.now() - Number(state.renderStartedAt || Date.now());
     if(data.status === 'SUCCESS' && (data.previewUrl || data.downloadUrl)){
       state.finalVideo = data;
       $('final-video-result').innerHTML = `<video class="video-frame" controls src="${esc(data.previewUrl || data.downloadUrl)}"></video><div class="btns" style="margin-top:10px"><a class="btn secondary" href="${esc(data.downloadUrl || data.previewUrl)}" download>下載成片</a></div><div class="status ok">成片已完成，檔案會暫存 24 小時，請及時下載保存。</div>`;
@@ -2461,7 +2476,16 @@ async function pollFinalRender(){
       $('btn-render-final').disabled = false;
       return;
     }
-    status('render-status',`正式成片輸出中：${data.status || 'RUNNING'}，10 秒後自動查詢。`,'warn');
+    const currentStatus = data.status || 'RUNNING';
+    const stuckStatuses = ['FETCHING', 'PREPROCESSING', 'RUNNING', 'QUEUED'];
+    if(elapsed > 180000 && stuckStatuses.includes(String(currentStatus).toUpperCase())){
+      status('render-status',`渲染服務已在 ${currentStatus} 停留超過 3 分鐘，可能是 Shotstack 抓取素材卡住。已停止自動等待，請直接按「一鍵輸出正式成片」重新送出一次。任務 ID：${state.renderId}`,'err');
+      $('btn-render-final').disabled = false;
+      saveWorkflowProgress();
+      return;
+    }
+    status('render-status',`正式成片輸出中：${currentStatus}，已等待 ${Math.max(10, Math.round(elapsed / 1000))} 秒，10 秒後自動查詢。`,'warn');
+    saveWorkflowProgress();
     setTimeout(pollFinalRender, 10000);
   }catch(e){
     status('render-status', e.message || '正式成片查詢失敗','err');
