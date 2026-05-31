@@ -1030,6 +1030,27 @@ body.oneclick-mode.admin-mode .mn-item.legacy-tool{display:flex}
   color: var(--t1);
 }
 
+.column-title-stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.title-workflow-chip {
+  width: max-content;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 16px;
+  line-height: 1.2;
+  color: #1a1205;
+  background: linear-gradient(135deg, #ff7a1a 0%, #f2c84b 48%, #fff0a8 100%);
+  box-shadow: 0 0 24px rgba(255, 122, 26, .28), inset 0 1px 0 rgba(255, 255, 255, .45);
+}
+
 .column-subtitle {
   font-size: 13px;
   color: var(--t2);
@@ -1151,6 +1172,78 @@ body.oneclick-mode.admin-mode .mn-item.legacy-tool{display:flex}
   line-height: 1.7;
 }
 
+.course-workflow-spotlight {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 16% 10%, rgba(255, 122, 26, .22), transparent 30%),
+    linear-gradient(135deg, rgba(255, 122, 26, .18), rgba(232, 197, 90, .12) 48%, rgba(74, 158, 255, .08));
+  border: 1px solid rgba(255, 183, 77, .48);
+  border-radius: 18px;
+  padding: 22px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  box-shadow: 0 16px 40px rgba(255, 122, 26, .12), inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+.course-workflow-spotlight:before {
+  content: "";
+  position: absolute;
+  inset: -40% -20% auto auto;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(255, 226, 130, .3), transparent 64%);
+  pointer-events: none;
+}
+
+.course-workflow-num {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #ff6a00, #ffd95a);
+  border: 1px solid rgba(255, 255, 255, .34);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  color: #1a1205;
+  flex-shrink: 0;
+  box-shadow: 0 0 22px rgba(255, 122, 26, .35);
+}
+
+.workflow-spotlight-kicker {
+  width: max-content;
+  max-width: 100%;
+  margin-bottom: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 122, 26, .18);
+  color: #ffd98a;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.workflow-spotlight-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: #fff3c4;
+  margin-bottom: 7px;
+}
+
+.workflow-spotlight-desc {
+  font-size: 14px;
+  color: var(--t2);
+  line-height: 1.85;
+}
+
+.workflow-spotlight-time {
+  color: #ffe07a;
+  font-weight: 900;
+}
+
 /* Option A - Tech highlights badges grid */
 .tech-badges-grid {
   display: grid;
@@ -1240,6 +1333,15 @@ body.oneclick-mode.admin-mode .mn-item.legacy-tool{display:flex}
   .faq-split-container {
     grid-template-columns: 1fr;
     gap: 30px;
+  }
+}
+
+@media(max-width: 640px) {
+  .course-workflow-spotlight {
+    padding: 18px;
+  }
+  .title-workflow-chip {
+    font-size: 14px;
   }
 }
 
@@ -2391,8 +2493,11 @@ async function decrAvatar(secs) {
     <!-- Right Column: Option B -->
     <div class="split-solution-right">
       <div class="column-badge badge-b">方案 B 自學課程</div>
-      <h2 class="column-title">AI 自媒體課程</h2>
-      <p class="column-subtitle">親自掌握 AI 內容生產線核心技術，從定位到私域溝通，建立你的自主化內容流程。</p>
+      <h2 class="column-title column-title-stacked">
+        AI 自媒體課程
+        <span class="title-workflow-chip">🔥 AI 一鍵成片工作流</span>
+      </h2>
+      <p class="column-subtitle">親自掌握 AI 內容生產線核心技術，並使用一鍵成片工作流，把選題、腳本、語音、AI 分身、字幕與成片輸出串成單一路徑。</p>
       
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px">
         <div style="background:var(--card2);border:1px solid var(--bdr);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start">
@@ -2448,6 +2553,17 @@ async function decrAvatar(secs) {
           <div>
             <div style="font-size:16px;font-weight:700;margin-bottom:5px">私域溝通</div>
             <div style="font-size:14px;color:var(--t2);line-height:1.8">從看到影片到主動了解再到預約諮詢，整條路線一次建好，讓內容持續幫你累積信任。</div>
+          </div>
+        </div>
+
+        <div class="course-workflow-spotlight">
+          <div class="course-workflow-num">08</div>
+          <div>
+            <div class="workflow-spotlight-kicker">重點新增</div>
+            <div class="workflow-spotlight-title">AI 一鍵成片工作流</div>
+            <div class="workflow-spotlight-desc">
+              將帳號定位、選題、腳本、合規、語音、AI 分身、字幕與成片輸出整合在同一頁。素材準備好後，一般 1 到 2 分鐘短影音，通常可在 <span class="workflow-spotlight-time">8 到 15 分鐘內完成一支片</span>，實際時間依影片長度與素材狀態而定。
+            </div>
           </div>
         </div>
       </div>
