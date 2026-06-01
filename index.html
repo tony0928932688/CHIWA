@@ -941,9 +941,10 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .coach-item-title{font-size:13px;font-weight:900;color:var(--t1);margin-bottom:5px}
 .coach-item-meta{font-size:11px;color:var(--t3);line-height:1.6}
 .coach-action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.coach-sync-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .coach-note{font-size:11px;color:var(--t3);line-height:1.65;margin-top:10px}
 @media(max-width:960px){.coach-grid{grid-template-columns:1fr}.coach-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:520px){.coach-kpi-grid{grid-template-columns:1fr}.coach-table{font-size:11px}.coach-table th:nth-child(3),.coach-table td:nth-child(3){display:none}}
+@media(max-width:520px){.coach-kpi-grid{grid-template-columns:1fr}.coach-sync-options{grid-template-columns:1fr}.coach-table{font-size:11px}.coach-table th:nth-child(3),.coach-table td:nth-child(3){display:none}}
 .avatar-video-shell {
   --avatar-video-max-h: 52vh;
   width: min(100%, 860px, calc(var(--avatar-video-max-h) * 16 / 9));
@@ -3184,10 +3185,6 @@ async function decrAvatar(secs) {
         <span class="sb-icon">🗂️</span>
         <span>生成紀錄</span>
       </div>
-      <div class="sb-item" data-panel="content-coach" onclick="swP('content-coach', this)">
-        <span class="sb-icon">📈</span>
-        <span>AI內容教練</span>
-      </div>
       <div class="sb-item legacy-tool" data-panel="voice" onclick="swP('voice', this)">
         <span class="sb-icon">🎙️</span>
         <span>語音克隆</span>
@@ -3199,6 +3196,10 @@ async function decrAvatar(secs) {
       <div class="sb-item legacy-tool" data-panel="materials" onclick="openMaterialGenerator()">
         <span class="sb-icon">🎨</span>
         <span>圖片&影片素材生成</span>
+      </div>
+      <div class="sb-item" data-panel="content-coach" onclick="swP('content-coach', this)">
+        <span class="sb-icon">📈</span>
+        <span>AI內容教練</span>
       </div>
       <div class="sb-item" data-panel="course" onclick="swP('course', this)">
         <span class="sb-icon">📚</span>
@@ -3272,6 +3273,26 @@ async function decrAvatar(secs) {
           <div class="coach-kpi"><b>—</b><span>近 90 天</span></div>
           <div class="coach-kpi"><b>—</b><span>可延伸方向</span></div>
           <div class="coach-kpi"><b>—</b><span>排除假爆款</span></div>
+        </div>
+        <div class="coach-sync-options">
+          <div>
+            <div class="label">分析範圍</div>
+            <select id="coach-sync-days" class="tinput">
+              <option value="30">最近 30 天</option>
+              <option value="60">最近 60 天</option>
+              <option value="90" selected>最近 90 天</option>
+              <option value="180">最近 180 天</option>
+            </select>
+          </div>
+          <div>
+            <div class="label">同步支數</div>
+            <select id="coach-sync-limit" class="tinput">
+              <option value="20">最多 20 支</option>
+              <option value="40">最多 40 支</option>
+              <option value="60">最多 60 支</option>
+              <option value="100" selected>最多 100 支</option>
+            </select>
+          </div>
         </div>
         <div class="coach-action-row">
           <button class="btn" type="button" id="coach-sync-btn" onclick="syncTikTokCoach()">同步最近影片</button>
@@ -4016,23 +4037,23 @@ async function decrAvatar(secs) {
   <div class="mn-item" id="mn-history" onclick="swPM('history',1)">
     <span class="mn-icon">🗂️</span><span>紀錄</span>
   </div>
-  <div class="mn-item" id="mn-content-coach" onclick="swPM('content-coach',2)">
-    <span class="mn-icon">📈</span><span>教練</span>
-  </div>
-  <div class="mn-item legacy-tool" id="mn-topic" onclick="swPM('topic',3)">
+  <div class="mn-item legacy-tool" id="mn-topic" onclick="swPM('topic',2)">
     <span class="mn-icon">🎯</span><span>選題</span>
   </div>
-  <div class="mn-item legacy-tool" id="mn-script" onclick="swPM('script',4)">
+  <div class="mn-item legacy-tool" id="mn-script" onclick="swPM('script',3)">
     <span class="mn-icon">🎬</span><span>口播</span>
   </div>
-  <div class="mn-item legacy-tool" id="mn-marketing" onclick="swPM('marketing',5)">
+  <div class="mn-item legacy-tool" id="mn-marketing" onclick="swPM('marketing',4)">
     <span class="mn-icon">✍️</span><span>文案</span>
   </div>
-  <div class="mn-item legacy-tool" id="mn-voice" onclick="swPM('voice',6)">
+  <div class="mn-item legacy-tool" id="mn-voice" onclick="swPM('voice',5)">
     <span class="mn-icon">🎙️</span><span>語音</span>
   </div>
-  <div class="mn-item legacy-tool" id="mn-avatar" onclick="swPM('avatar',7)">
+  <div class="mn-item legacy-tool" id="mn-avatar" onclick="swPM('avatar',6)">
     <span class="mn-icon">🧑‍💼</span><span>形象</span>
+  </div>
+  <div class="mn-item" id="mn-content-coach" onclick="swPM('content-coach',7)">
+    <span class="mn-icon">📈</span><span>教練</span>
   </div>
   <div class="mn-item" id="mn-course" onclick="swPM('course',8)">
     <span class="mn-icon">📚</span><span>課程</span>
@@ -5614,6 +5635,16 @@ function coachProfilePayload() {
   };
 }
 
+function coachSelectedDays() {
+  const value = Number(document.getElementById('coach-sync-days')?.value || 90);
+  return Number.isFinite(value) ? Math.max(1, Math.min(365, value)) : 90;
+}
+
+function coachSelectedLimit() {
+  const value = Number(document.getElementById('coach-sync-limit')?.value || 100);
+  return Number.isFinite(value) ? Math.max(1, Math.min(100, value)) : 100;
+}
+
 async function coachWorkerJson(path, options) {
   const token = await getVoiceSessionToken();
   if (!token) throw new Error('missing_authorization');
@@ -5648,11 +5679,12 @@ function renderCoachKpis(summary, analysis) {
   if (!box) return;
   const total = Number(summary && summary.totalVideos || 0);
   const recent = Number(summary && summary.recentVideos || 0);
+  const days = Number(summary && summary.days || coachSelectedDays());
   const extendable = Number(analysis && analysis.extendableCount || 0);
   const excluded = Number(analysis && analysis.excludedCount || 0);
   box.innerHTML = `
     <div class="coach-kpi"><b>${total || '—'}</b><span>同步影片</span></div>
-    <div class="coach-kpi"><b>${recent || '—'}</b><span>近 90 天</span></div>
+    <div class="coach-kpi"><b>${recent || '—'}</b><span>近 ${days} 天</span></div>
     <div class="coach-kpi"><b>${extendable || '—'}</b><span>可延伸方向</span></div>
     <div class="coach-kpi"><b>${excluded || '—'}</b><span>排除假爆款</span></div>
   `;
@@ -5779,11 +5811,13 @@ async function connectTikTokCoach() {
 async function syncTikTokCoach() {
   const btn = document.getElementById('coach-sync-btn');
   if (btn) btn.disabled = true;
+  const days = coachSelectedDays();
+  const limit = coachSelectedLimit();
   try {
-    coachSetText('coach-sync-summary', '正在同步 TikTok 公開影片...');
+    coachSetText('coach-sync-summary', `正在同步最近 ${days} 天，最多 ${limit} 支 TikTok 公開影片...`);
     const data = await coachWorkerJson('/coach/tiktok/sync', {
       method: 'POST',
-      body: JSON.stringify({ days: 90, limit: 100 })
+      body: JSON.stringify({ days, limit })
     });
     coachTikTokLastSync = data;
     renderCoachKpis(data.summary, coachTikTokLastAnalysis);
@@ -5800,10 +5834,11 @@ async function syncTikTokCoach() {
 async function analyzeTikTokCoach() {
   const btn = document.getElementById('coach-analyze-btn');
   if (btn) btn.disabled = true;
+  const days = coachSelectedDays();
   try {
     const data = await coachWorkerJson('/coach/tiktok/analyze', {
       method: 'POST',
-      body: JSON.stringify({ days: 90, profile: coachProfilePayload() })
+      body: JSON.stringify({ days, profile: coachProfilePayload() })
     });
     renderCoachAnalysis(data);
     if (Array.isArray(data.items)) renderCoachVideos(data.items);
