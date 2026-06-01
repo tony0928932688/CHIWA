@@ -276,6 +276,33 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
    WORKSPACE
 ══════════════════════════════════ */
 .sidebar{width:var(--sw);background:var(--card);border-right:1px solid var(--bdr);display:flex;flex-direction:column;flex-shrink:0;height:100vh;overflow:hidden}
+.workspace-cosmos{position:relative;min-height:100vh;background:#05060d;overflow:hidden}
+.cosmic-starfield{position:fixed;inset:0;z-index:0;pointer-events:none;background:
+  radial-gradient(circle at 18% 22%,rgba(74,158,255,.24),transparent 27%),
+  radial-gradient(circle at 78% 10%,rgba(167,139,250,.20),transparent 30%),
+  radial-gradient(circle at 52% 84%,rgba(232,197,90,.10),transparent 24%),
+  radial-gradient(circle at 20% 70%,rgba(255,255,255,.18) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 72% 32%,rgba(255,255,255,.18) 0 1px,transparent 1.7px),
+  radial-gradient(circle at 40% 18%,rgba(255,255,255,.14) 0 1px,transparent 1.4px),
+  linear-gradient(135deg,#04050b 0%,#080b18 42%,#05050d 100%);
+  background-size:auto,auto,auto,180px 180px,240px 240px,320px 320px,auto;
+  animation:cosmicDrift 22s ease-in-out infinite alternate;opacity:.95}
+.cosmic-starfield:before{content:"";position:absolute;inset:-20%;background:
+  radial-gradient(ellipse at 25% 36%,rgba(74,158,255,.16),transparent 34%),
+  radial-gradient(ellipse at 66% 48%,rgba(167,139,250,.13),transparent 36%),
+  radial-gradient(circle at 46% 42%,rgba(255,255,255,.42) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 62% 66%,rgba(255,255,255,.32) 0 1px,transparent 1.5px);
+  background-size:auto,auto,130px 130px,210px 210px;filter:blur(.2px);animation:starTwinkle 6s ease-in-out infinite}
+.workspace-cosmos .sidebar,.workspace-cosmos .ws-main,.workspace-cosmos .watermark-overlay{position:relative;z-index:1}
+.workspace-cosmos .sidebar{background:rgba(8,10,18,.84);border-right-color:rgba(245,224,160,.18);backdrop-filter:blur(18px);box-shadow:18px 0 60px rgba(0,0,0,.28)}
+.workspace-cosmos .sb-logo,.workspace-cosmos .sb-foot{border-color:rgba(245,224,160,.16)}
+.workspace-cosmos .sb-item{background:rgba(255,255,255,.012)}
+.workspace-cosmos .sb-item:hover{background:rgba(255,255,255,.055)}
+.workspace-cosmos .sb-item.on{background:rgba(74,158,255,.13);box-shadow:0 0 28px rgba(74,158,255,.12) inset}
+.workspace-cosmos .ws-main{background:linear-gradient(180deg,rgba(7,9,18,.22),rgba(5,6,13,.42))}
+.workspace-cosmos .panel.on,.workspace-cosmos .card,.workspace-cosmos .out-card,.workspace-cosmos .audio-player-box{background:rgba(13,15,28,.72);border-color:rgba(245,224,160,.18);box-shadow:0 18px 60px rgba(0,0,0,.22);backdrop-filter:blur(14px)}
+@keyframes cosmicDrift{from{background-position:0 0,0 0,0 0,0 0,0 0,0 0,0 0}to{background-position:22px -18px,-18px 22px,12px 18px,46px -22px,-32px 28px,24px 42px,0 0}}
+@keyframes starTwinkle{0%,100%{opacity:.56;transform:translate3d(0,0,0)}50%{opacity:.94;transform:translate3d(12px,-8px,0)}}
 .sb-logo{padding:18px 14px 14px;border-bottom:1px solid var(--bdr)}
 .sb-logo-t{font-size:15px;font-weight:900;color:var(--gold)}
 .sb-logo-s{font-size:10px;color:var(--t3);margin-top:1px}
@@ -878,6 +905,24 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .avatar-video-card {
   display: block;
 }
+.avatar-source-library{border:1.5px solid rgba(74,158,255,.25);border-radius:14px;padding:14px;background:linear-gradient(135deg,rgba(74,158,255,.08),rgba(167,139,250,.055));margin:14px 0}
+.avatar-source-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.avatar-source-title{font-size:14px;font-weight:900;color:var(--t1)}
+.avatar-source-count{font-size:11px;color:var(--gold);font-family:'Space Mono',monospace;margin-top:3px}
+.avatar-source-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.avatar-source-card{border:1px solid rgba(245,224,160,.20);border-radius:10px;background:rgba(5,7,15,.62);min-height:150px;padding:8px;display:flex;flex-direction:column;gap:7px;cursor:pointer;transition:border-color .16s,transform .16s,box-shadow .16s}
+.avatar-source-card:hover{border-color:rgba(245,224,160,.52);transform:translateY(-1px)}
+.avatar-source-card.selected{border-color:var(--gold);box-shadow:0 0 0 2px rgba(232,197,90,.16),0 18px 44px rgba(0,0,0,.24)}
+.avatar-source-empty{cursor:default;color:var(--t3);justify-content:center;align-items:center;text-align:center;border-style:dashed}
+.avatar-source-empty:hover{transform:none;border-color:rgba(245,224,160,.20)}
+.avatar-source-thumb{aspect-ratio:16/9;border-radius:8px;background:#000;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+.avatar-source-thumb video{width:100%;height:100%;object-fit:cover;display:block}
+.avatar-source-name{font-size:12px;font-weight:900;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avatar-source-meta{font-size:10px;color:var(--t3);line-height:1.45}
+.avatar-source-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:auto}
+.avatar-source-actions button{font-size:11px;padding:6px 10px}
+@media(max-width:960px){.avatar-source-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.avatar-source-grid{grid-template-columns:1fr}}
 .avatar-video-shell {
   --avatar-video-max-h: 52vh;
   width: min(100%, 860px, calc(var(--avatar-video-max-h) * 16 / 9));
@@ -1890,6 +1935,7 @@ async function finishStudentLogin(data, loginId) {
   if (typeof updateVoiceDropdown === 'function') updateVoiceDropdown();
   if (typeof loadTTSHistory === 'function') loadTTSHistory();
   if (typeof loadAvatarLibrary === 'function') loadAvatarLibrary();
+  if (typeof loadAvatarSourceLibrary === 'function') loadAvatarSourceLibrary();
   if (typeof loadGenerationHistory === 'function') loadGenerationHistory();
   if (typeof renderProfileForm === 'function') renderProfileForm();
   toast('🔓 登入成功！歡迎回來 ' + (data.name || currentUser));
@@ -3075,7 +3121,8 @@ async function decrAvatar(secs) {
 </div>
 
 <!-- ═══ WORKSPACE ═══ -->
-<div class="page" id="page-workspace" data-nosnippet>
+<div class="page workspace-cosmos" id="page-workspace" data-nosnippet>
+  <div class="cosmic-starfield" aria-hidden="true"></div>
   <!-- WATERMARK OVERLAY -->
   <div id="wm" class="watermark-overlay"></div>
 
@@ -3472,6 +3519,22 @@ async function decrAvatar(secs) {
         <div style="font-size:15px;font-weight:900;color:var(--purple);font-family:'Space Mono',monospace" id="avatar-rem-seconds">1,800<span style="font-size:11px;color:var(--t3);font-weight:400">/1,800秒</span></div>
       </div>
       <div style="font-size:11px;color:var(--t3)">依生成影片秒數扣除</div>
+    </div>
+    <div class="avatar-source-library" id="avatar-source-library">
+      <div class="avatar-source-head">
+        <div>
+          <div class="avatar-source-title">我的形象素材</div>
+          <div class="avatar-source-count" id="avatar-source-count">0/5</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-outline" type="button" style="padding:8px 12px;font-size:12px" onclick="loadAvatarSourceLibrary()">刷新</button>
+          <button class="btn-outline" type="button" style="padding:8px 12px;font-size:12px" onclick="document.getElementById('avatar-video-input').click()">上傳新形象</button>
+        </div>
+      </div>
+      <div class="avatar-source-grid" id="avatar-source-list">
+        <div class="avatar-source-card avatar-source-empty">登入後讀取形象素材</div>
+      </div>
+      <div style="font-size:11px;color:var(--t3);line-height:1.6;margin-top:10px">最多保留最近 5 組形象影片；選中後，本次生成會直接使用該素材。</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px" class="script-grid">
       <div class="drop-upload" data-drop-kind="avatar-video" onclick="document.getElementById('avatar-video-input').click()" style="background:var(--card);border-radius:12px;padding:16px">
@@ -6006,6 +6069,8 @@ let avatarAudioFile = null;
 let avatarAudioSeconds = 0;
 let avatarPollTimer = null;
 let avatarTaskStartedAt = 0;
+let avatarSourceProfiles = [];
+let selectedAvatarSourceProfile = null;
 
 function setAvatarStatus(type, text, ok) {
   const el = document.getElementById(type === 'video' ? 'avatar-video-status' : 'avatar-audio-status');
@@ -6028,6 +6093,8 @@ function handleAvatarSelectedFile(file, type, input) {
       return;
     }
     avatarVideoFile = file;
+    selectedAvatarSourceProfile = null;
+    renderAvatarSourceLibrary(avatarSourceProfiles);
     setAvatarStatus('video', '已選擇影片：' + file.name, true);
     toast('✅ 形象影片已載入。');
     return;
@@ -6331,6 +6398,184 @@ async function avatarR2Json(path, options) {
   return data;
 }
 
+function avatarSourceCacheKey() {
+  return currentUser ? `chiwa_avatar_sources_${currentUser}` : '';
+}
+
+function readAvatarSourceCache() {
+  const key = avatarSourceCacheKey();
+  if (!key || !window.localStorage) return [];
+  try {
+    const rows = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(rows) ? rows.filter(function(item) { return item && item.key; }).slice(0, 5) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function writeAvatarSourceCache(items) {
+  const key = avatarSourceCacheKey();
+  if (!key || !window.localStorage) return;
+  localStorage.setItem(key, JSON.stringify((items || []).filter(function(item) { return item && item.key; }).slice(0, 5)));
+}
+
+function mergeAvatarSourceProfiles(primary, fallback) {
+  const seen = new Set();
+  return []
+    .concat(Array.isArray(primary) ? primary : [])
+    .concat(Array.isArray(fallback) ? fallback : [])
+    .filter(function(item) {
+      const key = item && item.key;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 5);
+}
+
+function upsertAvatarSourceCache(item) {
+  if (!item || !item.key) return;
+  const next = mergeAvatarSourceProfiles([item], readAvatarSourceCache());
+  writeAvatarSourceCache(next);
+}
+
+function avatarSourceDateText(value) {
+  const text = avatarDateText(value);
+  return text ? text.replace(/\//g, '.') : '';
+}
+
+function avatarSourceSizeText(bytes) {
+  const size = Number(bytes || 0);
+  if (!size) return '';
+  return _fmtFileSize(size);
+}
+
+function renderAvatarSourceLibrary(items) {
+  const box = document.getElementById('avatar-source-list');
+  const count = document.getElementById('avatar-source-count');
+  if (!box) return;
+  avatarSourceProfiles = Array.isArray(items) ? items.slice(0, 5) : [];
+  if (count) count.textContent = avatarSourceProfiles.length + '/5';
+  const cards = [];
+  avatarSourceProfiles.forEach(function(item, index) {
+    const key = String(item.key || '');
+    const selected = selectedAvatarSourceProfile && selectedAvatarSourceProfile.key === key;
+    const name = escapeHtml(item.name || item.originalName || ('形象 ' + (index + 1)));
+    const meta = [avatarSourceDateText(item.uploaded), avatarSourceSizeText(item.size)].filter(Boolean).join('　');
+    cards.push(`
+      <div class="avatar-source-card${selected ? ' selected' : ''}" data-avatar-source-select="${escapeHtml(key)}">
+        <div class="avatar-source-thumb">${item.signedUrl ? `<video src="${escapeHtml(item.signedUrl)}" preload="metadata" muted playsinline></video>` : ''}</div>
+        <div class="avatar-source-name">${name}</div>
+        <div class="avatar-source-meta">${escapeHtml(meta || '形象素材')}</div>
+        <div class="avatar-source-actions">
+          <button class="btn-outline" type="button" data-avatar-source-select="${escapeHtml(key)}">${selected ? '已選用' : '選用此形象'}</button>
+          <button class="btn-outline" type="button" data-avatar-source-delete="${escapeHtml(key)}" style="border-color:rgba(255,107,107,.48);color:#ff9a9a">刪除</button>
+        </div>
+      </div>
+    `);
+  });
+  for (let i = avatarSourceProfiles.length; i < 5; i++) {
+    cards.push(`<div class="avatar-source-card avatar-source-empty"><div>空位 ${i + 1}</div><div class="avatar-source-meta">可上傳新形象</div></div>`);
+  }
+  box.innerHTML = cards.join('');
+  box.querySelectorAll('[data-avatar-source-select]').forEach(function(el) {
+    el.addEventListener('click', function(event) {
+      event.stopPropagation();
+      selectAvatarSourceProfile(el.getAttribute('data-avatar-source-select') || '');
+    });
+  });
+  box.querySelectorAll('[data-avatar-source-delete]').forEach(function(el) {
+    el.addEventListener('click', function(event) {
+      event.stopPropagation();
+      deleteAvatarSourceProfile(el.getAttribute('data-avatar-source-delete') || '');
+    });
+  });
+}
+
+async function loadAvatarSourceLibrary() {
+  const box = document.getElementById('avatar-source-list');
+  const cached = readAvatarSourceCache();
+  if (cached.length) renderAvatarSourceLibrary(cached);
+  else if (box) box.innerHTML = '<div class="avatar-source-card avatar-source-empty">正在讀取形象素材...</div>';
+  try {
+    const token = await getVoiceSessionToken();
+    if (!token) throw new Error('請使用 Google 登入後再讀取形象素材。');
+    const data = await avatarR2Json('/avatar/profile/list?limit=5', {
+      method: 'GET',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const merged = mergeAvatarSourceProfiles(data.items || [], cached);
+    renderAvatarSourceLibrary(merged);
+    writeAvatarSourceCache(merged);
+  } catch (e) {
+    renderAvatarSourceLibrary(cached);
+    console.warn('avatar source library load skipped:', e.message || e);
+  }
+}
+
+async function signAvatarSourceProfile(profile) {
+  const token = await getVoiceSessionToken();
+  if (!token) throw new Error('請重新登入後再選用形象素材。');
+  try {
+    const data = await avatarR2Json('/avatar/profile/sign', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ key: profile && profile.key })
+    });
+    selectedAvatarSourceProfile = Object.assign({}, profile || {}, data);
+    upsertAvatarSourceCache(selectedAvatarSourceProfile);
+    renderAvatarSourceLibrary(avatarSourceProfiles.map(function(item) {
+      return item.key === selectedAvatarSourceProfile.key ? selectedAvatarSourceProfile : item;
+    }));
+    return { path: data.key, signedUrl: data.signedUrl };
+  } catch (e) {
+    if (profile && profile.signedUrl) {
+      selectedAvatarSourceProfile = profile;
+      return { path: profile.key, signedUrl: profile.signedUrl };
+    }
+    throw e;
+  }
+}
+
+function selectAvatarSourceProfile(key) {
+  const item = avatarSourceProfiles.find(function(row) { return row.key === key; });
+  if (!item) return;
+  selectedAvatarSourceProfile = item;
+  avatarVideoFile = null;
+  const input = document.getElementById('avatar-video-input');
+  if (input) input.value = '';
+  setAvatarStatus('video', '已選用素材：' + (item.name || '形象素材'), true);
+  renderAvatarSourceLibrary(avatarSourceProfiles);
+}
+
+async function deleteAvatarSourceProfile(key) {
+  if (!key) return;
+  if (!confirm('確定要刪除這組形象素材嗎？刪除後不能再選用。')) return;
+  try {
+    const token = await getVoiceSessionToken();
+    if (!token) throw new Error('請重新登入後再刪除形象素材。');
+    await avatarR2Json('/avatar/profile/delete', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ key })
+    });
+    if (selectedAvatarSourceProfile && selectedAvatarSourceProfile.key === key) {
+      selectedAvatarSourceProfile = null;
+      setAvatarStatus('video', avatarVideoFile ? '已選擇影片：' + avatarVideoFile.name : '尚未選擇影片', !!avatarVideoFile);
+    }
+    toast('已刪除形象素材。');
+    await loadAvatarSourceLibrary();
+  } catch (e) {
+    toast('❌ ' + avatarErrorText(e, '刪除形象素材失敗，請稍後再試。'));
+  }
+}
+
 async function avatarR2Part(path, options) {
   const res = await fetch(CHIWA_AVATAR_R2_WORKER_URL + path, options);
   const data = await res.json().catch(() => ({}));
@@ -6513,8 +6758,8 @@ async function generateAvatarClone() {
   const load = document.getElementById('avatar-load');
   const result = document.getElementById('avatar-result');
 
-  if (!avatarVideoFile) {
-    toast('❌ 請先上傳形象影片。');
+  if (!avatarVideoFile && !selectedAvatarSourceProfile) {
+    toast('❌ 請先選用或上傳形象影片。');
     return;
   }
   if (!avatarAudioFile || !avatarAudioSeconds) {
@@ -6541,12 +6786,28 @@ async function generateAvatarClone() {
     if (result) result.innerHTML = '';
 
     avatarTaskStartedAt = 0;
-    avatarRenderBox('正在上傳形象影片... 0%', 'info');
-    const videoUpload = await uploadAvatarInputToR2(avatarVideoFile, 'video', function(pct, uploaded, total) {
-      const uploadedMb = (uploaded / 1024 / 1024).toFixed(1);
-      const totalMb = (total / 1024 / 1024).toFixed(1);
-      avatarRenderBox(`正在上傳形象影片... ${pct.toFixed(1)}%（${uploadedMb}MB / ${totalMb}MB）`, 'info');
-    });
+    let videoUpload;
+    if (selectedAvatarSourceProfile) {
+      avatarRenderBox('正在讀取已保存形象素材...', 'info');
+      videoUpload = await signAvatarSourceProfile(selectedAvatarSourceProfile);
+    } else {
+      avatarRenderBox('正在上傳形象影片... 0%', 'info');
+      videoUpload = await uploadAvatarInputToR2(avatarVideoFile, 'video', function(pct, uploaded, total) {
+        const uploadedMb = (uploaded / 1024 / 1024).toFixed(1);
+        const totalMb = (total / 1024 / 1024).toFixed(1);
+        avatarRenderBox(`正在上傳形象影片... ${pct.toFixed(1)}%（${uploadedMb}MB / ${totalMb}MB）`, 'info');
+      });
+      upsertAvatarSourceCache({
+        key: videoUpload.path,
+        path: videoUpload.path,
+        signedUrl: videoUpload.signedUrl,
+        name: avatarVideoFile.name,
+        originalName: avatarVideoFile.name,
+        size: avatarVideoFile.size,
+        uploaded: new Date().toISOString()
+      });
+      loadAvatarSourceLibrary();
+    }
     avatarRenderBox('形象影片已上傳，正在上傳人聲音檔... 0%', 'info');
     const audioUpload = await uploadAvatarInputToR2(avatarAudioFile, 'audio', function(pct) {
       avatarRenderBox(`正在上傳人聲音檔... ${pct.toFixed(1)}%`, 'info');

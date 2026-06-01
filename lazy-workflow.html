@@ -16,6 +16,28 @@
 }
 *{box-sizing:border-box}
 body{margin:0;background:radial-gradient(ellipse at 20% 0%,rgba(74,158,255,.09),transparent 42%),radial-gradient(ellipse at 80% 20%,rgba(167,139,250,.08),transparent 42%),var(--bg);color:var(--t1);font-family:'Noto Sans TC',sans-serif;line-height:1.65}
+body.workflow-cosmos{position:relative;min-height:100vh;background:#05060d;overflow-x:hidden}
+body.workflow-cosmos .cosmic-starfield{position:fixed;inset:0;z-index:0;pointer-events:none;background:
+  radial-gradient(circle at 18% 22%,rgba(74,158,255,.24),transparent 27%),
+  radial-gradient(circle at 78% 10%,rgba(167,139,250,.20),transparent 30%),
+  radial-gradient(circle at 52% 84%,rgba(232,197,90,.10),transparent 24%),
+  radial-gradient(circle at 20% 70%,rgba(255,255,255,.18) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 72% 32%,rgba(255,255,255,.18) 0 1px,transparent 1.7px),
+  radial-gradient(circle at 40% 18%,rgba(255,255,255,.14) 0 1px,transparent 1.4px),
+  linear-gradient(135deg,#04050b 0%,#080b18 42%,#05050d 100%);
+  background-size:auto,auto,auto,180px 180px,240px 240px,320px 320px,auto;
+  animation:cosmicDrift 22s ease-in-out infinite alternate;opacity:.95}
+body.workflow-cosmos .cosmic-starfield:before{content:"";position:absolute;inset:-20%;background:
+  radial-gradient(ellipse at 25% 36%,rgba(74,158,255,.16),transparent 34%),
+  radial-gradient(ellipse at 66% 48%,rgba(167,139,250,.13),transparent 36%),
+  radial-gradient(circle at 46% 42%,rgba(255,255,255,.42) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 62% 66%,rgba(255,255,255,.32) 0 1px,transparent 1.5px);
+  background-size:auto,auto,130px 130px,210px 210px;filter:blur(.2px);animation:starTwinkle 6s ease-in-out infinite}
+body.workflow-cosmos .wrap{position:relative;z-index:1}
+body.workflow-cosmos .rail,body.workflow-cosmos .profile-card,body.workflow-cosmos .panel,body.workflow-cosmos .utility-section{background:rgba(13,15,28,.74);border-color:rgba(245,224,160,.18);box-shadow:0 18px 60px rgba(0,0,0,.22);backdrop-filter:blur(14px)}
+body.workflow-cosmos .stepnav button,body.workflow-cosmos .workspace-tab,body.workflow-cosmos textarea,body.workflow-cosmos input,body.workflow-cosmos select{background:rgba(6,8,18,.70)}
+@keyframes cosmicDrift{from{background-position:0 0,0 0,0 0,0 0,0 0,0 0,0 0}to{background-position:22px -18px,-18px 22px,12px 18px,46px -22px,-32px 28px,24px 42px,0 0}}
+@keyframes starTwinkle{0%,100%{opacity:.56;transform:translate3d(0,0,0)}50%{opacity:.94;transform:translate3d(12px,-8px,0)}}
 button,input,select,textarea{font-family:inherit}
 .wrap{max-width:1180px;margin:0 auto;padding:28px 18px 56px}
 .top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:20px}
@@ -87,6 +109,24 @@ textarea{min-height:110px;resize:vertical}
 .drop.drag{border-color:var(--gold);background:rgba(232,197,90,.07)}
 audio,video{width:100%;margin-top:10px;border-radius:10px}
 .video-frame{max-width:760px;max-height:52vh;object-fit:contain;background:#000}
+.avatar-source-library{border:1.5px solid rgba(74,158,255,.25);border-radius:14px;padding:14px;background:linear-gradient(135deg,rgba(74,158,255,.08),rgba(167,139,250,.055));margin:14px 0}
+.avatar-source-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.avatar-source-title{font-size:14px;font-weight:900;color:var(--t1)}
+.avatar-source-count{font-size:11px;color:var(--gold);font-family:'Space Mono',monospace;margin-top:3px}
+.avatar-source-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.avatar-source-card{border:1px solid rgba(245,224,160,.20);border-radius:10px;background:rgba(5,7,15,.62);min-height:150px;padding:8px;display:flex;flex-direction:column;gap:7px;cursor:pointer;transition:border-color .16s,transform .16s,box-shadow .16s}
+.avatar-source-card:hover{border-color:rgba(245,224,160,.52);transform:translateY(-1px)}
+.avatar-source-card.selected{border-color:var(--gold);box-shadow:0 0 0 2px rgba(232,197,90,.16),0 18px 44px rgba(0,0,0,.24)}
+.avatar-source-empty{cursor:default;color:var(--t3);justify-content:center;align-items:center;text-align:center;border-style:dashed}
+.avatar-source-empty:hover{transform:none;border-color:rgba(245,224,160,.20)}
+.avatar-source-thumb{aspect-ratio:16/9;border-radius:8px;background:#000;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+.avatar-source-thumb video{width:100%;height:100%;object-fit:cover;display:block;margin-top:0;border-radius:0}
+.avatar-source-name{font-size:12px;font-weight:900;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avatar-source-meta{font-size:10px;color:var(--t3);line-height:1.45}
+.avatar-source-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:auto}
+.avatar-source-actions button{font-size:11px;padding:6px 10px}
+@media(max-width:960px){.avatar-source-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.avatar-source-grid{grid-template-columns:1fr}}
 .subtitle-box{white-space:pre-wrap;background:#0f0f17;border:1px solid var(--bdr);border-radius:12px;padding:12px;font-family:'Space Mono','Noto Sans TC',monospace;font-size:12px;color:var(--t2);max-height:260px;overflow:auto}
 textarea.subtitle-box{display:block;width:100%;min-height:260px;resize:vertical;line-height:1.65;white-space:pre;box-sizing:border-box}
 .notice{border:1px solid rgba(62,207,142,.28);background:rgba(62,207,142,.07);color:#c9f7e3;border-radius:12px;padding:12px;font-size:12px;margin-bottom:14px}
@@ -132,7 +172,8 @@ textarea.subtitle-box{display:block;width:100%;min-height:260px;resize:vertical;
 @media(max-width:860px){.grid{grid-template-columns:1fr}.rail{position:static}.cards,.row,.marketing-grid,.length-grid,.control-grid,.render-lab,.profile-summary,.utility-grid{grid-template-columns:1fr}.top{display:block}.pill{margin-top:12px}.marketing-grid .wide{grid-column:auto}.profile-head{display:block}.profile-head .btns{margin-top:10px}}
 </style>
 </head>
-<body>
+<body class="workflow-cosmos">
+<div class="cosmic-starfield" aria-hidden="true"></div>
 <div class="wrap">
   <div class="top">
     <div class="brand">
@@ -509,6 +550,22 @@ textarea.subtitle-box{display:block;width:100%;min-height:260px;resize:vertical;
       <section class="panel" id="step-4">
         <h2>第四步：數字人對口型</h2>
         <div class="hint">上傳形象影片，確認後才送出生成。此步成功完成後，才會扣影像克隆秒數。</div>
+        <div class="avatar-source-library" id="avatar-source-library">
+          <div class="avatar-source-head">
+            <div>
+              <div class="avatar-source-title">我的形象素材</div>
+              <div class="avatar-source-count" id="avatar-source-count">0/5</div>
+            </div>
+            <div class="btns">
+              <button class="btn secondary" type="button" id="btn-refresh-avatar-sources">刷新</button>
+              <button class="btn secondary" type="button" id="btn-upload-avatar-source">上傳新形象</button>
+            </div>
+          </div>
+          <div class="avatar-source-grid" id="avatar-source-list">
+            <div class="avatar-source-card avatar-source-empty">登入後讀取形象素材</div>
+          </div>
+          <div class="hint" style="margin:10px 0 0">最多保留最近 5 組形象影片；選中後，本次生成會直接使用該素材。</div>
+        </div>
         <div class="drop" id="video-drop">
           <input type="file" id="avatar-video" accept="video/*" hidden>
           <b>選擇或拖曳形象影片</b>
@@ -667,6 +724,8 @@ const state = {
   voiceAudioSeconds: 0,
   voiceScriptText: '',
   avatarVideoFile: null,
+  avatarSourceProfiles: [],
+  selectedAvatarSource: null,
   avatarTaskId: '',
   avatarResult: null,
   renderId: '',
@@ -1900,6 +1959,8 @@ async function init(){
   document.querySelectorAll('[data-workspace-tab]').forEach(btn => btn.onclick = () => setWorkspaceTab(btn.dataset.workspaceTab));
   if($('btn-refresh-assets')) $('btn-refresh-assets').onclick = loadAssetManager;
   if($('btn-refresh-history')) $('btn-refresh-history').onclick = loadGenerationHistory;
+  if($('btn-refresh-avatar-sources')) $('btn-refresh-avatar-sources').onclick = loadAvatarSourceLibrary;
+  if($('btn-upload-avatar-source')) $('btn-upload-avatar-source').onclick = () => $('avatar-video').click();
   if($('history-type-filter')) $('history-type-filter').onchange = loadGenerationHistory;
   initRenderTemplates();
   initScriptLengthControls();
@@ -1929,6 +1990,7 @@ async function init(){
   loadVoices().catch(e => {
     status('voice-status', e.message || '聲音清單暫時讀取失敗，請稍後按刷新聲音清單。', 'warn');
   });
+  loadAvatarSourceLibrary();
   restoreWorkflowProgress();
   runRenderSelfTestIfRequested();
 }
@@ -2337,6 +2399,165 @@ async function r2Json(path, options){
   if(!res.ok) throw new Error(data.error || `upload_${res.status}`);
   return data;
 }
+function avatarSourceCacheKey(){
+  const userKey = state.user && (state.user.email || state.user.id);
+  return userKey ? `chiwa_workflow_avatar_sources_${userKey}` : '';
+}
+function readAvatarSourceCache(){
+  const key = avatarSourceCacheKey();
+  if(!key || !window.localStorage) return [];
+  try{
+    const rows = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(rows) ? rows.filter(item => item && item.key).slice(0, 5) : [];
+  }catch(e){
+    return [];
+  }
+}
+function writeAvatarSourceCache(items){
+  const key = avatarSourceCacheKey();
+  if(!key || !window.localStorage) return;
+  localStorage.setItem(key, JSON.stringify((items || []).filter(item => item && item.key).slice(0, 5)));
+}
+function mergeAvatarSourceProfiles(primary, fallback){
+  const seen = new Set();
+  return []
+    .concat(Array.isArray(primary) ? primary : [])
+    .concat(Array.isArray(fallback) ? fallback : [])
+    .filter(item => {
+      const key = item && item.key;
+      if(!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 5);
+}
+function upsertAvatarSourceCache(item){
+  if(!item || !item.key) return;
+  writeAvatarSourceCache(mergeAvatarSourceProfiles([item], readAvatarSourceCache()));
+}
+function avatarSourceDateText(value){
+  if(!value) return '';
+  const date = new Date(value);
+  if(!Number.isFinite(date.getTime())) return '';
+  return date.toLocaleDateString('zh-TW', { month:'2-digit', day:'2-digit' });
+}
+function avatarSourceSizeText(bytes){
+  const size = Number(bytes || 0);
+  if(!size) return '';
+  if(size >= 1024 * 1024) return `${(size / 1024 / 1024).toFixed(1)}MB`;
+  return `${Math.max(1, Math.round(size / 1024))}KB`;
+}
+function renderAvatarSourceLibrary(items){
+  const box = $('avatar-source-list');
+  const count = $('avatar-source-count');
+  if(!box) return;
+  state.avatarSourceProfiles = Array.isArray(items) ? items.slice(0, 5) : [];
+  if(count) count.textContent = `${state.avatarSourceProfiles.length}/5`;
+  const cards = [];
+  state.avatarSourceProfiles.forEach((item, index) => {
+    const key = String(item.key || '');
+    const selected = state.selectedAvatarSource && state.selectedAvatarSource.key === key;
+    const name = esc(item.name || item.originalName || `形象 ${index + 1}`);
+    const meta = [avatarSourceDateText(item.uploaded), avatarSourceSizeText(item.size)].filter(Boolean).join('　');
+    cards.push(`
+      <div class="avatar-source-card${selected ? ' selected' : ''}" data-avatar-source-select="${esc(key)}">
+        <div class="avatar-source-thumb">${item.signedUrl ? `<video src="${esc(item.signedUrl)}" preload="metadata" muted playsinline></video>` : ''}</div>
+        <div class="avatar-source-name">${name}</div>
+        <div class="avatar-source-meta">${esc(meta || '形象素材')}</div>
+        <div class="avatar-source-actions">
+          <button class="btn secondary" type="button" data-avatar-source-select="${esc(key)}">${selected ? '已選用' : '選用此形象'}</button>
+          <button class="btn secondary danger" type="button" data-avatar-source-delete="${esc(key)}">刪除</button>
+        </div>
+      </div>
+    `);
+  });
+  for(let i=state.avatarSourceProfiles.length;i<5;i++){
+    cards.push(`<div class="avatar-source-card avatar-source-empty"><div>空位 ${i + 1}</div><div class="avatar-source-meta">可上傳新形象</div></div>`);
+  }
+  box.innerHTML = cards.join('');
+  box.querySelectorAll('[data-avatar-source-select]').forEach(el => {
+    el.addEventListener('click', event => {
+      event.stopPropagation();
+      selectAvatarSourceProfile(el.getAttribute('data-avatar-source-select') || '');
+    });
+  });
+  box.querySelectorAll('[data-avatar-source-delete]').forEach(el => {
+    el.addEventListener('click', event => {
+      event.stopPropagation();
+      deleteAvatarSourceProfile(el.getAttribute('data-avatar-source-delete') || '');
+    });
+  });
+}
+async function loadAvatarSourceLibrary(){
+  const box = $('avatar-source-list');
+  const cached = readAvatarSourceCache();
+  if(cached.length) renderAvatarSourceLibrary(cached);
+  else if(box) box.innerHTML = '<div class="avatar-source-card avatar-source-empty">正在讀取形象素材...</div>';
+  try{
+    const t = await token();
+    const data = await r2Json('/avatar/profile/list?limit=5', {
+      method:'GET',
+      headers:{ 'Authorization':'Bearer ' + t }
+    });
+    const merged = mergeAvatarSourceProfiles(data.items || [], cached);
+    renderAvatarSourceLibrary(merged);
+    writeAvatarSourceCache(merged);
+  }catch(e){
+    renderAvatarSourceLibrary(cached);
+    console.warn('avatar source library load skipped:', e.message || e);
+  }
+}
+async function signAvatarSourceProfile(profile){
+  const t = await token();
+  try{
+    const data = await r2Json('/avatar/profile/sign', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer ' + t, 'Content-Type':'application/json' },
+      body: JSON.stringify({ key: profile && profile.key })
+    });
+    state.selectedAvatarSource = { ...(profile || {}), ...data };
+    upsertAvatarSourceCache(state.selectedAvatarSource);
+    renderAvatarSourceLibrary(state.avatarSourceProfiles.map(item => item.key === state.selectedAvatarSource.key ? state.selectedAvatarSource : item));
+    return { key:data.key, signedUrl:data.signedUrl };
+  }catch(e){
+    if(profile && profile.signedUrl){
+      state.selectedAvatarSource = profile;
+      return { key:profile.key, signedUrl:profile.signedUrl };
+    }
+    throw e;
+  }
+}
+function selectAvatarSourceProfile(key){
+  const item = state.avatarSourceProfiles.find(row => row.key === key);
+  if(!item) return;
+  state.selectedAvatarSource = item;
+  state.avatarVideoFile = null;
+  if($('avatar-video')) $('avatar-video').value = '';
+  $('video-status').textContent = '已選用素材：' + (item.name || '形象素材');
+  $('btn-avatar').disabled = !(state.voiceItem && state.selectedAvatarSource);
+  renderAvatarSourceLibrary(state.avatarSourceProfiles);
+}
+async function deleteAvatarSourceProfile(key){
+  if(!key) return;
+  if(!confirm('確定要刪除這組形象素材嗎？刪除後不能再選用。')) return;
+  try{
+    const t = await token();
+    await r2Json('/avatar/profile/delete', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer ' + t, 'Content-Type':'application/json' },
+      body: JSON.stringify({ key })
+    });
+    if(state.selectedAvatarSource && state.selectedAvatarSource.key === key){
+      state.selectedAvatarSource = null;
+      $('video-status').textContent = state.avatarVideoFile ? `已選擇：${state.avatarVideoFile.name}（${(state.avatarVideoFile.size/1024/1024).toFixed(1)}MB）` : '尚未選擇影片';
+      $('btn-avatar').disabled = !(state.voiceItem && (state.avatarVideoFile || state.selectedAvatarSource));
+    }
+    status('avatar-status','已刪除形象素材。','ok');
+    await loadAvatarSourceLibrary();
+  }catch(e){
+    status('avatar-status', avatarErrorText(e, '刪除形象素材失敗'), 'err');
+  }
+}
 function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
 async function uploadVideoToR2(file, onProgress){
   const t = await token();
@@ -2385,20 +2606,35 @@ async function uploadVideoToR2(file, onProgress){
 }
 async function submitAvatar(){
   if(!state.voiceItem || !state.voiceItem.playUrl){ status('avatar-status','請先完成語音並確認。','err'); return; }
-  if(!state.avatarVideoFile){ status('avatar-status','請先選擇形象影片。','err'); return; }
+  if(!state.avatarVideoFile && !state.selectedAvatarSource){ status('avatar-status','請先選用或上傳形象影片。','err'); return; }
   if(!confirm(`確認送出形象克隆？\n語音長度：約 ${state.voiceAudioSeconds} 秒\n成功完成後才會扣影像克隆秒數。`)) return;
   $('btn-avatar').disabled = true;
   try{
-    status('avatar-status','形象影片上傳中 0%...','warn');
-    const uploaded = await uploadVideoToR2(state.avatarVideoFile, (pct, done, total) => {
-      status('avatar-status', `形象影片上傳中 ${pct.toFixed(1)}%（${(done/1024/1024).toFixed(1)}MB / ${(total/1024/1024).toFixed(1)}MB）`, 'warn');
-    });
+    let uploaded;
+    if(state.selectedAvatarSource){
+      status('avatar-status','正在讀取已保存形象素材...','warn');
+      uploaded = await signAvatarSourceProfile(state.selectedAvatarSource);
+    }else{
+      status('avatar-status','形象影片上傳中 0%...','warn');
+      uploaded = await uploadVideoToR2(state.avatarVideoFile, (pct, done, total) => {
+        status('avatar-status', `形象影片上傳中 ${pct.toFixed(1)}%（${(done/1024/1024).toFixed(1)}MB / ${(total/1024/1024).toFixed(1)}MB）`, 'warn');
+      });
+      upsertAvatarSourceCache({
+        key: uploaded.key,
+        signedUrl: uploaded.signedUrl,
+        name: state.avatarVideoFile.name,
+        originalName: state.avatarVideoFile.name,
+        size: state.avatarVideoFile.size,
+        uploaded: new Date().toISOString()
+      });
+      loadAvatarSourceLibrary();
+    }
     status('avatar-status','素材已上傳，正在送出形象克隆任務...','warn');
     const data = await authedFetch(AVATAR_API_URL, {
       action:'submit_urls',
       video_url:uploaded.signedUrl,
       audio_url:state.voiceItem.playUrl,
-      video_path:uploaded.key,
+      video_path:uploaded.key || uploaded.path,
       audio_path:state.voiceItem.id || 'workflow-tts',
       duration_seconds:state.voiceAudioSeconds
     });
@@ -2439,8 +2675,10 @@ async function pollAvatar(){
 }
 function selectVideo(file){
   state.avatarVideoFile = file || null;
+  state.selectedAvatarSource = null;
   $('video-status').textContent = file ? `已選擇：${file.name}（${(file.size/1024/1024).toFixed(1)}MB）` : '尚未選擇影片';
-  $('btn-avatar').disabled = !(state.voiceItem && state.avatarVideoFile);
+  $('btn-avatar').disabled = !(state.voiceItem && (state.avatarVideoFile || state.selectedAvatarSource));
+  renderAvatarSourceLibrary(state.avatarSourceProfiles);
 }
 function srtTime(sec){
   const ms = Math.floor((sec % 1) * 1000);
@@ -2702,7 +2940,7 @@ $('voice-file').onchange = e => {
     setRecordStatus('檔案格式不正確，請選擇音檔。','err');
   }
 };
-$('btn-to-avatar').onclick = () => { goStep(4); $('btn-avatar').disabled = !(state.voiceItem && state.avatarVideoFile); };
+$('btn-to-avatar').onclick = () => { goStep(4); $('btn-avatar').disabled = !(state.voiceItem && (state.avatarVideoFile || state.selectedAvatarSource)); };
 $('btn-avatar').onclick = submitAvatar;
 $('btn-subtitles').onclick = generateSubtitles;
 $('btn-download-srt').onclick = () => downloadText('chiwa-workflow-subtitles.srt', editableSrtText(), 'text/plain;charset=utf-8');
