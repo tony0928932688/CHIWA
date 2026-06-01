@@ -1973,32 +1973,28 @@ function getBlockedOAuthUserAgentName() {
 
 function showSafeBrowserNotice(appName) {
   const siteUrl = 'https://chiwaai.com/';
-  const old = document.getElementById('safe-browser-notice');
-  if (old) old.remove();
-
-  const wrap = document.createElement('div');
-  wrap.id = 'safe-browser-notice';
-  wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(5,5,10,.82);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:22px;';
+  const loginPanel = document.getElementById('login-panel');
+  const err = document.getElementById('lerr');
+  let wrap = document.getElementById('safe-browser-notice');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'safe-browser-notice';
+    if (err && err.parentNode) err.parentNode.insertBefore(wrap, err);
+    else if (loginPanel) loginPanel.appendChild(wrap);
+    else document.body.appendChild(wrap);
+  }
+  wrap.style.cssText = 'display:block;background:rgba(232,197,90,.08);border:1px solid rgba(232,197,90,.36);border-radius:12px;padding:12px 14px;margin:12px 0;color:#eeeef2;text-align:left;font-family:\'Noto Sans TC\',sans-serif;';
   wrap.innerHTML = `
-    <div style="width:min(440px,100%);background:#111118;border:1px solid rgba(232,197,90,.35);border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.45);padding:24px;color:#eeeef2;font-family:'Noto Sans TC',sans-serif;">
-      <div style="font-size:20px;font-weight:900;color:#e8c55a;margin-bottom:8px;">請用 Safari / Chrome 開啟再登入</div>
-      <div style="font-size:14px;line-height:1.8;color:#b8b8d6;margin-bottom:16px;">
-        你目前使用的是「${appName || 'App 內建瀏覽器'}」。Google 會封鎖 App 內建瀏覽器的登入，因此會出現 403: disallowed_useragent。
-      </div>
-      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;font-size:13px;line-height:1.8;color:#d9d9e8;margin-bottom:18px;">
-        iPhone：點右下角分享或右上角「...」，選「在 Safari 開啟」。<br>
-        Android：點右上角「...」，選「在 Chrome 開啟」。<br>
-        開啟後再按 Google 帳號登入即可。
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button type="button" id="safe-browser-copy" style="flex:1;min-width:150px;border:0;border-radius:10px;background:#e8c55a;color:#17120a;font-weight:900;padding:12px 14px;cursor:pointer;">複製網站連結</button>
-        <button type="button" id="safe-browser-close" style="flex:1;min-width:110px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:rgba(255,255,255,.06);color:#eeeef2;font-weight:800;padding:12px 14px;cursor:pointer;">我知道了</button>
-      </div>
+    <div style="font-size:14px;font-weight:900;color:#e8c55a;margin-bottom:6px;">目前在 ${appName || 'App 內建瀏覽器'} 裡</div>
+    <div style="font-size:12px;line-height:1.75;color:#c9c9dd;margin-bottom:10px;">
+      Google 不允許在 LINE / FB / IG 這類內建瀏覽器登入。請複製網址，用 Safari 或 Chrome 開啟後再登入。
     </div>
+    <button type="button" id="safe-browser-copy" style="width:100%;border:0;border-radius:10px;background:#e8c55a;color:#17120a;font-weight:900;padding:10px 12px;cursor:pointer;">複製網址，改用 Safari / Chrome 開啟</button>
   `;
-  document.body.appendChild(wrap);
-
-  document.getElementById('safe-browser-close').onclick = () => wrap.remove();
+  if (err) {
+    err.style.display = 'block';
+    err.textContent = '這不是網站故障，是 Google 不允許在 App 內建瀏覽器登入。';
+  }
   document.getElementById('safe-browser-copy').onclick = async () => {
     try {
       await navigator.clipboard.writeText(siteUrl);
