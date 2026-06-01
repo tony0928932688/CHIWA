@@ -3423,7 +3423,7 @@ async function decrAvatar(secs) {
     <!-- 文案合規 -->
     <div class="panel" id="p-compliance">
     <div class="sec-title">✅ 文案合規</div>
-    <div class="sec-sub">審查 TikTok 廣告政策 + 台灣公平交易法</div>
+    <div class="sec-sub">審查 TikTok + Meta/FB/IG 廣告政策 + 台灣公平交易法</div>
     <div class="label mb14">貼入腳本</div>
     <textarea id="cin" rows="8" placeholder="貼入要審查的腳本文字..." maxlength="1500"></textarea>
     <div class="fl mt10">
@@ -5130,6 +5130,11 @@ function applyWritingPromptRules(sys, type) {
   return base.includes('標點符號規則') ? base : [base, TTS_PUNCTUATION_PROMPT].filter(Boolean).join('\n\n');
 }
 
+function aiPlatformCompliancePrompt(type) {
+  if (!['topics', 'script', 'marketing', 'compliance'].includes(type)) return '';
+  return `平台投放合規規則：所有選題、標題、口播文案、行銷文案與合規審查，都必須同時符合 TikTok、Meta/Facebook/Instagram（FB/IG）廣告政策與台灣常見廣告法規風險。避免誇大收益、保證效果、前後對比承諾、未經驗證數字、絕對化字眼、誘導點擊與恐嚇式行銷。不得暗示或直接點名使用者個人敏感屬性，包括健康狀況、財務困境、年齡、外貌、族群、宗教、政治、性取向、家庭狀態或其他受保護特徵。可以有銷售力，但必須以中性、可驗證、可投放的方式表達。`;
+}
+
 /* AI Core Connection */
 async function callSecureAI(sys, usr, typeOverride, fmtOverride, toneOverride) {
   let type = typeOverride;
@@ -5152,6 +5157,10 @@ async function callSecureAI(sys, usr, typeOverride, fmtOverride, toneOverride) {
     } else {
       type = 'script';
     }
+  }
+  const platformCompliance = aiPlatformCompliancePrompt(type);
+  if (platformCompliance && !String(sys || '').includes('Meta/Facebook/Instagram')) {
+    sys = [sys, platformCompliance].filter(Boolean).join('\n\n');
   }
   sys = applyWritingPromptRules(sys, type);
 

@@ -357,7 +357,7 @@ textarea.subtitle-box{display:block;width:100%;min-height:260px;resize:vertical;
 
       <section class="panel on" id="step-1">
         <h2>第一步：生成 8 個可拍選題</h2>
-        <div class="hint">學員自己挑選題。選題會套用帳號定位、TikTok 廣告合規與台灣法規風險規則。</div>
+        <div class="hint">學員自己挑選題。選題會套用帳號定位、TikTok 與 Meta/FB/IG 廣告合規與台灣法規風險規則。</div>
         <div class="row">
           <div class="field">
             <div class="label">選題方向</div>
@@ -1056,7 +1056,7 @@ async function enforceScriptLength(text, cfg, system, casual){
 硬性規則：
 1. 只能輸出口播正文。
 2. 不要 Markdown、不要標題、不要條列。
-3. 不要新增誇大承諾，不要違反 TikTok 廣告政策與台灣法規。
+3. 不要新增誇大承諾，不要違反 TikTok、Meta/Facebook/Instagram 廣告政策與台灣法規。
 4. 字數一定要落在 ${range.min} 到 ${range.max} 字。
 5. 保留原本文案的台灣口語感、痛點、例子與 CTA。
 
@@ -1240,7 +1240,7 @@ async function saveProfile(){
   }
 }
 function compliancePrompt(){
-  return `合規規則：使用台灣繁體中文。內容必須先有實質內容，不得只有語氣詞。避開絕對化成效、財務暗示、未經驗證數字、最高級與唯一性宣稱。具體成效必須避免未經驗證的聲稱。可以有說服力，但要符合 TikTok 廣告政策與台灣常見法規風險。不得使用 emoji 或表情符號。`;
+  return `合規規則：使用台灣繁體中文。內容必須先有實質內容，不得只有語氣詞。避開絕對化成效、財務暗示、未經驗證數字、最高級與唯一性宣稱。具體成效必須避免未經驗證的聲稱。可以有說服力，但要符合 TikTok、Meta/Facebook/Instagram（FB/IG）廣告政策與台灣常見法規風險。所有選題、標題、口播文案與行銷文案都要符合投放合規：避免誇大收益、保證效果、前後對比承諾、誘導點擊與恐嚇式行銷；不得暗示或直接點名使用者個人敏感屬性，包括健康狀況、財務困境、年齡、外貌、族群、宗教、政治、性取向、家庭狀態或其他受保護特徵。不得使用 emoji 或表情符號。`;
 }
 function updateQuota(){
   const s = state.student || {};
