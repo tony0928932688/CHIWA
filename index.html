@@ -488,13 +488,14 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
     display:flex;position:fixed;bottom:0;left:0;right:0;z-index:500;
     background:var(--card);border-top:1px solid var(--bdr);
     padding:8px 0 calc(8px + env(safe-area-inset-bottom));
-    justify-content:space-around;
+    justify-content:flex-start;overflow-x:auto;gap:4px;scrollbar-width:none;
   }
+  #mobile-nav::-webkit-scrollbar{display:none}
   .mn-item{
     display:flex;flex-direction:column;align-items:center;gap:3px;
     cursor:pointer;padding:4px 10px;border-radius:8px;
     font-size:10px;color:var(--t2);transition:all .15s;
-    font-family:'Noto Sans TC',sans-serif;min-width:52px;
+    font-family:'Noto Sans TC',sans-serif;min-width:52px;flex:0 0 auto;
   }
   .mn-item .mn-icon{font-size:20px}
   .mn-item.on{color:var(--blue)}
@@ -923,6 +924,26 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .avatar-source-actions button{font-size:11px;padding:6px 10px}
 @media(max-width:960px){.avatar-source-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.avatar-source-grid{grid-template-columns:1fr}}
+.coach-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr);gap:14px;align-items:start}
+.coach-status-card{border:1px solid rgba(74,158,255,.25);border-radius:14px;padding:16px;background:linear-gradient(135deg,rgba(74,158,255,.08),rgba(62,207,142,.05))}
+.coach-status-line{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.coach-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+.coach-kpi{border:1px solid rgba(245,224,160,.16);border-radius:10px;background:rgba(5,7,15,.52);padding:10px}
+.coach-kpi b{display:block;font-size:20px;color:var(--gold);font-family:'Space Mono',monospace;line-height:1.1}
+.coach-kpi span{display:block;font-size:11px;color:var(--t3);margin-top:4px}
+.coach-table{width:100%;border-collapse:collapse;font-size:12px}
+.coach-table th,.coach-table td{border-bottom:1px solid rgba(245,224,160,.12);padding:8px 6px;text-align:left;vertical-align:top}
+.coach-table th{color:var(--t3);font-size:11px;font-weight:800}
+.coach-table td{color:var(--t2)}
+.coach-table .coach-video-title{color:var(--t1);font-weight:800;line-height:1.45}
+.coach-list{display:grid;gap:10px}
+.coach-item{border:1px solid rgba(245,224,160,.16);border-radius:12px;background:rgba(5,7,15,.46);padding:12px}
+.coach-item-title{font-size:13px;font-weight:900;color:var(--t1);margin-bottom:5px}
+.coach-item-meta{font-size:11px;color:var(--t3);line-height:1.6}
+.coach-action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.coach-note{font-size:11px;color:var(--t3);line-height:1.65;margin-top:10px}
+@media(max-width:960px){.coach-grid{grid-template-columns:1fr}.coach-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.coach-kpi-grid{grid-template-columns:1fr}.coach-table{font-size:11px}.coach-table th:nth-child(3),.coach-table td:nth-child(3){display:none}}
 .avatar-video-shell {
   --avatar-video-max-h: 52vh;
   width: min(100%, 860px, calc(var(--avatar-video-max-h) * 16 / 9));
@@ -1413,6 +1434,7 @@ const CHIWA_PROFILE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/fun
 const CHIWA_HISTORY_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-history';
 const CHIWA_AVATAR_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-avatar';
 const CHIWA_AVATAR_R2_WORKER_URL = 'https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev';
+const CHIWA_CONTENT_COACH_WORKER_URL = CHIWA_AVATAR_R2_WORKER_URL;
 const AVATAR_MAX_SECONDS = Number.MAX_SAFE_INTEGER;
 const AVATAR_MAX_VIDEO_BYTES = 2 * 1024 * 1024 * 1024;
 const AVATAR_MAX_AUDIO_BYTES = 500 * 1024 * 1024;
@@ -1938,6 +1960,7 @@ async function finishStudentLogin(data, loginId) {
   if (typeof loadAvatarSourceLibrary === 'function') loadAvatarSourceLibrary();
   if (typeof loadGenerationHistory === 'function') loadGenerationHistory();
   if (typeof renderProfileForm === 'function') renderProfileForm();
+  if (typeof restoreCoachReturnPanel === 'function') restoreCoachReturnPanel();
   toast('🔓 登入成功！歡迎回來 ' + (data.name || currentUser));
 }
 
@@ -3161,6 +3184,10 @@ async function decrAvatar(secs) {
         <span class="sb-icon">🗂️</span>
         <span>生成紀錄</span>
       </div>
+      <div class="sb-item" data-panel="content-coach" onclick="swP('content-coach', this)">
+        <span class="sb-icon">📈</span>
+        <span>AI內容教練</span>
+      </div>
       <div class="sb-item legacy-tool" data-panel="voice" onclick="swP('voice', this)">
         <span class="sb-icon">🎙️</span>
         <span>語音克隆</span>
@@ -3217,6 +3244,59 @@ async function decrAvatar(secs) {
       <h3 style="margin:0 0 10px;color:var(--gold);font-size:22px">AI短影音一鍵成片工作流</h3>
       <p style="margin:0 0 18px;color:var(--t2);line-height:1.8">一鍵成片是新增的懶人工作流入口；原本的帳號定位、選題、文案、語音、形象克隆、素材與課程功能仍保留在左側選單，可依課程進度分開操作。</p>
       <button class="btn" type="button" onclick="location.href='lazy-workflow.html'">開啟一鍵成片工作流</button>
+    </div>
+  </div>
+
+    <!-- AI 內容教練 -->
+  <div class="panel" id="p-content-coach">
+    <div class="sec-title">📈 AI內容教練</div>
+    <div class="sec-sub">讀取 TikTok 公開影片成效，排除一次性事件流量，整理下一輪可測試選題</div>
+    <div class="coach-grid">
+      <div class="card" style="padding:18px">
+        <div class="coach-status-card">
+          <div class="coach-status-line">
+            <div>
+              <div style="font-size:15px;font-weight:900;color:var(--gold)">TikTok 只讀成效連接</div>
+              <div style="font-size:12px;color:var(--t2);line-height:1.65;margin-top:4px">只讀取已發布公開影片，不會發布、刪除或修改內容。</div>
+            </div>
+            <span class="badge b-blue" id="coach-tiktok-status-badge">尚未檢查</span>
+          </div>
+          <div id="coach-tiktok-status" style="font-size:12px;color:var(--t2);line-height:1.7">登入後可檢查 TikTok 連接狀態。</div>
+          <div class="coach-action-row">
+            <button class="btn-gold" type="button" id="coach-connect-btn" onclick="connectTikTokCoach()">連接 TikTok 成效</button>
+            <button class="btn-outline" type="button" id="coach-refresh-btn" onclick="loadTikTokCoachStatus()">重新檢查</button>
+          </div>
+        </div>
+        <div class="coach-kpi-grid" id="coach-kpi-grid">
+          <div class="coach-kpi"><b>—</b><span>同步影片</span></div>
+          <div class="coach-kpi"><b>—</b><span>近 90 天</span></div>
+          <div class="coach-kpi"><b>—</b><span>可延伸方向</span></div>
+          <div class="coach-kpi"><b>—</b><span>排除假爆款</span></div>
+        </div>
+        <div class="coach-action-row">
+          <button class="btn" type="button" id="coach-sync-btn" onclick="syncTikTokCoach()">同步最近影片</button>
+          <button class="btn-outline" type="button" id="coach-analyze-btn" onclick="analyzeTikTokCoach()">分析內容方向</button>
+        </div>
+        <div class="coach-note">系統預設看最近 90 天，歷史高流量影片只作輔助參考；名人事件、社會爭議、災難死亡等短期流量會被標記，不直接拿來推薦下一週題目。</div>
+      </div>
+      <div class="card" style="padding:18px">
+        <div style="font-size:15px;font-weight:900;color:var(--gold);margin-bottom:10px">本次分析結果</div>
+        <div id="coach-analysis-result" class="coach-list">
+          <div class="coach-item">
+            <div class="coach-item-title">尚未分析</div>
+            <div class="coach-item-meta">連接 TikTok 並同步影片後，這裡會顯示可延伸方向、假爆款排除與下週測題建議。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="padding:18px;margin-top:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+        <div style="font-size:15px;font-weight:900;color:var(--gold)">同步影片樣本</div>
+        <span style="font-size:11px;color:var(--t3)" id="coach-sync-summary">尚未同步</span>
+      </div>
+      <div id="coach-video-list">
+        <div style="font-size:12px;color:var(--t3)">同步後會列出最近影片、指標與是否屬於一次性事件流量。</div>
+      </div>
     </div>
   </div>
 
@@ -3936,22 +4016,25 @@ async function decrAvatar(secs) {
   <div class="mn-item" id="mn-history" onclick="swPM('history',1)">
     <span class="mn-icon">🗂️</span><span>紀錄</span>
   </div>
-  <div class="mn-item legacy-tool" id="mn-topic" onclick="swPM('topic',2)">
+  <div class="mn-item" id="mn-content-coach" onclick="swPM('content-coach',2)">
+    <span class="mn-icon">📈</span><span>教練</span>
+  </div>
+  <div class="mn-item legacy-tool" id="mn-topic" onclick="swPM('topic',3)">
     <span class="mn-icon">🎯</span><span>選題</span>
   </div>
-  <div class="mn-item legacy-tool" id="mn-script" onclick="swPM('script',3)">
+  <div class="mn-item legacy-tool" id="mn-script" onclick="swPM('script',4)">
     <span class="mn-icon">🎬</span><span>口播</span>
   </div>
-  <div class="mn-item legacy-tool" id="mn-marketing" onclick="swPM('marketing',4)">
+  <div class="mn-item legacy-tool" id="mn-marketing" onclick="swPM('marketing',5)">
     <span class="mn-icon">✍️</span><span>文案</span>
   </div>
-  <div class="mn-item legacy-tool" id="mn-voice" onclick="swPM('voice',5)">
+  <div class="mn-item legacy-tool" id="mn-voice" onclick="swPM('voice',6)">
     <span class="mn-icon">🎙️</span><span>語音</span>
   </div>
-  <div class="mn-item legacy-tool" id="mn-avatar" onclick="swPM('avatar',6)">
+  <div class="mn-item legacy-tool" id="mn-avatar" onclick="swPM('avatar',7)">
     <span class="mn-icon">🧑‍💼</span><span>形象</span>
   </div>
-  <div class="mn-item" id="mn-course" onclick="swPM('course',7)">
+  <div class="mn-item" id="mn-course" onclick="swPM('course',8)">
     <span class="mn-icon">📚</span><span>課程</span>
   </div>
 </div>
@@ -4322,6 +4405,7 @@ function swP(name, el) {
   if (el) el.classList.add('on');
   if (name === 'profile' && typeof renderProfileForm === 'function') renderProfileForm();
   if (name === 'history' && typeof loadGenerationHistory === 'function') loadGenerationHistory();
+  if (name === 'content-coach' && typeof loadTikTokCoachStatus === 'function') loadTikTokCoachStatus();
   // 切換到課程面板時自動重新渲染單元列表
   if (name === 'course') renderUnitGrid();
   // 切換到管理後台時自動刷新影片設定 UI
@@ -5488,6 +5572,251 @@ async function getVoiceSessionToken() {
   if (!_SB || !_SB.auth || typeof _SB.auth.getSession !== 'function') return '';
   const { data } = await _SB.auth.getSession();
   return data && data.session && data.session.access_token ? data.session.access_token : '';
+}
+
+let coachTikTokLastSync = null;
+let coachTikTokLastAnalysis = null;
+let coachStatusLoading = false;
+
+function coachSetText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+function coachSetBadge(text, cls) {
+  const el = document.getElementById('coach-tiktok-status-badge');
+  if (!el) return;
+  el.className = 'badge ' + (cls || 'b-blue');
+  el.textContent = text;
+}
+
+function coachErrorMessage(error, fallback) {
+  const raw = String(error && error.message || error || '').trim();
+  if (/missing_authorization|invalid_session|login|session|jwt|unauthorized|401/i.test(raw)) return '請先使用 Google 帳號登入後再操作。';
+  if (/setup_missing|client|secret|redirect|credential|token_encryption|state_secret/i.test(raw)) return 'TikTok 開發者憑證尚未在後端設定完成，目前不能正式連接。';
+  if (/tiktok_not_connected|not_connected/i.test(raw)) return '尚未連接 TikTok 成效資料。';
+  if (/not_found|404/i.test(raw)) return '內容教練後端路由尚未部署，前端入口已就緒。';
+  if (/network|fetch|timeout/i.test(raw)) return 'TikTok 成效服務暫時連線不穩，請稍後再試。';
+  return raw || fallback || '內容教練暫時無法使用。';
+}
+
+function coachProfilePayload() {
+  const profile = currentUserData && currentUserData.profile && typeof currentUserData.profile === 'object' ? currentUserData.profile : {};
+  return {
+    name: profile.name || '',
+    industry: profile.industry || '',
+    service: profile.service || '',
+    target_gender: profile.target_gender || '',
+    target_age: Array.isArray(profile.target_age) ? profile.target_age : [],
+    target_identity: Array.isArray(profile.target_identity) ? profile.target_identity : [],
+    style: profile.style || '',
+    extra_note: profile.extra_note || ''
+  };
+}
+
+async function coachWorkerJson(path, options) {
+  const token = await getVoiceSessionToken();
+  if (!token) throw new Error('missing_authorization');
+  const res = await fetch(CHIWA_CONTENT_COACH_WORKER_URL + path, Object.assign({}, options || {}, {
+    headers: Object.assign({
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    }, options && options.headers ? options.headers : {})
+  }));
+  const data = await res.json().catch(function() { return {}; });
+  if (!res.ok) throw new Error(data.detail || data.error || ('HTTP ' + res.status));
+  return data;
+}
+
+function restoreCoachReturnPanel() {
+  const params = new URLSearchParams(location.search || '');
+  const coachState = params.get('coach') || '';
+  if (!coachState) return;
+  setTimeout(function() {
+    swP('content-coach', sidebarItemFor('content-coach'));
+    if (/tiktok-connected/i.test(coachState)) {
+      toast('✅ TikTok 已完成授權，正在檢查連接狀態。');
+      loadTikTokCoachStatus();
+    } else if (/tiktok-error/i.test(coachState)) {
+      toast('❌ TikTok 授權未完成，請稍後再試。');
+    }
+  }, 300);
+}
+
+function renderCoachKpis(summary, analysis) {
+  const box = document.getElementById('coach-kpi-grid');
+  if (!box) return;
+  const total = Number(summary && summary.totalVideos || 0);
+  const recent = Number(summary && summary.recentVideos || 0);
+  const extendable = Number(analysis && analysis.extendableCount || 0);
+  const excluded = Number(analysis && analysis.excludedCount || 0);
+  box.innerHTML = `
+    <div class="coach-kpi"><b>${total || '—'}</b><span>同步影片</span></div>
+    <div class="coach-kpi"><b>${recent || '—'}</b><span>近 90 天</span></div>
+    <div class="coach-kpi"><b>${extendable || '—'}</b><span>可延伸方向</span></div>
+    <div class="coach-kpi"><b>${excluded || '—'}</b><span>排除假爆款</span></div>
+  `;
+}
+
+function coachMetric(value) {
+  const n = Number(value || 0);
+  if (!Number.isFinite(n) || n <= 0) return '0';
+  if (n >= 1000000) return (n / 1000000).toFixed(n >= 10000000 ? 0 : 1) + 'M';
+  if (n >= 10000) return (n / 10000).toFixed(n >= 100000 ? 0 : 1) + '萬';
+  return String(Math.round(n));
+}
+
+function renderCoachVideos(items) {
+  const box = document.getElementById('coach-video-list');
+  const summary = document.getElementById('coach-sync-summary');
+  if (!box) return;
+  const list = Array.isArray(items) ? items : [];
+  if (summary) summary.textContent = list.length ? `已同步 ${list.length} 支影片` : '尚未同步';
+  if (!list.length) {
+    box.innerHTML = '<div style="font-size:12px;color:var(--t3)">目前沒有可分析影片。</div>';
+    return;
+  }
+  box.innerHTML = `
+    <div style="overflow:auto">
+      <table class="coach-table">
+        <thead><tr><th>影片</th><th>觀看</th><th>互動</th><th>判斷</th></tr></thead>
+        <tbody>
+          ${list.slice(0, 24).map(function(item) {
+            const title = item.title || item.video_description || item.share_url || '未命名影片';
+            const eventRisk = item.eventRisk || item.event_risk;
+            const reason = item.eventReason || item.event_reason || (eventRisk ? '一次性事件' : '可納入樣本');
+            const badge = eventRisk ? '<span class="badge b-gold">排除參考</span>' : '<span class="badge b-green">主樣本</span>';
+            const views = coachMetric(item.view_count || item.views);
+            const engage = coachMetric(Number(item.like_count || 0) + Number(item.comment_count || 0) + Number(item.share_count || 0));
+            return `<tr>
+              <td><div class="coach-video-title">${escapeHtml(title)}</div><div style="font-size:11px;color:var(--t3)">${escapeHtml(item.createdText || item.created_text || '')}</div></td>
+              <td>${views}</td>
+              <td>${engage}</td>
+              <td>${badge}<div style="font-size:11px;color:var(--t3);margin-top:5px">${escapeHtml(reason)}</div></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderCoachAnalysis(data) {
+  const box = document.getElementById('coach-analysis-result');
+  if (!box) return;
+  const analysis = data && data.analysis ? data.analysis : data;
+  coachTikTokLastAnalysis = analysis || null;
+  renderCoachKpis(coachTikTokLastSync && coachTikTokLastSync.summary, analysis);
+  if (!analysis) {
+    box.innerHTML = '<div class="coach-item"><div class="coach-item-title">尚未分析</div><div class="coach-item-meta">同步影片後可分析內容方向。</div></div>';
+    return;
+  }
+  const winners = Array.isArray(analysis.extendableVideos) ? analysis.extendableVideos : [];
+  const excluded = Array.isArray(analysis.excludedVideos) ? analysis.excludedVideos : [];
+  const ideas = Array.isArray(analysis.recommendations) ? analysis.recommendations : [];
+  box.innerHTML = `
+    <div class="coach-item">
+      <div class="coach-item-title">可延伸方向</div>
+      <div class="coach-item-meta">${winners.length ? winners.slice(0, 4).map(function(v) { return '• ' + escapeHtml(v.reason || v.title || '可延伸內容'); }).join('<br>') : '目前樣本不足，建議先同步更多近期影片。'}</div>
+    </div>
+    <div class="coach-item">
+      <div class="coach-item-title">不建議複製的爆量</div>
+      <div class="coach-item-meta">${excluded.length ? excluded.slice(0, 4).map(function(v) { return '• ' + escapeHtml((v.title || '影片') + '：' + (v.reason || '一次性事件流量')); }).join('<br>') : '本次沒有明顯一次性事件流量。'}</div>
+    </div>
+    <div class="coach-item">
+      <div class="coach-item-title">下週測題建議</div>
+      <div class="coach-item-meta">${ideas.length ? ideas.slice(0, 6).map(function(idea, idx) { return `${idx + 1}. ${escapeHtml(idea)}`; }).join('<br>') : '請先完成同步與分析。'}</div>
+    </div>
+  `;
+}
+
+async function loadTikTokCoachStatus() {
+  if (coachStatusLoading) return;
+  coachStatusLoading = true;
+  coachSetBadge('檢查中', 'b-blue');
+  coachSetText('coach-tiktok-status', '正在檢查 TikTok 只讀連接狀態...');
+  try {
+    const data = await coachWorkerJson('/coach/tiktok/status', { method: 'GET' });
+    if (data.connected) {
+      coachSetBadge('已連接', 'b-green');
+      const profile = data.profile || {};
+      coachSetText('coach-tiktok-status', `已連接 ${profile.display_name || profile.username || 'TikTok 帳號'}，只讀取公開影片成效。`);
+    } else {
+      coachSetBadge('未連接', 'b-gold');
+      coachSetText('coach-tiktok-status', '尚未連接 TikTok 成效資料。');
+    }
+  } catch(e) {
+    coachSetBadge('需設定', 'b-gold');
+    coachSetText('coach-tiktok-status', coachErrorMessage(e, 'TikTok 連接狀態檢查失敗。'));
+  } finally {
+    coachStatusLoading = false;
+  }
+}
+
+async function connectTikTokCoach() {
+  const btn = document.getElementById('coach-connect-btn');
+  if (btn) btn.disabled = true;
+  try {
+    coachSetBadge('授權中', 'b-blue');
+    coachSetText('coach-tiktok-status', '正在建立 TikTok 只讀授權連結...');
+    const data = await coachWorkerJson('/coach/tiktok/connect', {
+      method: 'POST',
+      body: JSON.stringify({
+        returnTo: location.origin + location.pathname + '?coach=tiktok-connected#workspace'
+      })
+    });
+    if (!data.authUrl) throw new Error('missing_auth_url');
+    location.href = data.authUrl;
+  } catch(e) {
+    coachSetBadge('需設定', 'b-gold');
+    coachSetText('coach-tiktok-status', coachErrorMessage(e, 'TikTok 授權連結建立失敗。'));
+    toast('❌ ' + coachErrorMessage(e, 'TikTok 授權連結建立失敗。'));
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function syncTikTokCoach() {
+  const btn = document.getElementById('coach-sync-btn');
+  if (btn) btn.disabled = true;
+  try {
+    coachSetText('coach-sync-summary', '正在同步 TikTok 公開影片...');
+    const data = await coachWorkerJson('/coach/tiktok/sync', {
+      method: 'POST',
+      body: JSON.stringify({ days: 90, limit: 100 })
+    });
+    coachTikTokLastSync = data;
+    renderCoachKpis(data.summary, coachTikTokLastAnalysis);
+    renderCoachVideos(data.items || []);
+    toast('✅ TikTok 影片成效已同步。');
+  } catch(e) {
+    coachSetText('coach-sync-summary', coachErrorMessage(e, '同步失敗。'));
+    toast('❌ ' + coachErrorMessage(e, 'TikTok 影片同步失敗。'));
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function analyzeTikTokCoach() {
+  const btn = document.getElementById('coach-analyze-btn');
+  if (btn) btn.disabled = true;
+  try {
+    const data = await coachWorkerJson('/coach/tiktok/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ days: 90, profile: coachProfilePayload() })
+    });
+    renderCoachAnalysis(data);
+    if (Array.isArray(data.items)) renderCoachVideos(data.items);
+    toast('✅ 內容方向分析完成。');
+  } catch(e) {
+    const box = document.getElementById('coach-analysis-result');
+    if (box) {
+      box.innerHTML = `<div class="coach-item"><div class="coach-item-title">分析未完成</div><div class="coach-item-meta">${escapeHtml(coachErrorMessage(e, '內容方向分析失敗。'))}</div></div>`;
+    }
+    toast('❌ ' + coachErrorMessage(e, '內容方向分析失敗。'));
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 function voiceServiceErrorMessage(error, fallback) {
