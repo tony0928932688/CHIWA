@@ -1949,10 +1949,50 @@ async function loginWithGoogleEmail(email) {
     if (secure.reset) toast('新週期開始，AI 次數、語音字數與影像克隆秒數已自動重置。');
   } catch(e) {
     console.error('Google login profile error:', e);
-    if (err) {
-      err.style.display = 'block';
-      err.textContent = e && e.message ? e.message : 'Google 登入驗證失敗，請稍後再試。';
+    const raw = e && e.message ? e.message : 'Google 登入驗證失敗，請稍後再試。';
+    const likelyNotOpened = /尚未開通|未開通|not.?found|not.?authorized|unauthorized|forbidden|permission|403|401|student/i.test(raw);
+    clearWorkspaceRestore();
+    setWorkspaceHash(false);
+    if (_SB && _SB.auth && typeof _SB.auth.signOut === 'function') {
+      await _SB.auth.signOut().catch(function(){});
     }
+    if (likelyNotOpened) {
+      showGoogleAccountNotOpenedNotice(email);
+    } else if (err) {
+      goPage('login');
+      err.style.display = 'block';
+      err.textContent = raw;
+    }
+  }
+}
+
+function showGoogleAccountNotOpenedNotice(email) {
+  const loginPanel = document.getElementById('login-panel');
+  const err = document.getElementById('lerr');
+  let wrap = document.getElementById('google-account-not-opened');
+  const supportEmail = 'chivashorts@gmail.com';
+  const account = String(email || '').trim();
+  const subject = encodeURIComponent('學員帳號開通協助');
+  const body = encodeURIComponent(`您好，我想確認吉娃 AI 學員帳號是否已開通。\n\nGoogle 帳號：${account || '請填入你的 Google Email'}\n`);
+  goPage('login');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'google-account-not-opened';
+    if (err && err.parentNode) err.parentNode.insertBefore(wrap, err);
+    else if (loginPanel) loginPanel.appendChild(wrap);
+    else document.body.appendChild(wrap);
+  }
+  wrap.style.cssText = 'display:block;background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.35);border-radius:12px;padding:12px 14px;margin:12px 0;color:#eeeef2;text-align:left;font-family:\'Noto Sans TC\',sans-serif;';
+  wrap.innerHTML = `
+    <div style="font-size:15px;font-weight:900;color:#ff9a9a;margin-bottom:6px;">此 Google 帳號尚未開通</div>
+    <div style="font-size:12px;line-height:1.75;color:#d9d9e8;margin-bottom:10px;">
+      ${account ? `你目前登入的是 <b>${escapeHtml(account)}</b>，` : ''}此帳號尚未列入付費學員名單。若你已完成付款，請聯繫吉娃客服協助開通。
+    </div>
+    <a href="mailto:${supportEmail}?subject=${subject}&body=${body}" style="display:inline-flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box;border-radius:10px;background:#e8c55a;color:#17120a;font-weight:900;padding:10px 12px;text-decoration:none;">聯繫客服：${supportEmail}</a>
+  `;
+  if (err) {
+    err.style.display = 'block';
+    err.textContent = '請確認付款資料與登入的 Google 帳號是否一致。';
   }
 }
 
@@ -2008,6 +2048,11 @@ function showSafeBrowserNotice(appName) {
 async function doGoogleLogin() {
   const err = document.getElementById('lerr');
   const blockedBrowser = getBlockedOAuthUserAgentName();
+  const oldNotOpened = document.getElementById('google-account-not-opened');
+  const oldBrowserNotice = document.getElementById('safe-browser-notice');
+  if (oldNotOpened) oldNotOpened.remove();
+  if (oldBrowserNotice) oldBrowserNotice.remove();
+  if (err) err.style.display = 'none';
   chiwaTrack('login_click', { login_method: 'google' });
   if (blockedBrowser) {
     chiwaTrack('login_blocked_browser', { browser_name: blockedBrowser });
