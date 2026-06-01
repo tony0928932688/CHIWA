@@ -2403,12 +2403,56 @@ function avatarSourceCacheKey(){
   const userKey = state.user && (state.user.email || state.user.id);
   return userKey ? `chiwa_workflow_avatar_sources_${userKey}` : '';
 }
+function avatarSourceDeletedCacheKey(){
+  const key = avatarSourceCacheKey();
+  return key ? `${key}_deleted` : '';
+}
+function readDeletedAvatarSourceKeys(){
+  const key = avatarSourceDeletedCacheKey();
+  if(!key || !window.localStorage) return [];
+  try{
+    const rows = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(rows) ? rows.map(value => String(value || '')).filter(Boolean).slice(-50) : [];
+  }catch(e){
+    return [];
+  }
+}
+function writeDeletedAvatarSourceKeys(keys){
+  const key = avatarSourceDeletedCacheKey();
+  if(!key || !window.localStorage) return;
+  const seen = new Set();
+  const next = (Array.isArray(keys) ? keys : [])
+    .map(value => String(value || ''))
+    .filter(value => {
+      if(!value || seen.has(value)) return false;
+      seen.add(value);
+      return true;
+    })
+    .slice(-50);
+  localStorage.setItem(key, JSON.stringify(next));
+}
+function markDeletedAvatarSourceKey(key){
+  if(!key) return;
+  writeDeletedAvatarSourceKeys(readDeletedAvatarSourceKeys().concat(key));
+}
+function clearDeletedAvatarSourceKey(key){
+  if(!key) return;
+  const next = readDeletedAvatarSourceKeys().filter(value => value !== key);
+  writeDeletedAvatarSourceKeys(next);
+}
+function filterDeletedAvatarSources(items){
+  const deleted = new Set(readDeletedAvatarSourceKeys());
+  return (Array.isArray(items) ? items : []).filter(item => {
+    const key = item && item.key;
+    return key && !deleted.has(key);
+  });
+}
 function readAvatarSourceCache(){
   const key = avatarSourceCacheKey();
   if(!key || !window.localStorage) return [];
   try{
     const rows = JSON.parse(localStorage.getItem(key) || '[]');
-    return Array.isArray(rows) ? rows.filter(item => item && item.key).slice(0, 5) : [];
+    return filterDeletedAvatarSources(Array.isArray(rows) ? rows.filter(item => item && item.key) : []).slice(0, 5);
   }catch(e){
     return [];
   }
@@ -2416,7 +2460,7 @@ function readAvatarSourceCache(){
 function writeAvatarSourceCache(items){
   const key = avatarSourceCacheKey();
   if(!key || !window.localStorage) return;
-  localStorage.setItem(key, JSON.stringify((items || []).filter(item => item && item.key && !isLocalAvatarSource(item)).slice(0, 5)));
+  localStorage.setItem(key, JSON.stringify(filterDeletedAvatarSources(items).filter(item => item && item.key && !isLocalAvatarSource(item)).slice(0, 5)));
 }
 function mergeAvatarSourceProfiles(primary, fallback){
   const seen = new Set();
@@ -2433,6 +2477,7 @@ function mergeAvatarSourceProfiles(primary, fallback){
 }
 function upsertAvatarSourceCache(item){
   if(!item || !item.key) return;
+  clearDeletedAvatarSourceKey(item.key);
   const cached = readAvatarSourceCache();
   const next = cached.some(row => row && row.key === item.key)
     ? cached.map(row => row && row.key === item.key ? { ...row, ...item } : row)
@@ -2539,7 +2584,7 @@ function renderAvatarSourceLibrary(items){
   const box = $('avatar-source-list');
   const count = $('avatar-source-count');
   if(!box) return;
-  state.avatarSourceProfiles = Array.isArray(items) ? items.slice(0, 5) : [];
+  state.avatarSourceProfiles = filterDeletedAvatarSources(items).slice(0, 5);
   if(count) count.textContent = `${state.avatarSourceProfiles.length}/5`;
   const cards = [];
   state.avatarSourceProfiles.forEach((item, index) => {
@@ -2622,7 +2667,7 @@ async function loadAvatarSourceLibrary(){
       method:'GET',
       headers:{ 'Authorization':'Bearer ' + t }
     });
-    const savedMerged = mergeAvatarSourceProfiles(cached, data.items || []);
+    const savedMerged = filterDeletedAvatarSources(mergeAvatarSourceProfiles(cached, data.items || []));
     const merged = mergeAvatarSourceProfiles(localAvatarSources(), savedMerged);
     renderAvatarSourceLibrary(merged);
     writeAvatarSourceCache(savedMerged);
@@ -2668,24 +2713,34 @@ function selectAvatarSourceProfile(key){
   updateAvatarSubmitButton();
   renderAvatarSourceLibrary(state.avatarSourceProfiles);
 }
+function removeAvatarSourceFromLibrary(key){
+  if(!key) return;
+  (state.avatarSourceProfiles || [])
+    .filter(item => item && item.key === key && isLocalAvatarSource(item))
+    .forEach(revokeLocalAvatarSource);
+  state.avatarSourceProfiles = (state.avatarSourceProfiles || []).filter(row => row && row.key !== key);
+  if(state.selectedAvatarSource && state.selectedAvatarSource.key === key){
+    state.selectedAvatarSource = null;
+    state.avatarVideoFile = null;
+    if($('avatar-video')) $('avatar-video').value = '';
+    if($('video-status')) $('video-status').textContent = '尚未選擇影片';
+  }
+  writeAvatarSourceCache(state.avatarSourceProfiles);
+  updateAvatarSubmitButton();
+  renderAvatarSourceLibrary(state.avatarSourceProfiles);
+}
 async function deleteAvatarSourceProfile(key){
   if(!key) return;
   const item = state.avatarSourceProfiles.find(row => row.key === key);
   if(!confirm('確定要刪除這組形象素材嗎？刪除後不能再選用。')) return;
   if(isLocalAvatarSource(item)){
-    revokeLocalAvatarSource(item);
-    state.avatarSourceProfiles = state.avatarSourceProfiles.filter(row => row.key !== key);
-    if(state.selectedAvatarSource && state.selectedAvatarSource.key === key){
-      state.selectedAvatarSource = null;
-      state.avatarVideoFile = null;
-      if($('avatar-video')) $('avatar-video').value = '';
-      $('video-status').textContent = '尚未選擇影片';
-      updateAvatarSubmitButton();
-    }
+    removeAvatarSourceFromLibrary(key);
     status('avatar-status','已移除本次待上傳形象素材。','ok');
-    renderAvatarSourceLibrary(state.avatarSourceProfiles);
     return;
   }
+  markDeletedAvatarSourceKey(key);
+  removeAvatarSourceFromLibrary(key);
+  status('avatar-status','已刪除形象素材。','ok');
   try{
     const t = await token();
     await r2Json('/avatar/profile/delete', {
@@ -2693,16 +2748,10 @@ async function deleteAvatarSourceProfile(key){
       headers:{ 'Authorization':'Bearer ' + t, 'Content-Type':'application/json' },
       body: JSON.stringify({ key })
     });
-    if(state.selectedAvatarSource && state.selectedAvatarSource.key === key){
-      state.selectedAvatarSource = null;
-      $('video-status').textContent = state.avatarVideoFile ? `已選擇：${state.avatarVideoFile.name}（${(state.avatarVideoFile.size/1024/1024).toFixed(1)}MB）` : '尚未選擇影片';
-      updateAvatarSubmitButton();
-    }
-    status('avatar-status','已刪除形象素材。','ok');
-    await loadAvatarSourceLibrary();
   }catch(e){
-    status('avatar-status', avatarErrorText(e, '刪除形象素材失敗'), 'err');
+    console.warn('avatar source cloud delete skipped:', e.message || e);
   }
+  await loadAvatarSourceLibrary();
 }
 function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
 async function uploadVideoToR2(file, onProgress){

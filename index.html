@@ -6778,12 +6778,61 @@ function avatarSourceCacheKey() {
   return currentUser ? `chiwa_avatar_sources_${currentUser}` : '';
 }
 
+function avatarSourceDeletedCacheKey() {
+  const key = avatarSourceCacheKey();
+  return key ? `${key}_deleted` : '';
+}
+
+function readDeletedAvatarSourceKeys() {
+  const key = avatarSourceDeletedCacheKey();
+  if (!key || !window.localStorage) return [];
+  try {
+    const rows = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(rows) ? rows.map(function(value) { return String(value || ''); }).filter(Boolean).slice(-50) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function writeDeletedAvatarSourceKeys(keys) {
+  const key = avatarSourceDeletedCacheKey();
+  if (!key || !window.localStorage) return;
+  const seen = new Set();
+  const next = (Array.isArray(keys) ? keys : [])
+    .map(function(value) { return String(value || ''); })
+    .filter(function(value) {
+      if (!value || seen.has(value)) return false;
+      seen.add(value);
+      return true;
+    })
+    .slice(-50);
+  localStorage.setItem(key, JSON.stringify(next));
+}
+
+function markDeletedAvatarSourceKey(key) {
+  if (!key) return;
+  writeDeletedAvatarSourceKeys(readDeletedAvatarSourceKeys().concat(key));
+}
+
+function clearDeletedAvatarSourceKey(key) {
+  if (!key) return;
+  writeDeletedAvatarSourceKeys(readDeletedAvatarSourceKeys().filter(function(value) { return value !== key; }));
+}
+
+function filterDeletedAvatarSources(items) {
+  const deleted = new Set(readDeletedAvatarSourceKeys());
+  return (Array.isArray(items) ? items : []).filter(function(item) {
+    const key = item && item.key;
+    return key && !deleted.has(key);
+  });
+}
+
 function readAvatarSourceCache() {
   const key = avatarSourceCacheKey();
   if (!key || !window.localStorage) return [];
   try {
     const rows = JSON.parse(localStorage.getItem(key) || '[]');
-    return Array.isArray(rows) ? rows.filter(function(item) { return item && item.key; }).slice(0, 5) : [];
+    return filterDeletedAvatarSources(Array.isArray(rows) ? rows.filter(function(item) { return item && item.key; }) : []).slice(0, 5);
   } catch (e) {
     return [];
   }
@@ -6792,7 +6841,7 @@ function readAvatarSourceCache() {
 function writeAvatarSourceCache(items) {
   const key = avatarSourceCacheKey();
   if (!key || !window.localStorage) return;
-  localStorage.setItem(key, JSON.stringify((items || []).filter(function(item) { return item && item.key && !isLocalAvatarSourceProfile(item); }).slice(0, 5)));
+  localStorage.setItem(key, JSON.stringify(filterDeletedAvatarSources(items).filter(function(item) { return item && item.key && !isLocalAvatarSourceProfile(item); }).slice(0, 5)));
 }
 
 function mergeAvatarSourceProfiles(primary, fallback) {
@@ -6811,6 +6860,7 @@ function mergeAvatarSourceProfiles(primary, fallback) {
 
 function upsertAvatarSourceCache(item) {
   if (!item || !item.key) return;
+  clearDeletedAvatarSourceKey(item.key);
   const cached = readAvatarSourceCache();
   const next = cached.some(function(row) { return row && row.key === item.key; })
     ? cached.map(function(row) { return row && row.key === item.key ? Object.assign({}, row, item) : row; })
@@ -6928,7 +6978,7 @@ function renderAvatarSourceLibrary(items) {
   const box = document.getElementById('avatar-source-list');
   const count = document.getElementById('avatar-source-count');
   if (!box) return;
-  avatarSourceProfiles = Array.isArray(items) ? items.slice(0, 5) : [];
+  avatarSourceProfiles = filterDeletedAvatarSources(items).slice(0, 5);
   if (count) count.textContent = avatarSourceProfiles.length + '/5';
   const cards = [];
   avatarSourceProfiles.forEach(function(item, index) {
@@ -7012,7 +7062,7 @@ async function loadAvatarSourceLibrary() {
       method: 'GET',
       headers: { 'Authorization': 'Bearer ' + token }
     });
-    const savedMerged = mergeAvatarSourceProfiles(cached, data.items || []);
+    const savedMerged = filterDeletedAvatarSources(mergeAvatarSourceProfiles(cached, data.items || []));
     const merged = mergeAvatarSourceProfiles(localAvatarSourceProfiles(), savedMerged);
     renderAvatarSourceLibrary(merged);
     writeAvatarSourceCache(savedMerged);
@@ -7065,27 +7115,37 @@ function selectAvatarSourceProfile(key) {
   renderAvatarSourceLibrary(avatarSourceProfiles);
 }
 
+function removeAvatarSourceProfileFromLibrary(key) {
+  if (!key) return;
+  (avatarSourceProfiles || [])
+    .filter(function(item) { return item && item.key === key && isLocalAvatarSourceProfile(item); })
+    .forEach(revokeLocalAvatarSourceProfile);
+  avatarSourceProfiles = (avatarSourceProfiles || []).filter(function(row) { return row && row.key !== key; });
+  if (selectedAvatarSourceProfile && selectedAvatarSourceProfile.key === key) {
+    selectedAvatarSourceProfile = null;
+    avatarVideoFile = null;
+    const input = document.getElementById('avatar-video-input');
+    if (input) input.value = '';
+    setAvatarStatus('video', '尚未選擇影片', false);
+  }
+  writeAvatarSourceCache(avatarSourceProfiles);
+  renderAvatarSourceLibrary(avatarSourceProfiles);
+}
+
 async function deleteAvatarSourceProfile(key) {
   if (!key) return;
   const item = avatarSourceProfiles.find(function(row) { return row.key === key; });
   if (!confirm('確定要刪除這組形象素材嗎？刪除後不能再選用。')) return;
   if (isLocalAvatarSourceProfile(item)) {
-    revokeLocalAvatarSourceProfile(item);
-    avatarSourceProfiles = avatarSourceProfiles.filter(function(row) { return row.key !== key; });
-    if (selectedAvatarSourceProfile && selectedAvatarSourceProfile.key === key) {
-      selectedAvatarSourceProfile = null;
-      avatarVideoFile = null;
-      const input = document.getElementById('avatar-video-input');
-      if (input) input.value = '';
-      setAvatarStatus('video', '尚未選擇影片', false);
-    }
+    removeAvatarSourceProfileFromLibrary(key);
     toast('已移除本次待上傳形象素材。');
-    renderAvatarSourceLibrary(avatarSourceProfiles);
     return;
   }
+  markDeletedAvatarSourceKey(key);
+  removeAvatarSourceProfileFromLibrary(key);
+  toast('已刪除形象素材。');
   try {
     const token = await getVoiceSessionToken();
-    if (!token) throw new Error('請重新登入後再刪除形象素材。');
     await avatarR2Json('/avatar/profile/delete', {
       method: 'POST',
       headers: {
@@ -7094,15 +7154,10 @@ async function deleteAvatarSourceProfile(key) {
       },
       body: JSON.stringify({ key })
     });
-    if (selectedAvatarSourceProfile && selectedAvatarSourceProfile.key === key) {
-      selectedAvatarSourceProfile = null;
-      setAvatarStatus('video', avatarVideoFile ? '已選擇影片：' + avatarVideoFile.name : '尚未選擇影片', !!avatarVideoFile);
-    }
-    toast('已刪除形象素材。');
-    await loadAvatarSourceLibrary();
   } catch (e) {
-    toast('❌ ' + avatarErrorText(e, '刪除形象素材失敗，請稍後再試。'));
+    console.warn('avatar source cloud delete skipped:', e.message || e);
   }
+  await loadAvatarSourceLibrary();
 }
 
 async function avatarR2Part(path, options) {
