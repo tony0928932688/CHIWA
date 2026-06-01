@@ -2433,7 +2433,11 @@ function mergeAvatarSourceProfiles(primary, fallback){
 }
 function upsertAvatarSourceCache(item){
   if(!item || !item.key) return;
-  writeAvatarSourceCache(mergeAvatarSourceProfiles([item], readAvatarSourceCache()));
+  const cached = readAvatarSourceCache();
+  const next = cached.some(row => row && row.key === item.key)
+    ? cached.map(row => row && row.key === item.key ? { ...row, ...item } : row)
+    : cached.concat(item);
+  writeAvatarSourceCache(next);
 }
 function isLocalAvatarSource(item){
   return !!(item && item.localOnly === true);
@@ -2451,7 +2455,7 @@ function revokeLocalAvatarSource(item){
 function replaceLocalAvatarSources(savedItem){
   (state.avatarSourceProfiles || []).filter(isLocalAvatarSource).forEach(revokeLocalAvatarSource);
   state.avatarSourceProfiles = savedItem
-    ? mergeAvatarSourceProfiles([savedItem], savedAvatarSources())
+    ? mergeAvatarSourceProfiles(savedAvatarSources(), [savedItem])
     : savedAvatarSources();
   if(state.selectedAvatarSource && isLocalAvatarSource(state.selectedAvatarSource)) state.selectedAvatarSource = savedItem || null;
 }
@@ -2618,7 +2622,7 @@ async function loadAvatarSourceLibrary(){
       method:'GET',
       headers:{ 'Authorization':'Bearer ' + t }
     });
-    const savedMerged = mergeAvatarSourceProfiles(data.items || [], cached);
+    const savedMerged = mergeAvatarSourceProfiles(cached, data.items || []);
     const merged = mergeAvatarSourceProfiles(localAvatarSources(), savedMerged);
     renderAvatarSourceLibrary(merged);
     writeAvatarSourceCache(savedMerged);
@@ -2831,7 +2835,7 @@ function selectVideo(file){
   state.selectedAvatarSource = localSource;
   $('video-status').textContent = file ? `已選擇：${file.name}（${(file.size/1024/1024).toFixed(1)}MB）` : '尚未選擇影片';
   updateAvatarSubmitButton();
-  renderAvatarSourceLibrary(mergeAvatarSourceProfiles([localSource], state.avatarSourceProfiles));
+  renderAvatarSourceLibrary(mergeAvatarSourceProfiles(state.avatarSourceProfiles, [localSource]));
   saveLocalAvatarSource(localSource);
 }
 function srtTime(sec){

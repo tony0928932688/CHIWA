@@ -6469,7 +6469,7 @@ function handleAvatarSelectedFile(file, type, input) {
     const localSource = createLocalAvatarSourceProfile(file);
     avatarVideoFile = file;
     selectedAvatarSourceProfile = localSource;
-    renderAvatarSourceLibrary(mergeAvatarSourceProfiles([localSource], avatarSourceProfiles));
+    renderAvatarSourceLibrary(mergeAvatarSourceProfiles(avatarSourceProfiles, [localSource]));
     setAvatarStatus('video', '已選擇影片：' + file.name, true);
     saveLocalAvatarSourceProfile(localSource);
     toast('✅ 形象影片已載入。');
@@ -6811,7 +6811,10 @@ function mergeAvatarSourceProfiles(primary, fallback) {
 
 function upsertAvatarSourceCache(item) {
   if (!item || !item.key) return;
-  const next = mergeAvatarSourceProfiles([item], readAvatarSourceCache());
+  const cached = readAvatarSourceCache();
+  const next = cached.some(function(row) { return row && row.key === item.key; })
+    ? cached.map(function(row) { return row && row.key === item.key ? Object.assign({}, row, item) : row; })
+    : cached.concat(item);
   writeAvatarSourceCache(next);
 }
 
@@ -6837,7 +6840,7 @@ function revokeLocalAvatarSourceProfile(item) {
 function replaceLocalAvatarSourceProfiles(savedItem) {
   (avatarSourceProfiles || []).filter(isLocalAvatarSourceProfile).forEach(revokeLocalAvatarSourceProfile);
   avatarSourceProfiles = savedItem
-    ? mergeAvatarSourceProfiles([savedItem], savedAvatarSourceProfiles())
+    ? mergeAvatarSourceProfiles(savedAvatarSourceProfiles(), [savedItem])
     : savedAvatarSourceProfiles();
   if (selectedAvatarSourceProfile && isLocalAvatarSourceProfile(selectedAvatarSourceProfile)) {
     selectedAvatarSourceProfile = savedItem || null;
@@ -7009,7 +7012,7 @@ async function loadAvatarSourceLibrary() {
       method: 'GET',
       headers: { 'Authorization': 'Bearer ' + token }
     });
-    const savedMerged = mergeAvatarSourceProfiles(data.items || [], cached);
+    const savedMerged = mergeAvatarSourceProfiles(cached, data.items || []);
     const merged = mergeAvatarSourceProfiles(localAvatarSourceProfiles(), savedMerged);
     renderAvatarSourceLibrary(merged);
     writeAvatarSourceCache(savedMerged);
