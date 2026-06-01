@@ -1731,8 +1731,9 @@ function vttFromSrt(srt){
   return 'WEBVTT\n\n' + String(srt || '').replace(/\r\n/g, '\n').replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2').trim() + '\n';
 }
 function subtitleSourceLabel(source){
-  if(source === 'cartesia_ink_stt_traditional_text') return '音軌自動對齊（繁中字幕）';
-  if(source === 'cartesia_ink_stt') return '音軌自動對齊';
+  const normalized = String(source || '').toLowerCase();
+  if(normalized.includes('traditional')) return '音軌自動對齊（繁中字幕）';
+  if(normalized.includes('stt')) return '音軌自動對齊';
   if(source === 'manual_fallback') return '手動字幕備援';
   if(source === 'manual') return '手動字幕';
   return '音軌自動對齊';
@@ -3050,7 +3051,7 @@ async function pollFinalRender(){
     const currentStatus = data.status || 'RUNNING';
     const stuckStatuses = ['FETCHING', 'PREPROCESSING', 'RUNNING', 'QUEUED'];
     if(elapsed > 180000 && stuckStatuses.includes(String(currentStatus).toUpperCase())){
-      status('render-status',`渲染服務已在 ${currentStatus} 停留超過 3 分鐘，可能是 Shotstack 抓取素材卡住。已停止自動等待，請直接按「一鍵輸出正式成片」重新送出一次。任務 ID：${state.renderId}`,'err');
+      status('render-status',`渲染服務已在 ${currentStatus} 停留超過 3 分鐘，可能是雲端渲染服務抓取素材卡住。已停止自動等待，請直接按「一鍵輸出正式成片」重新送出一次。任務 ID：${state.renderId}`,'err');
       $('btn-render-final').disabled = false;
       saveWorkflowProgress();
       return;
@@ -3065,7 +3066,7 @@ async function pollFinalRender(){
 }
 function renderFailureReason(data){
   if(!data) return 'video_render_failed';
-  const reason = data.error || data.message || data.reason || data.detail || data.shotstackError || data.shotstack_status || data.status;
+  const reason = data.error || data.message || data.reason || data.detail || data.status;
   return String(reason || 'video_render_failed').slice(0, 500);
 }
 async function runRenderSelfTestIfRequested(){
@@ -3080,7 +3081,7 @@ async function runRenderSelfTestIfRequested(){
     ].join('\n');
     const submit = await authedFetch(VIDEO_RENDER_API_URL, {
       action:'submit',
-      video_url:'https://shotstack-assets.s3.ap-southeast-2.amazonaws.com/footage/beach-overhead.mp4',
+      video_url:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
       srt_text:sampleSrt,
       title:'成片輸出內部檢查',
       duration_seconds:5
