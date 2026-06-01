@@ -283,10 +283,6 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .sb-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;cursor:pointer;color:var(--t2);transition:all .15s;margin-bottom:2px;font-size:13px;border:1px solid transparent}
 .sb-item:hover{background:var(--card2);color:var(--t1);border-color:rgba(245,224,160,.42)}
 .sb-item.on{background:rgba(74,158,255,.08);color:var(--blue);border-left:3px solid var(--blue);border-color:rgba(74,158,255,.45)}
-body.oneclick-mode .sb-item.legacy-tool{display:none}
-body.oneclick-mode.admin-mode .sb-item.legacy-tool{display:flex}
-body.oneclick-mode .mn-item.legacy-tool{display:none}
-body.oneclick-mode.admin-mode .mn-item.legacy-tool{display:flex}
 .sb-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0}
 .sb-usage{margin:8px;background:rgba(232,197,90,.05);border:1px solid rgba(232,197,90,.15);border-radius:10px;padding:10px 12px}
 .sb-ul{font-size:10px;color:var(--t3)}
@@ -1829,7 +1825,6 @@ function setWorkspaceHash(active) {
 }
 
 function applyWorkspaceMode(){
-  document.body.classList.add('oneclick-mode');
   document.body.classList.toggle('admin-mode', !!(currentUserData && currentUserData.is_admin));
 }
 
@@ -3132,7 +3127,7 @@ async function decrAvatar(secs) {
     <div class="sec-title">🎞️ AI短影音一鍵成片</div>
     <div class="card" style="padding:24px;max-width:760px">
       <h3 style="margin:0 0 10px;color:var(--gold);font-size:22px">AI短影音一鍵成片工作流</h3>
-      <p style="margin:0 0 18px;color:var(--t2);line-height:1.8">一般學員主入口已收斂到一鍵成片；舊的選題、文案、語音、形象克隆工具保留在後台與進階維護用途。</p>
+      <p style="margin:0 0 18px;color:var(--t2);line-height:1.8">一鍵成片是新增的懶人工作流入口；原本的帳號定位、選題、文案、語音、形象克隆、素材與課程功能仍保留在左側選單，可依課程進度分開操作。</p>
       <button class="btn" type="button" onclick="location.href='lazy-workflow.html'">開啟一鍵成片工作流</button>
     </div>
   </div>
@@ -4129,7 +4124,7 @@ function goPage(pageId) {
   if (targetPage) {
     targetPage.classList.add('active');
       if (pageId === 'workspace') {
-      const defaultPanel = currentUserData && currentUserData.is_admin ? 'profile' : 'oneclick';
+      const defaultPanel = 'profile';
       swP(defaultPanel, sidebarItemFor(defaultPanel));
     }
   } else {
