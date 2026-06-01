@@ -2416,7 +2416,7 @@ function readAvatarSourceCache(){
 function writeAvatarSourceCache(items){
   const key = avatarSourceCacheKey();
   if(!key || !window.localStorage) return;
-  localStorage.setItem(key, JSON.stringify((items || []).filter(item => item && item.key).slice(0, 5)));
+  localStorage.setItem(key, JSON.stringify((items || []).filter(item => item && item.key && !isLocalAvatarSource(item)).slice(0, 5)));
 }
 function mergeAvatarSourceProfiles(primary, fallback){
   const seen = new Set();
@@ -2434,6 +2434,47 @@ function mergeAvatarSourceProfiles(primary, fallback){
 function upsertAvatarSourceCache(item){
   if(!item || !item.key) return;
   writeAvatarSourceCache(mergeAvatarSourceProfiles([item], readAvatarSourceCache()));
+}
+function isLocalAvatarSource(item){
+  return !!(item && item.localOnly === true);
+}
+function localAvatarSources(){
+  return (state.avatarSourceProfiles || []).filter(isLocalAvatarSource);
+}
+function savedAvatarSources(items){
+  return (items || state.avatarSourceProfiles || []).filter(item => item && !isLocalAvatarSource(item));
+}
+function revokeLocalAvatarSource(item){
+  if(!isLocalAvatarSource(item) || !item.objectUrl || typeof URL === 'undefined' || !URL.revokeObjectURL) return;
+  try{ URL.revokeObjectURL(item.objectUrl); }catch(e){}
+}
+function replaceLocalAvatarSources(savedItem){
+  (state.avatarSourceProfiles || []).filter(isLocalAvatarSource).forEach(revokeLocalAvatarSource);
+  state.avatarSourceProfiles = savedItem
+    ? mergeAvatarSourceProfiles([savedItem], savedAvatarSources())
+    : savedAvatarSources();
+  if(state.selectedAvatarSource && isLocalAvatarSource(state.selectedAvatarSource)) state.selectedAvatarSource = savedItem || null;
+}
+function avatarSelectionReady(){
+  return !!(state.avatarVideoFile || (state.selectedAvatarSource && !isLocalAvatarSource(state.selectedAvatarSource)));
+}
+function updateAvatarSubmitButton(){
+  const btn = $('btn-avatar');
+  if(btn) btn.disabled = !(state.voiceItem && avatarSelectionReady());
+}
+function createLocalAvatarSource(file){
+  const objectUrl = (typeof URL !== 'undefined' && URL.createObjectURL) ? URL.createObjectURL(file) : '';
+  return {
+    key: `local-avatar-source:${Date.now()}:${Math.random().toString(36).slice(2)}`,
+    signedUrl: objectUrl,
+    objectUrl,
+    name: file.name || '本次上傳形象影片',
+    originalName: file.name || '本次上傳形象影片',
+    size: file.size || 0,
+    uploaded: new Date().toISOString(),
+    localOnly: true,
+    file
+  };
 }
 function avatarSourceDateText(value){
   if(!value) return '';
@@ -2458,7 +2499,7 @@ function renderAvatarSourceLibrary(items){
     const key = String(item.key || '');
     const selected = state.selectedAvatarSource && state.selectedAvatarSource.key === key;
     const name = esc(item.name || item.originalName || `形象 ${index + 1}`);
-    const meta = [avatarSourceDateText(item.uploaded), avatarSourceSizeText(item.size)].filter(Boolean).join('　');
+    const meta = [isLocalAvatarSource(item) ? '本次待上傳' : avatarSourceDateText(item.uploaded), avatarSourceSizeText(item.size)].filter(Boolean).join('　');
     cards.push(`
       <div class="avatar-source-card${selected ? ' selected' : ''}" data-avatar-source-select="${esc(key)}">
         <div class="avatar-source-thumb">${item.signedUrl ? `<video src="${esc(item.signedUrl)}" preload="metadata" muted playsinline></video>` : ''}</div>
@@ -2466,7 +2507,7 @@ function renderAvatarSourceLibrary(items){
         <div class="avatar-source-meta">${esc(meta || '形象素材')}</div>
         <div class="avatar-source-actions">
           <button class="btn secondary" type="button" data-avatar-source-select="${esc(key)}">${selected ? '已選用' : '選用此形象'}</button>
-          <button class="btn secondary danger" type="button" data-avatar-source-delete="${esc(key)}">刪除</button>
+          <button class="btn secondary danger" type="button" data-avatar-source-delete="${esc(key)}">${isLocalAvatarSource(item) ? '移除' : '刪除'}</button>
         </div>
       </div>
     `);
@@ -2490,8 +2531,10 @@ function renderAvatarSourceLibrary(items){
 }
 async function loadAvatarSourceLibrary(){
   const box = $('avatar-source-list');
+  const localItems = localAvatarSources();
   const cached = readAvatarSourceCache();
-  if(cached.length) renderAvatarSourceLibrary(cached);
+  const initial = mergeAvatarSourceProfiles(localItems, cached);
+  if(initial.length) renderAvatarSourceLibrary(initial);
   else if(box) box.innerHTML = '<div class="avatar-source-card avatar-source-empty">正在讀取形象素材...</div>';
   try{
     const t = await token();
@@ -2499,11 +2542,12 @@ async function loadAvatarSourceLibrary(){
       method:'GET',
       headers:{ 'Authorization':'Bearer ' + t }
     });
-    const merged = mergeAvatarSourceProfiles(data.items || [], cached);
+    const savedMerged = mergeAvatarSourceProfiles(data.items || [], cached);
+    const merged = mergeAvatarSourceProfiles(localAvatarSources(), savedMerged);
     renderAvatarSourceLibrary(merged);
-    writeAvatarSourceCache(merged);
+    writeAvatarSourceCache(savedMerged);
   }catch(e){
-    renderAvatarSourceLibrary(cached);
+    renderAvatarSourceLibrary(initial);
     console.warn('avatar source library load skipped:', e.message || e);
   }
 }
@@ -2531,15 +2575,37 @@ function selectAvatarSourceProfile(key){
   const item = state.avatarSourceProfiles.find(row => row.key === key);
   if(!item) return;
   state.selectedAvatarSource = item;
-  state.avatarVideoFile = null;
-  if($('avatar-video')) $('avatar-video').value = '';
-  $('video-status').textContent = '已選用素材：' + (item.name || '形象素材');
-  $('btn-avatar').disabled = !(state.voiceItem && state.selectedAvatarSource);
+  if(isLocalAvatarSource(item)){
+    state.avatarVideoFile = item.file || state.avatarVideoFile;
+    $('video-status').textContent = state.avatarVideoFile
+      ? `已選擇：${state.avatarVideoFile.name}（${(state.avatarVideoFile.size/1024/1024).toFixed(1)}MB）`
+      : '已選用本次待上傳素材';
+  }else{
+    state.avatarVideoFile = null;
+    if($('avatar-video')) $('avatar-video').value = '';
+    $('video-status').textContent = '已選用素材：' + (item.name || '形象素材');
+  }
+  updateAvatarSubmitButton();
   renderAvatarSourceLibrary(state.avatarSourceProfiles);
 }
 async function deleteAvatarSourceProfile(key){
   if(!key) return;
+  const item = state.avatarSourceProfiles.find(row => row.key === key);
   if(!confirm('確定要刪除這組形象素材嗎？刪除後不能再選用。')) return;
+  if(isLocalAvatarSource(item)){
+    revokeLocalAvatarSource(item);
+    state.avatarSourceProfiles = state.avatarSourceProfiles.filter(row => row.key !== key);
+    if(state.selectedAvatarSource && state.selectedAvatarSource.key === key){
+      state.selectedAvatarSource = null;
+      state.avatarVideoFile = null;
+      if($('avatar-video')) $('avatar-video').value = '';
+      $('video-status').textContent = '尚未選擇影片';
+      updateAvatarSubmitButton();
+    }
+    status('avatar-status','已移除本次待上傳形象素材。','ok');
+    renderAvatarSourceLibrary(state.avatarSourceProfiles);
+    return;
+  }
   try{
     const t = await token();
     await r2Json('/avatar/profile/delete', {
@@ -2550,7 +2616,7 @@ async function deleteAvatarSourceProfile(key){
     if(state.selectedAvatarSource && state.selectedAvatarSource.key === key){
       state.selectedAvatarSource = null;
       $('video-status').textContent = state.avatarVideoFile ? `已選擇：${state.avatarVideoFile.name}（${(state.avatarVideoFile.size/1024/1024).toFixed(1)}MB）` : '尚未選擇影片';
-      $('btn-avatar').disabled = !(state.voiceItem && (state.avatarVideoFile || state.selectedAvatarSource));
+      updateAvatarSubmitButton();
     }
     status('avatar-status','已刪除形象素材。','ok');
     await loadAvatarSourceLibrary();
@@ -2606,27 +2672,32 @@ async function uploadVideoToR2(file, onProgress){
 }
 async function submitAvatar(){
   if(!state.voiceItem || !state.voiceItem.playUrl){ status('avatar-status','請先完成語音並確認。','err'); return; }
-  if(!state.avatarVideoFile && !state.selectedAvatarSource){ status('avatar-status','請先選用或上傳形象影片。','err'); return; }
+  if(!avatarSelectionReady()){ status('avatar-status','請先選用或上傳形象影片。','err'); return; }
   if(!confirm(`確認送出形象克隆？\n語音長度：約 ${state.voiceAudioSeconds} 秒\n成功完成後才會扣影像克隆秒數。`)) return;
   $('btn-avatar').disabled = true;
   try{
     let uploaded;
-    if(state.selectedAvatarSource){
+    if(state.selectedAvatarSource && !isLocalAvatarSource(state.selectedAvatarSource)){
       status('avatar-status','正在讀取已保存形象素材...','warn');
       uploaded = await signAvatarSourceProfile(state.selectedAvatarSource);
     }else{
+      if(!state.avatarVideoFile) throw new Error('請重新選擇形象影片。');
       status('avatar-status','形象影片上傳中 0%...','warn');
       uploaded = await uploadVideoToR2(state.avatarVideoFile, (pct, done, total) => {
         status('avatar-status', `形象影片上傳中 ${pct.toFixed(1)}%（${(done/1024/1024).toFixed(1)}MB / ${(total/1024/1024).toFixed(1)}MB）`, 'warn');
       });
-      upsertAvatarSourceCache({
+      const savedProfile = {
         key: uploaded.key,
         signedUrl: uploaded.signedUrl,
         name: state.avatarVideoFile.name,
         originalName: state.avatarVideoFile.name,
         size: state.avatarVideoFile.size,
         uploaded: new Date().toISOString()
-      });
+      };
+      upsertAvatarSourceCache(savedProfile);
+      replaceLocalAvatarSources(savedProfile);
+      state.avatarVideoFile = null;
+      if($('avatar-video')) $('avatar-video').value = '';
       loadAvatarSourceLibrary();
     }
     status('avatar-status','素材已上傳，正在送出形象克隆任務...','warn');
@@ -2644,7 +2715,7 @@ async function submitAvatar(){
     pollAvatar();
   }catch(e){
     status('avatar-status', avatarErrorText(e, '形象克隆送出失敗'), 'err');
-    $('btn-avatar').disabled = false;
+    updateAvatarSubmitButton();
   }
 }
 async function pollAvatar(){
@@ -2674,11 +2745,21 @@ async function pollAvatar(){
   }
 }
 function selectVideo(file){
-  state.avatarVideoFile = file || null;
-  state.selectedAvatarSource = null;
+  replaceLocalAvatarSources();
+  if(!file){
+    state.avatarVideoFile = null;
+    state.selectedAvatarSource = null;
+    $('video-status').textContent = '尚未選擇影片';
+    updateAvatarSubmitButton();
+    renderAvatarSourceLibrary(state.avatarSourceProfiles);
+    return;
+  }
+  const localSource = createLocalAvatarSource(file);
+  state.avatarVideoFile = file;
+  state.selectedAvatarSource = localSource;
   $('video-status').textContent = file ? `已選擇：${file.name}（${(file.size/1024/1024).toFixed(1)}MB）` : '尚未選擇影片';
-  $('btn-avatar').disabled = !(state.voiceItem && (state.avatarVideoFile || state.selectedAvatarSource));
-  renderAvatarSourceLibrary(state.avatarSourceProfiles);
+  updateAvatarSubmitButton();
+  renderAvatarSourceLibrary(mergeAvatarSourceProfiles([localSource], state.avatarSourceProfiles));
 }
 function srtTime(sec){
   const ms = Math.floor((sec % 1) * 1000);

@@ -6465,9 +6465,11 @@ function handleAvatarSelectedFile(file, type, input) {
       resetFileInput(input);
       return;
     }
+    replaceLocalAvatarSourceProfiles();
+    const localSource = createLocalAvatarSourceProfile(file);
     avatarVideoFile = file;
-    selectedAvatarSourceProfile = null;
-    renderAvatarSourceLibrary(avatarSourceProfiles);
+    selectedAvatarSourceProfile = localSource;
+    renderAvatarSourceLibrary(mergeAvatarSourceProfiles([localSource], avatarSourceProfiles));
     setAvatarStatus('video', '已選擇影片：' + file.name, true);
     toast('✅ 形象影片已載入。');
     return;
@@ -6789,7 +6791,7 @@ function readAvatarSourceCache() {
 function writeAvatarSourceCache(items) {
   const key = avatarSourceCacheKey();
   if (!key || !window.localStorage) return;
-  localStorage.setItem(key, JSON.stringify((items || []).filter(function(item) { return item && item.key; }).slice(0, 5)));
+  localStorage.setItem(key, JSON.stringify((items || []).filter(function(item) { return item && item.key && !isLocalAvatarSourceProfile(item); }).slice(0, 5)));
 }
 
 function mergeAvatarSourceProfiles(primary, fallback) {
@@ -6810,6 +6812,55 @@ function upsertAvatarSourceCache(item) {
   if (!item || !item.key) return;
   const next = mergeAvatarSourceProfiles([item], readAvatarSourceCache());
   writeAvatarSourceCache(next);
+}
+
+function isLocalAvatarSourceProfile(item) {
+  return !!(item && item.localOnly === true);
+}
+
+function localAvatarSourceProfiles() {
+  return (avatarSourceProfiles || []).filter(isLocalAvatarSourceProfile);
+}
+
+function savedAvatarSourceProfiles(items) {
+  return (items || avatarSourceProfiles || []).filter(function(item) {
+    return item && !isLocalAvatarSourceProfile(item);
+  });
+}
+
+function revokeLocalAvatarSourceProfile(item) {
+  if (!isLocalAvatarSourceProfile(item) || !item.objectUrl || typeof URL === 'undefined' || !URL.revokeObjectURL) return;
+  try { URL.revokeObjectURL(item.objectUrl); } catch(e) {}
+}
+
+function replaceLocalAvatarSourceProfiles(savedItem) {
+  (avatarSourceProfiles || []).filter(isLocalAvatarSourceProfile).forEach(revokeLocalAvatarSourceProfile);
+  avatarSourceProfiles = savedItem
+    ? mergeAvatarSourceProfiles([savedItem], savedAvatarSourceProfiles())
+    : savedAvatarSourceProfiles();
+  if (selectedAvatarSourceProfile && isLocalAvatarSourceProfile(selectedAvatarSourceProfile)) {
+    selectedAvatarSourceProfile = savedItem || null;
+  }
+}
+
+function avatarSourceSelectionReady() {
+  return !!(avatarVideoFile || (selectedAvatarSourceProfile && !isLocalAvatarSourceProfile(selectedAvatarSourceProfile)));
+}
+
+function createLocalAvatarSourceProfile(file) {
+  const objectUrl = (typeof URL !== 'undefined' && URL.createObjectURL) ? URL.createObjectURL(file) : '';
+  return {
+    key: 'local-avatar-source:' + Date.now() + ':' + Math.random().toString(36).slice(2),
+    path: '',
+    signedUrl: objectUrl,
+    objectUrl,
+    name: file.name || '本次上傳形象影片',
+    originalName: file.name || '本次上傳形象影片',
+    size: file.size || 0,
+    uploaded: new Date().toISOString(),
+    localOnly: true,
+    file: file
+  };
 }
 
 function avatarSourceDateText(value) {
@@ -6834,7 +6885,7 @@ function renderAvatarSourceLibrary(items) {
     const key = String(item.key || '');
     const selected = selectedAvatarSourceProfile && selectedAvatarSourceProfile.key === key;
     const name = escapeHtml(item.name || item.originalName || ('形象 ' + (index + 1)));
-    const meta = [avatarSourceDateText(item.uploaded), avatarSourceSizeText(item.size)].filter(Boolean).join('　');
+    const meta = [isLocalAvatarSourceProfile(item) ? '本次待上傳' : avatarSourceDateText(item.uploaded), avatarSourceSizeText(item.size)].filter(Boolean).join('　');
     cards.push(`
       <div class="avatar-source-card${selected ? ' selected' : ''}" data-avatar-source-select="${escapeHtml(key)}">
         <div class="avatar-source-thumb">${item.signedUrl ? `<video src="${escapeHtml(item.signedUrl)}" preload="metadata" muted playsinline></video>` : ''}</div>
@@ -6842,7 +6893,7 @@ function renderAvatarSourceLibrary(items) {
         <div class="avatar-source-meta">${escapeHtml(meta || '形象素材')}</div>
         <div class="avatar-source-actions">
           <button class="btn-outline" type="button" data-avatar-source-select="${escapeHtml(key)}">${selected ? '已選用' : '選用此形象'}</button>
-          <button class="btn-outline" type="button" data-avatar-source-delete="${escapeHtml(key)}" style="border-color:rgba(255,107,107,.48);color:#ff9a9a">刪除</button>
+          <button class="btn-outline" type="button" data-avatar-source-delete="${escapeHtml(key)}" style="border-color:rgba(255,107,107,.48);color:#ff9a9a">${isLocalAvatarSourceProfile(item) ? '移除' : '刪除'}</button>
         </div>
       </div>
     `);
@@ -6867,8 +6918,10 @@ function renderAvatarSourceLibrary(items) {
 
 async function loadAvatarSourceLibrary() {
   const box = document.getElementById('avatar-source-list');
+  const localItems = localAvatarSourceProfiles();
   const cached = readAvatarSourceCache();
-  if (cached.length) renderAvatarSourceLibrary(cached);
+  const initial = mergeAvatarSourceProfiles(localItems, cached);
+  if (initial.length) renderAvatarSourceLibrary(initial);
   else if (box) box.innerHTML = '<div class="avatar-source-card avatar-source-empty">正在讀取形象素材...</div>';
   try {
     const token = await getVoiceSessionToken();
@@ -6877,11 +6930,12 @@ async function loadAvatarSourceLibrary() {
       method: 'GET',
       headers: { 'Authorization': 'Bearer ' + token }
     });
-    const merged = mergeAvatarSourceProfiles(data.items || [], cached);
+    const savedMerged = mergeAvatarSourceProfiles(data.items || [], cached);
+    const merged = mergeAvatarSourceProfiles(localAvatarSourceProfiles(), savedMerged);
     renderAvatarSourceLibrary(merged);
-    writeAvatarSourceCache(merged);
+    writeAvatarSourceCache(savedMerged);
   } catch (e) {
-    renderAvatarSourceLibrary(cached);
+    renderAvatarSourceLibrary(initial);
     console.warn('avatar source library load skipped:', e.message || e);
   }
 }
@@ -6917,16 +6971,36 @@ function selectAvatarSourceProfile(key) {
   const item = avatarSourceProfiles.find(function(row) { return row.key === key; });
   if (!item) return;
   selectedAvatarSourceProfile = item;
-  avatarVideoFile = null;
-  const input = document.getElementById('avatar-video-input');
-  if (input) input.value = '';
-  setAvatarStatus('video', '已選用素材：' + (item.name || '形象素材'), true);
+  if (isLocalAvatarSourceProfile(item)) {
+    avatarVideoFile = item.file || avatarVideoFile;
+    setAvatarStatus('video', avatarVideoFile ? '已選擇影片：' + avatarVideoFile.name : '已選用本次待上傳素材', !!avatarVideoFile);
+  } else {
+    avatarVideoFile = null;
+    const input = document.getElementById('avatar-video-input');
+    if (input) input.value = '';
+    setAvatarStatus('video', '已選用素材：' + (item.name || '形象素材'), true);
+  }
   renderAvatarSourceLibrary(avatarSourceProfiles);
 }
 
 async function deleteAvatarSourceProfile(key) {
   if (!key) return;
+  const item = avatarSourceProfiles.find(function(row) { return row.key === key; });
   if (!confirm('確定要刪除這組形象素材嗎？刪除後不能再選用。')) return;
+  if (isLocalAvatarSourceProfile(item)) {
+    revokeLocalAvatarSourceProfile(item);
+    avatarSourceProfiles = avatarSourceProfiles.filter(function(row) { return row.key !== key; });
+    if (selectedAvatarSourceProfile && selectedAvatarSourceProfile.key === key) {
+      selectedAvatarSourceProfile = null;
+      avatarVideoFile = null;
+      const input = document.getElementById('avatar-video-input');
+      if (input) input.value = '';
+      setAvatarStatus('video', '尚未選擇影片', false);
+    }
+    toast('已移除本次待上傳形象素材。');
+    renderAvatarSourceLibrary(avatarSourceProfiles);
+    return;
+  }
   try {
     const token = await getVoiceSessionToken();
     if (!token) throw new Error('請重新登入後再刪除形象素材。');
@@ -7131,7 +7205,7 @@ async function generateAvatarClone() {
   const load = document.getElementById('avatar-load');
   const result = document.getElementById('avatar-result');
 
-  if (!avatarVideoFile && !selectedAvatarSourceProfile) {
+  if (!avatarSourceSelectionReady()) {
     toast('❌ 請先選用或上傳形象影片。');
     return;
   }
@@ -7160,17 +7234,18 @@ async function generateAvatarClone() {
 
     avatarTaskStartedAt = 0;
     let videoUpload;
-    if (selectedAvatarSourceProfile) {
+    if (selectedAvatarSourceProfile && !isLocalAvatarSourceProfile(selectedAvatarSourceProfile)) {
       avatarRenderBox('正在讀取已保存形象素材...', 'info');
       videoUpload = await signAvatarSourceProfile(selectedAvatarSourceProfile);
     } else {
+      if (!avatarVideoFile) throw new Error('請重新選擇形象影片。');
       avatarRenderBox('正在上傳形象影片... 0%', 'info');
       videoUpload = await uploadAvatarInputToR2(avatarVideoFile, 'video', function(pct, uploaded, total) {
         const uploadedMb = (uploaded / 1024 / 1024).toFixed(1);
         const totalMb = (total / 1024 / 1024).toFixed(1);
         avatarRenderBox(`正在上傳形象影片... ${pct.toFixed(1)}%（${uploadedMb}MB / ${totalMb}MB）`, 'info');
       });
-      upsertAvatarSourceCache({
+      const savedProfile = {
         key: videoUpload.path,
         path: videoUpload.path,
         signedUrl: videoUpload.signedUrl,
@@ -7178,7 +7253,12 @@ async function generateAvatarClone() {
         originalName: avatarVideoFile.name,
         size: avatarVideoFile.size,
         uploaded: new Date().toISOString()
-      });
+      };
+      upsertAvatarSourceCache(savedProfile);
+      replaceLocalAvatarSourceProfiles(savedProfile);
+      avatarVideoFile = null;
+      const input = document.getElementById('avatar-video-input');
+      if (input) input.value = '';
       loadAvatarSourceLibrary();
     }
     avatarRenderBox('形象影片已上傳，正在上傳人聲音檔... 0%', 'info');
