@@ -2455,6 +2455,29 @@ function replaceLocalAvatarSources(savedItem){
     : savedAvatarSources();
   if(state.selectedAvatarSource && isLocalAvatarSource(state.selectedAvatarSource)) state.selectedAvatarSource = savedItem || null;
 }
+function replaceLocalAvatarSource(localKey, savedItem){
+  if(!savedItem || !savedItem.key) return null;
+  let replacedSelected = false;
+  const next = (state.avatarSourceProfiles || []).map(item => {
+    if(item && item.key === localKey){
+      revokeLocalAvatarSource(item);
+      if(state.selectedAvatarSource && state.selectedAvatarSource.key === localKey) replacedSelected = true;
+      return savedItem;
+    }
+    return item;
+  });
+  state.avatarSourceProfiles = mergeAvatarSourceProfiles(
+    next.some(item => item && item.key === savedItem.key) ? next : [savedItem].concat(next),
+    []
+  );
+  if(replacedSelected){
+    state.selectedAvatarSource = savedItem;
+    state.avatarVideoFile = null;
+    if($('avatar-video')) $('avatar-video').value = '';
+    if($('video-status')) $('video-status').textContent = '已保存並選用素材：' + (savedItem.name || '形象素材');
+  }
+  return savedItem;
+}
 function avatarSelectionReady(){
   return !!(state.avatarVideoFile || (state.selectedAvatarSource && !isLocalAvatarSource(state.selectedAvatarSource)));
 }
@@ -2475,6 +2498,26 @@ function createLocalAvatarSource(file){
     localOnly: true,
     file
   };
+}
+function savedAvatarSourceFromUpload(file, uploaded){
+  return {
+    key: uploaded.key || uploaded.path,
+    path: uploaded.path || uploaded.key,
+    signedUrl: uploaded.signedUrl,
+    name: file.name,
+    originalName: file.name,
+    size: file.size,
+    uploaded: new Date().toISOString()
+  };
+}
+function localAvatarSourceMeta(item){
+  if(!isLocalAvatarSource(item)) return avatarSourceDateText(item.uploaded);
+  if(item.uploadStatus === 'saving'){
+    const pct = Number(item.uploadProgress || 0);
+    return pct > 0 ? `保存中 ${pct.toFixed(0)}%` : '保存中';
+  }
+  if(item.uploadStatus === 'error') return '保存失敗';
+  return '本次待上傳';
 }
 function avatarSourceDateText(value){
   if(!value) return '';
@@ -2499,7 +2542,7 @@ function renderAvatarSourceLibrary(items){
     const key = String(item.key || '');
     const selected = state.selectedAvatarSource && state.selectedAvatarSource.key === key;
     const name = esc(item.name || item.originalName || `形象 ${index + 1}`);
-    const meta = [isLocalAvatarSource(item) ? '本次待上傳' : avatarSourceDateText(item.uploaded), avatarSourceSizeText(item.size)].filter(Boolean).join('　');
+    const meta = [localAvatarSourceMeta(item), avatarSourceSizeText(item.size)].filter(Boolean).join('　');
     cards.push(`
       <div class="avatar-source-card${selected ? ' selected' : ''}" data-avatar-source-select="${esc(key)}">
         <div class="avatar-source-thumb">${item.signedUrl ? `<video src="${esc(item.signedUrl)}" preload="metadata" muted playsinline></video>` : ''}</div>
@@ -2528,6 +2571,39 @@ function renderAvatarSourceLibrary(items){
       deleteAvatarSourceProfile(el.getAttribute('data-avatar-source-delete') || '');
     });
   });
+}
+function saveLocalAvatarSource(localSource){
+  if(!isLocalAvatarSource(localSource) || !localSource.file) return null;
+  if(localSource.uploadPromise) return localSource.uploadPromise;
+  const file = localSource.file;
+  localSource.uploadStatus = 'saving';
+  localSource.uploadProgress = 0;
+  localSource.uploadPromise = (async () => {
+    try{
+      const uploaded = await uploadVideoToR2(file, pct => {
+        localSource.uploadProgress = Math.min(100, Math.max(0, Number(pct || 0)));
+        renderAvatarSourceLibrary(state.avatarSourceProfiles);
+      });
+      const savedProfile = savedAvatarSourceFromUpload(file, uploaded);
+      upsertAvatarSourceCache(savedProfile);
+      replaceLocalAvatarSource(localSource.key, savedProfile);
+      status('avatar-status','形象素材已保存到素材庫，刷新後仍會保留。','ok');
+      updateAvatarSubmitButton();
+      renderAvatarSourceLibrary(state.avatarSourceProfiles);
+      loadAvatarSourceLibrary();
+      return { key:savedProfile.key, path:savedProfile.path, signedUrl:savedProfile.signedUrl };
+    }catch(e){
+      localSource.uploadStatus = 'error';
+      localSource.uploadError = e && e.message || String(e || '');
+      status('avatar-status', avatarErrorText(e, '形象素材保存失敗，請重新上傳。'), 'err');
+      updateAvatarSubmitButton();
+      renderAvatarSourceLibrary(state.avatarSourceProfiles);
+      throw e;
+    }
+  })();
+  localSource.uploadPromise.catch(() => {});
+  renderAvatarSourceLibrary(state.avatarSourceProfiles);
+  return localSource.uploadPromise;
 }
 async function loadAvatarSourceLibrary(){
   const box = $('avatar-source-list');
@@ -2677,7 +2753,10 @@ async function submitAvatar(){
   $('btn-avatar').disabled = true;
   try{
     let uploaded;
-    if(state.selectedAvatarSource && !isLocalAvatarSource(state.selectedAvatarSource)){
+    if(isLocalAvatarSource(state.selectedAvatarSource) && state.selectedAvatarSource.uploadPromise){
+      status('avatar-status','正在等待形象素材保存完成...','warn');
+      uploaded = await state.selectedAvatarSource.uploadPromise;
+    }else if(state.selectedAvatarSource && !isLocalAvatarSource(state.selectedAvatarSource)){
       status('avatar-status','正在讀取已保存形象素材...','warn');
       uploaded = await signAvatarSourceProfile(state.selectedAvatarSource);
     }else{
@@ -2686,14 +2765,7 @@ async function submitAvatar(){
       uploaded = await uploadVideoToR2(state.avatarVideoFile, (pct, done, total) => {
         status('avatar-status', `形象影片上傳中 ${pct.toFixed(1)}%（${(done/1024/1024).toFixed(1)}MB / ${(total/1024/1024).toFixed(1)}MB）`, 'warn');
       });
-      const savedProfile = {
-        key: uploaded.key,
-        signedUrl: uploaded.signedUrl,
-        name: state.avatarVideoFile.name,
-        originalName: state.avatarVideoFile.name,
-        size: state.avatarVideoFile.size,
-        uploaded: new Date().toISOString()
-      };
+      const savedProfile = savedAvatarSourceFromUpload(state.avatarVideoFile, uploaded);
       upsertAvatarSourceCache(savedProfile);
       replaceLocalAvatarSources(savedProfile);
       state.avatarVideoFile = null;
@@ -2760,6 +2832,7 @@ function selectVideo(file){
   $('video-status').textContent = file ? `已選擇：${file.name}（${(file.size/1024/1024).toFixed(1)}MB）` : '尚未選擇影片';
   updateAvatarSubmitButton();
   renderAvatarSourceLibrary(mergeAvatarSourceProfiles([localSource], state.avatarSourceProfiles));
+  saveLocalAvatarSource(localSource);
 }
 function srtTime(sec){
   const ms = Math.floor((sec % 1) * 1000);
