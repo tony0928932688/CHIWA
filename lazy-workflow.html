@@ -2670,7 +2670,7 @@ async function loadAvatarSourceLibrary(){
       method:'GET',
       headers:{ 'Authorization':'Bearer ' + t }
     });
-    const savedMerged = filterDeletedAvatarSources(mergeAvatarSourceProfiles(cached, data.items || []));
+    const savedMerged = filterDeletedAvatarSources(data.items || []);
     const merged = mergeAvatarSourceProfiles(localAvatarSources(), savedMerged);
     renderAvatarSourceLibrary(merged);
     writeAvatarSourceCache(savedMerged);
