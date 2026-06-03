@@ -325,6 +325,18 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .ws-main{flex:1;min-width:0;height:100vh;overflow-y:auto;padding:26px}
 .panel{display:none}
 .panel.on{display:block}
+.short-drama-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.short-drama-grid .full{grid-column:1/-1}
+.short-drama-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0 16px}
+.short-drama-admin-badge{display:inline-flex;align-items:center;border:1px solid rgba(232,197,90,.45);border-radius:999px;padding:2px 9px;margin-left:8px;color:var(--gold);font-size:10px;font-weight:900;vertical-align:middle}
+.short-drama-stage{border:1px dashed rgba(245,224,160,.32);border-radius:12px;background:rgba(255,255,255,.018);padding:14px;margin:14px 0}
+.short-drama-videos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}
+.short-drama-video{border:1px solid var(--bdr);border-radius:10px;background:var(--card2);padding:10px;min-width:0}
+.short-drama-video b{display:block;font-size:12px;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.short-drama-video span{display:block;font-size:11px;color:var(--t3);margin-top:4px}
+.short-drama-output{white-space:pre-wrap;line-height:1.75}
+@media(max-width:900px){.short-drama-grid{grid-template-columns:1fr}.short-drama-videos{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.short-drama-videos{grid-template-columns:1fr}}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
 .chip{padding:7px 14px;border-radius:100px;border:1.5px solid var(--bdr-strong);cursor:pointer;font-size:12px;color:var(--t2);transition:all .15s;background:var(--card);white-space:nowrap}
 .chip:hover{border-color:rgba(245,224,160,.74);color:var(--t1);box-shadow:0 0 0 1px rgba(232,197,90,.16)}
@@ -1916,6 +1928,19 @@ function setWorkspaceHash(active) {
 
 function applyWorkspaceMode(){
   document.body.classList.toggle('admin-mode', !!(currentUserData && currentUserData.is_admin));
+  setAdminOnlyFeatureVisibility();
+}
+
+function isCurrentAdmin() {
+  return !!(currentUserData && currentUserData.is_admin);
+}
+
+function setAdminOnlyFeatureVisibility() {
+  const visible = isCurrentAdmin();
+  ['sb-admin-item', 'sb-health-item', 'sb-short-drama-item', 'mn-short-drama'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = visible ? 'flex' : 'none';
+  });
 }
 
 async function callChiwaSecure(action, payload) {
@@ -3222,6 +3247,10 @@ async function decrAvatar(secs) {
         <span class="sb-icon">🎨</span>
         <span>圖片&影片素材生成</span>
       </div>
+      <div class="sb-item" id="sb-short-drama-item" data-panel="short-drama" style="display:none;" onclick="swP('short-drama', this)">
+        <span class="sb-icon">DR</span>
+        <span>AI短劇工作流</span>
+      </div>
       <div class="sb-item" data-panel="content-coach" onclick="swP('content-coach', this)">
         <span class="sb-icon">📈</span>
         <span>AI內容教練</span>
@@ -3494,6 +3523,67 @@ async function decrAvatar(secs) {
     <div id="history-list" style="display:grid;gap:12px">
       <div class="out-card"><div class="out-text">登入後的 AI 生成結果會顯示在這裡。</div></div>
     </div>
+  </div>
+
+  <div class="panel" id="p-short-drama" data-admin-only="true">
+    <div class="sec-title">AI短劇工作流 <span class="short-drama-admin-badge">管理員內測</span></div>
+    <div class="sec-sub">先把多段 15 秒直式短片規劃成連貫劇情，固定人物、場景、服裝與轉場規則；後續再接後端拼接任務。</div>
+
+    <div class="short-drama-grid">
+      <div class="full">
+        <div class="label mb14">短劇主題 / 商品服務 / 轉化目標</div>
+        <textarea id="sd-brief" rows="4" placeholder="例：一位中小企業老闆一直投廣告失敗，最後理解問題不是素材，而是定位不清楚。" maxlength="1200"></textarea>
+      </div>
+      <div>
+        <div class="label mb14">人物設定</div>
+        <textarea id="sd-characters" rows="4" placeholder="例：主角是 35-45 歲企業主，說話直接；配角是員工或顧問。" maxlength="800"></textarea>
+      </div>
+      <div>
+        <div class="label mb14">場景 / 服裝 / 道具一致性</div>
+        <textarea id="sd-world" rows="4" placeholder="例：辦公室、深色襯衫、筆電、白板，所有片段都維持同一套視覺設定。" maxlength="800"></textarea>
+      </div>
+      <div>
+        <div class="label mb14">段數</div>
+        <select id="sd-count" class="tinput" style="height:42px">
+          <option value="3">3 段，共 45 秒</option>
+          <option value="4" selected>4 段，共 60 秒</option>
+          <option value="5">5 段，共 75 秒</option>
+          <option value="6">6 段，共 90 秒</option>
+          <option value="8">8 段，共 120 秒</option>
+        </select>
+      </div>
+      <div>
+        <div class="label mb14">劇情走向</div>
+        <select id="sd-arc" class="tinput" style="height:42px">
+          <option value="反轉型">反轉型</option>
+          <option value="痛點解法型">痛點解法型</option>
+          <option value="案例覺醒型">案例覺醒型</option>
+          <option value="懸念追劇型">懸念追劇型</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="short-drama-stage">
+      <div class="out-head" style="margin-bottom:8px">
+        <div>
+          <div style="font-size:14px;font-weight:900;color:var(--t1)">15 秒素材暫存清單</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">先用本機預覽與排序思路，不會影響原本素材庫。</div>
+        </div>
+        <button class="btn-outline" type="button" onclick="document.getElementById('sd-video-input').click()">選擇影片</button>
+      </div>
+      <input type="file" id="sd-video-input" accept="video/*" multiple style="display:none" onchange="handleShortDramaVideos(event)">
+      <div id="sd-video-list" class="short-drama-videos">
+        <div class="short-drama-video"><b>尚未選擇影片</b><span>可先選多支 15 秒 MP4 做劇情規劃。</span></div>
+      </div>
+    </div>
+
+    <div class="short-drama-controls">
+      <button class="btn-gold" id="sd-generate-btn" onclick="generateShortDramaPlan()">生成短劇分鏡</button>
+      <button class="btn-outline" onclick="copyShortDramaPlan()">複製結果</button>
+      <button class="btn-outline" onclick="sendShortDramaToScript()">帶到口播文案</button>
+    </div>
+    <div id="sd-load" style="display:none" class="loading"><div class="spinner"></div>AI 正在規劃短劇分鏡...</div>
+    <div id="sd-out" style="margin-top:18px"></div>
   </div>
 
     <!-- 口播文案 -->
@@ -4101,7 +4191,10 @@ async function decrAvatar(secs) {
   <div class="mn-item" id="mn-content-coach" onclick="swPM('content-coach',7)">
     <span class="mn-icon">📈</span><span>教練</span>
   </div>
-  <div class="mn-item" id="mn-course" onclick="swPM('course',8)">
+  <div class="mn-item" id="mn-short-drama" style="display:none;" onclick="swPM('short-drama',8)">
+    <span class="mn-icon">DR</span><span>短劇</span>
+  </div>
+  <div class="mn-item" id="mn-course" onclick="swPM('course',9)">
     <span class="mn-icon">📚</span><span>課程</span>
   </div>
 </div>
@@ -4428,6 +4521,10 @@ async function doLogout(options) {
   if (adminTab) adminTab.style.display = 'none';
   const healthTab = document.getElementById('sb-health-item');
   if (healthTab) healthTab.style.display = 'none';
+  const shortDramaTab = document.getElementById('sb-short-drama-item');
+  if (shortDramaTab) shortDramaTab.style.display = 'none';
+  const shortDramaMobileTab = document.getElementById('mn-short-drama');
+  if (shortDramaMobileTab) shortDramaMobileTab.style.display = 'none';
 }
 
 /* 忘記密碼面板切換 */
@@ -4467,6 +4564,11 @@ function sidebarItemFor(name) {
 }
 
 function swP(name, el) {
+  if (name === 'short-drama' && !isCurrentAdmin()) {
+    toast('此功能目前僅開放管理員內測');
+    name = 'oneclick';
+    el = sidebarItemFor(name);
+  }
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('on'));
   const panel = document.getElementById('p-' + name);
@@ -5510,6 +5612,131 @@ function sendComp(){
 function sendMarketing(){
   const el=document.getElementById('mkin');if(el)el.value=scriptTxt;
   swP('marketing', sidebarItemFor('marketing'));
+}
+
+let shortDramaVideos = [];
+let shortDramaPlanText = '';
+
+function requireShortDramaAdmin() {
+  if (isCurrentAdmin()) return true;
+  toast('此功能目前僅開放管理員內測');
+  return false;
+}
+
+function shortDramaValue(id) {
+  return (document.getElementById(id)?.value || '').trim();
+}
+
+function handleShortDramaVideos(event) {
+  if (!requireShortDramaAdmin()) return;
+  shortDramaVideos.forEach(function(item) {
+    try { if (item.url) URL.revokeObjectURL(item.url); } catch(e) {}
+  });
+  const files = Array.from((event && event.target && event.target.files) || []).filter(function(file) {
+    return file && /^video\//i.test(file.type || '');
+  }).slice(0, 12);
+  shortDramaVideos = files.map(function(file, idx) {
+    return {
+      name: file.name || ('video-' + (idx + 1)),
+      size: file.size || 0,
+      type: file.type || 'video/mp4',
+      url: URL.createObjectURL(file)
+    };
+  });
+  renderShortDramaVideos();
+}
+
+function renderShortDramaVideos() {
+  const list = document.getElementById('sd-video-list');
+  if (!list) return;
+  if (!shortDramaVideos.length) {
+    list.innerHTML = '<div class="short-drama-video"><b>尚未選擇影片</b><span>可先選多支 15 秒 MP4 做劇情規劃。</span></div>';
+    return;
+  }
+  list.innerHTML = shortDramaVideos.map(function(item, idx) {
+    return `<div class="short-drama-video">
+      <video src="${escapeHtml(item.url)}" controls muted playsinline style="width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:8px;background:#000;margin-bottom:8px"></video>
+      <b>${idx + 1}. ${escapeHtml(item.name)}</b>
+      <span>${escapeHtml(_fmtFileSize(item.size))} · 建議 15 秒</span>
+    </div>`;
+  }).join('');
+}
+
+function buildShortDramaPrompt() {
+  const brief = shortDramaValue('sd-brief');
+  const characters = shortDramaValue('sd-characters') || '請依主題建立主角與配角，但要保持一致。';
+  const world = shortDramaValue('sd-world') || '請建立可重複使用的直式短劇場景、服裝與道具規則。';
+  const count = shortDramaValue('sd-count') || '4';
+  const arc = shortDramaValue('sd-arc') || '反轉型';
+  const videos = shortDramaVideos.length
+    ? shortDramaVideos.map(function(item, idx) {
+        return `${idx + 1}. ${item.name}（${_fmtFileSize(item.size)}）`;
+      }).join('\n')
+    : '尚未選擇素材，請先以可拍攝或可生成的素材需求輸出。';
+  return [
+    '短劇主題 / 轉化目標：' + brief,
+    '人物設定：' + characters,
+    '場景 / 服裝 / 道具一致性：' + world,
+    '段數：' + count + ' 段，每段 15 秒。',
+    '劇情走向：' + arc,
+    '已選 15 秒素材：\n' + videos,
+    dSU('6KuL6Ly45Ye65Zu65a6a5qC85byP77yaCgrjgJDnn63liofkuLvnt5rjgJEK5LiA5Y+l6Kmx5qKX5qaC77yaCuaguOW/g+ihneeqge+8mgrmg4Xnt5Lmm7Lnt5rvvJoK6KeS6Imy5LiA6Ie05oCn77yaCuWgtOaZr+S4gOiHtOaAp++8mgrmnI3oo50v6YGT5YW35LiA6Ie05oCn77yaCgrjgJDop5LoibLogZbntpPjgJEK5Li76KeS77yaCumFjeinku+8mgrnpoHlv4zororli5XvvJoKCuOAkOWIhuauteWKh+aDheOAkQrnrKwgMSDmrrXvvIgwLTE1IOenku+8iQrliofmg4Xnm67nmoTvvJoK55Wr6Z2i77yaCuWPsOipnu+8mgrovYnloLTpipzmjqXvvJoK5LiA6Ie05oCn5qqi5p+l77yaCgrkvp3nhafmjIflrprmrrXmlbjnubznuozovLjlh7rmr4/kuIDmrrXvvIzmr4/mrrXpg73lv4XpoIjmnInliofmg4XmjqjpgLLvvIzkuI3lj6/ku6Xlj6rmmK/ph43opIfku4vntLnjgIIKCuOAkDE1IOenkuW9seeJh+aLvOaOpea4heWWruOAkQrmrrXokL3vvJoK57Sg5p2Q6ZyA5rGC77yaCumKnOaOpem7nu+8mgrlrZfluZXph43pu57vvJoK6Z+z5pWI56+A5aWP77yaCgrjgJDnlJ/miJDms6jmhI/kuovpoIXjgJEK5Lq654mp5LiN6K6K6KaP5YmH77yaCuWgtOaZr+S4jeiuiuimj+WJh++8mgrpj6HpoK3oiIfliarovK/nr4DlpY/vvJoK5a655piT5aSx5pWX55qE5Zyw5pa577ya')
+  ].join('\n\n');
+}
+
+async function generateShortDramaPlan() {
+  if (!requireShortDramaAdmin()) return;
+  const brief = shortDramaValue('sd-brief');
+  if (!brief) { toast('請先輸入短劇主題或轉化目標'); return; }
+  if (currentUserData && (currentUserData.ai_usage || 0) <= 0) {
+    toast('AI 生成次數已用完，請先補充額度。');
+    return;
+  }
+  const btn = document.getElementById('sd-generate-btn');
+  const load = document.getElementById('sd-load');
+  const out = document.getElementById('sd-out');
+  if (!btn || !load || !out) return;
+  btn.disabled = true;
+  load.style.display = 'flex';
+  out.innerHTML = '';
+  try {
+    const text = await callSecureAI(
+      dSU('5L2g5piv55+t5YqH5bel5L2c5rWB5bCO5ryU6IiH5YiG6Y+h57Wx57GM44CC5Y+q55So57mB6auU5Lit5paH44CC6KuL5oqK6Ly45YWl5pW055CG5oiQ5Y+v5Z+36KGM55qE55u05byP55+t5YqH5bel5L2c5rWB77yM6YeN6bue5piv5aSa5q61IDE1IOenkueJh+auteiDvemAo+iyq+mKnOaOpeOAgeS6uueJqeioreWumuS4gOiHtOOAgeWgtOaZr+iIh+mBk+WFt+S4gOiHtOOAgeavj+autemDveaciea4healmuihneeqgeiIh+aOqOmAsuOAguS4jeimgeS9v+eUqCBlbW9qaeOAgumBv+WFjemBleazleOAgeiqh+Wkp+aUtuebiuOAgeS/neitieaViOaenOOAgeaBkOWah+W8j+ihjOmKt+aIluS+teeKr+maseengeOAgui8uOWHuuimgeiDveS6pOe1puW+jOe6jOW9seWDj+eUn+aIkOOAgeaLjeaUneaIluWJqui8r+W3peWFt+Wft+ihjOOAgg=='),
+      buildShortDramaPrompt(),
+      'script',
+      'storyboard',
+      'professional'
+    );
+    await spendAIForContent(1);
+    shortDramaPlanText = cleanScript(text);
+    out.innerHTML = `<div class="out-card" style="border-left:3px solid var(--gold)">
+      <div class="out-head">
+        <span class="badge b-gold">短劇分鏡工作流</span>
+        <span class="copy-btn" onclick="copyShortDramaPlan()">複製</span>
+      </div>
+      <div class="out-text short-drama-output">${escapeHtml(shortDramaPlanText)}</div>
+    </div>`;
+  } catch(e) {
+    out.innerHTML = '<div class="out-card"><div style="color:var(--red);font-size:13px">生成失敗：' + escapeHtml(e.message || '請稍後再試') + '</div></div>';
+  }
+  btn.disabled = false;
+  load.style.display = 'none';
+}
+
+function copyShortDramaPlan() {
+  if (!requireShortDramaAdmin()) return;
+  if (!shortDramaPlanText) { toast('目前還沒有短劇分鏡結果'); return; }
+  copyT(shortDramaPlanText);
+}
+
+function sendShortDramaToScript() {
+  if (!requireShortDramaAdmin()) return;
+  if (!shortDramaPlanText) { toast('請先生成短劇分鏡'); return; }
+  const topicEl = document.getElementById('stopic');
+  const extraEl = document.getElementById('sextra');
+  if (topicEl) topicEl.value = shortDramaValue('sd-brief').slice(0, 200);
+  if (extraEl) extraEl.value = shortDramaPlanText.slice(0, 300);
+  swP('script', sidebarItemFor('script'));
 }
 
 /* 行銷文案 */
