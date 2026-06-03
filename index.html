@@ -424,6 +424,28 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .admin-btn-sm{font-size:11px;padding:4px 12px;border-radius:6px;border:1px solid var(--bdr-strong);background:var(--card2);color:var(--t2);cursor:pointer;transition:all .15s;font-family:'Noto Sans TC',sans-serif}
 .admin-btn-sm:hover{border-color:var(--gold-d);color:var(--gold)}
 .admin-btn-sm.danger:hover{border-color:var(--red);color:var(--red)}
+.health-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:16px 20px 0}
+.health-summary-card{border:1px solid var(--bdr);border-radius:10px;background:var(--card2);padding:12px}
+.health-summary-card b{display:block;font-size:20px;line-height:1.1}
+.health-summary-card span{font-size:11px;color:var(--t3)}
+.health-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:16px 20px 20px}
+.health-card{border:1px solid var(--bdr);border-radius:12px;background:rgba(255,255,255,.018);padding:14px;min-width:0}
+.health-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.health-name{font-size:13px;font-weight:900;color:var(--t1);line-height:1.35;word-break:break-word}
+.health-cat{font-size:10px;color:var(--t3);margin-top:3px}
+.health-badge{flex-shrink:0;border:1px solid var(--bdr);border-radius:999px;padding:2px 9px;font-size:10px;font-weight:900;white-space:nowrap}
+.health-ok{color:var(--green);border-color:rgba(68,204,136,.35);background:rgba(68,204,136,.09)}
+.health-warn{color:var(--gold);border-color:rgba(232,197,90,.35);background:rgba(232,197,90,.08)}
+.health-error{color:var(--red);border-color:rgba(255,107,107,.35);background:rgba(255,107,107,.08)}
+.health-manual{color:var(--t2);border-color:var(--bdr-strong);background:rgba(255,255,255,.035)}
+.health-detail{font-size:12px;color:var(--t2);line-height:1.65;margin-bottom:10px;word-break:break-word}
+.health-evidence{font-size:11px;color:var(--t3);line-height:1.55;margin:-4px 0 10px;word-break:break-word}
+.health-links{display:flex;flex-wrap:wrap;gap:8px}
+.health-link{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--bdr-strong);border-radius:999px;padding:5px 10px;font-size:11px;color:var(--t2);text-decoration:none;background:var(--card2)}
+.health-link:hover{border-color:var(--gold-d);color:var(--gold)}
+.health-link.pay{border-color:rgba(232,197,90,.45);color:var(--gold)}
+.health-note{padding:0 20px 16px;color:var(--t3);font-size:11px;line-height:1.65}
+@media(max-width:900px){.health-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.health-list{grid-template-columns:1fr}}
 .add-student-form{padding:20px;display:none}
 .add-student-form.show{display:block}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
@@ -3805,6 +3827,23 @@ async function decrAvatar(secs) {
         <div class="astat-label">後台資料來源</div>
         <div class="astat-num blue" id="adm-source-status" style="font-size: 14px; font-weight: 800; line-height: 1.8;">Supabase</div>
       </div>
+    </div>
+
+    <div class="admin-section" id="admin-health-center">
+      <div class="admin-sec-head">
+        <div>
+          <div class="admin-sec-title">系統健康中心</div>
+          <div style="font-size:11px;color:var(--t3);line-height:1.6">只給管理員查看，不顯示任何密鑰或提示詞。生成型服務不會在巡檢時送出付費任務。</div>
+        </div>
+        <button class="admin-btn-sm" type="button" onclick="loadSystemHealth(true)">一鍵巡檢</button>
+      </div>
+      <div id="admin-health-summary" class="health-summary-grid">
+        <div class="health-summary-card"><b style="color:var(--t3)">-</b><span>尚未巡檢</span></div>
+      </div>
+      <div id="admin-health-list" class="health-list">
+        <div style="font-size:12px;color:var(--t3);line-height:1.7">進入管理員頁後會自動讀取一次，也可以按一鍵巡檢重新檢查。</div>
+      </div>
+      <div id="admin-health-notes" class="health-note"></div>
     </div>
 
     <!-- 學員管理表單與搜尋 -->
@@ -8037,6 +8076,100 @@ function adminLog(message) {
   } catch(e) {}
 }
 
+let systemHealthLoading = false;
+let systemHealthLoaded = false;
+
+function systemHealthStatusMeta(status) {
+  const value = String(status || 'manual').toLowerCase();
+  if (value === 'ok') return { label: '正常', cls: 'health-ok' };
+  if (value === 'warn') return { label: '注意', cls: 'health-warn' };
+  if (value === 'error') return { label: '異常', cls: 'health-error' };
+  return { label: '人工確認', cls: 'health-manual' };
+}
+
+function renderSystemHealth(data) {
+  const summaryBox = document.getElementById('admin-health-summary');
+  const listBox = document.getElementById('admin-health-list');
+  const notesBox = document.getElementById('admin-health-notes');
+  if (!summaryBox || !listBox) return;
+
+  const summary = data && data.summary ? data.summary : {};
+  const summaryCards = [
+    { key: 'ok', label: '正常', color: 'var(--green)' },
+    { key: 'warn', label: '注意', color: 'var(--gold)' },
+    { key: 'error', label: '異常', color: 'var(--red)' },
+    { key: 'manual', label: '人工確認', color: 'var(--t2)' }
+  ];
+  summaryBox.innerHTML = summaryCards.map(function(card) {
+    return `<div class="health-summary-card"><b style="color:${card.color}">${escapeHtml(String(summary[card.key] || 0))}</b><span>${escapeHtml(card.label)}</span></div>`;
+  }).join('');
+
+  const items = Array.isArray(data && data.items) ? data.items : [];
+  if (!items.length) {
+    listBox.innerHTML = '<div style="font-size:12px;color:var(--t3);line-height:1.7">尚未取得巡檢資料。</div>';
+  } else {
+    listBox.innerHTML = items.map(function(item) {
+      const meta = systemHealthStatusMeta(item.status);
+      const links = Array.isArray(item.links) ? item.links : [];
+      const linkHtml = links.length ? `<div class="health-links">${links.map(function(link) {
+        const cls = link && link.kind === 'pay' ? 'health-link pay' : 'health-link';
+        return `<a class="${cls}" href="${escapeHtml(link.url || '#')}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label || '開啟')}</a>`;
+      }).join('')}</div>` : '';
+      const evidence = item.evidence ? `<div class="health-evidence">${escapeHtml(item.evidence)}</div>` : '';
+      return `
+        <div class="health-card">
+          <div class="health-top">
+            <div>
+              <div class="health-name">${escapeHtml(item.name || '健康項目')}</div>
+              <div class="health-cat">${escapeHtml(item.category || '系統')}</div>
+            </div>
+            <span class="health-badge ${meta.cls}">${meta.label}</span>
+          </div>
+          <div class="health-detail">${escapeHtml(item.detail || '')}</div>
+          ${evidence}
+          ${linkHtml}
+        </div>
+      `;
+    }).join('');
+  }
+
+  const notes = Array.isArray(data && data.notes) ? data.notes : [];
+  if (notesBox) {
+    const checkedAt = data && data.checkedAt ? new Date(data.checkedAt).toLocaleString() : '';
+    notesBox.innerHTML = [
+      checkedAt ? `最後巡檢：${escapeHtml(checkedAt)}` : '',
+      notes.map(function(note) { return `・${escapeHtml(note)}`; }).join('<br>')
+    ].filter(Boolean).join('<br>');
+  }
+}
+
+async function loadSystemHealth(force) {
+  if (systemHealthLoading) return;
+  if (!force && systemHealthLoaded) return;
+  if (!currentUserData || !currentUserData.is_admin) return;
+
+  const summaryBox = document.getElementById('admin-health-summary');
+  const listBox = document.getElementById('admin-health-list');
+  if (summaryBox && !systemHealthLoaded) {
+    summaryBox.innerHTML = '<div class="health-summary-card"><b style="color:var(--gold)">...</b><span>巡檢中</span></div>';
+  }
+  if (listBox && force) {
+    listBox.innerHTML = '<div style="font-size:12px;color:var(--t2);line-height:1.7">正在巡檢核心服務、平台帳務入口與外部路由...</div>';
+  }
+
+  systemHealthLoading = true;
+  try {
+    const data = await callChiwaSecure('system_health', { force: !!force });
+    systemHealthLoaded = true;
+    renderSystemHealth(data);
+  } catch(e) {
+    if (summaryBox) summaryBox.innerHTML = '<div class="health-summary-card"><b style="color:var(--red)">!</b><span>讀取失敗</span></div>';
+    if (listBox) listBox.innerHTML = `<div style="font-size:12px;color:var(--red);line-height:1.7">健康中心讀取失敗：${escapeHtml(e && e.message ? e.message : e)}</div>`;
+  } finally {
+    systemHealthLoading = false;
+  }
+}
+
 function adminStudentId(s) {
   return String((s && (s.id || s.email || s.google_email || s.username)) || '').trim();
 }
@@ -8142,6 +8275,7 @@ renderAdminPanel = async function() {
     if (logsConsole) logsConsole.innerHTML = '<div style="color: var(--red);">無法載入日誌記錄。</div>';
   }
 
+  if (typeof loadSystemHealth === 'function') loadSystemHealth(false);
   updateAdminVSLUI();
 };
 
