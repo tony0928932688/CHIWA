@@ -1945,10 +1945,13 @@ async function finishStudentLogin(data, loginId) {
   });
 
   const adminTab = document.getElementById('sb-admin-item');
+  const healthTab = document.getElementById('sb-health-item');
   if (data.is_admin) {
     if (adminTab) adminTab.style.display = 'flex';
+    if (healthTab) healthTab.style.display = 'flex';
   } else {
     if (adminTab) adminTab.style.display = 'none';
+    if (healthTab) healthTab.style.display = 'none';
   }
 
   const unameEl = document.querySelector('.sb-uname');
@@ -3235,6 +3238,10 @@ async function decrAvatar(secs) {
         <span class="sb-icon">⚙️</span>
         <span>帳號授權管理</span>
       </div>
+      <div class="sb-item" id="sb-health-item" style="display:none;" onclick="openSystemHealthCenter(this)">
+        <span class="sb-icon">SYS</span>
+        <span>系統健康中心</span>
+      </div>
     </div>
 
     <div class="sb-usage">
@@ -4419,6 +4426,8 @@ async function doLogout(options) {
   if (lp) lp.value = '';
   const adminTab = document.getElementById('sb-admin-item');
   if (adminTab) adminTab.style.display = 'none';
+  const healthTab = document.getElementById('sb-health-item');
+  if (healthTab) healthTab.style.display = 'none';
 }
 
 /* 忘記密碼面板切換 */
@@ -8168,6 +8177,16 @@ async function loadSystemHealth(force) {
   } finally {
     systemHealthLoading = false;
   }
+}
+
+function openSystemHealthCenter(el) {
+  const adminTab = document.getElementById('sb-admin-item') || el;
+  if (typeof swP === 'function') swP('admin', adminTab);
+  setTimeout(function() {
+    const target = document.getElementById('admin-health-center');
+    if (target && typeof target.scrollIntoView === 'function') target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (typeof loadSystemHealth === 'function') loadSystemHealth(true);
+  }, 80);
 }
 
 function adminStudentId(s) {
