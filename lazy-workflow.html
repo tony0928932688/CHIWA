@@ -2675,6 +2675,12 @@ async function loadAvatarSourceLibrary(){
     renderAvatarSourceLibrary(merged);
     writeAvatarSourceCache(savedMerged);
   }catch(e){
+    if(String(e && e.message || e) === 'not_found'){
+      renderAvatarSourceLibrary(localAvatarSources());
+      writeAvatarSourceCache([]);
+      console.warn('avatar source cloud routes are not deployed yet');
+      return;
+    }
     renderAvatarSourceLibrary(initial);
     console.warn('avatar source library load skipped:', e.message || e);
   }
