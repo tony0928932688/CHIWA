@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com https://player.vimeo.com https://www.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://nsauscojruqjcprvsfsn.supabase.co https://nsauscojruqjcprvsfsn.storage.supabase.co wss://nsauscojruqjcprvsfsn.supabase.co https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev https://chiwa-avatar-r2.tony0928932688.workers.dev https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://*.clarity.ms; frame-src https://player.vimeo.com https://vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://calendar.app.google https://p.ecpay.com.tw; upgrade-insecure-requests;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com https://player.vimeo.com https://www.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://nsauscojruqjcprvsfsn.supabase.co https://nsauscojruqjcprvsfsn.storage.supabase.co wss://nsauscojruqjcprvsfsn.supabase.co https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev https://chiwa-avatar-r2.tony0928932688.workers.dev https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://*.clarity.ms; frame-src https://player.vimeo.com https://vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://docs.google.com https://p.ecpay.com.tw; upgrade-insecure-requests;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>吉娃AI自媒體系統</title>
 <meta name="description" content="AI自媒體系統，協助你用授權聲音與形象素材產出短影音。AI幫你想選題、寫文案、生成語音與字幕成片。">
@@ -1506,7 +1506,7 @@ let currentUserData = null;
 const CHIWA_IDLE_LIMIT_MS = 24 * 60 * 60 * 1000;
 const CHIWA_LAST_ACTIVITY_KEY = 'chiwa_last_activity_at';
 const CHIWA_WORKSPACE_RESTORE_KEY = 'chiwa_workspace_restore';
-const CHIWA_BOOKING_URL = 'https://calendar.app.google/BFEdtf1wx658dbK19';
+const CHIWA_BOOKING_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScfqcFcYRq8ioo4AAtn9uL_cDelKGlel6YwBOn9HTMEEHyDJA/viewform';
 const CHIWA_LINE_URL = 'https://line.me/R/ti/p/@543xxzvk';
 const CHIWA_ECPAY_URL = 'https://p.ecpay.com.tw/20FFCB5';
 const CHIWA_GA4_MEASUREMENT_ID = '';
@@ -1670,7 +1670,7 @@ function chiwaTrack(eventName, params) {
 }
 
 function openBooking(source) {
-  chiwaTrack('cta_click_booking', { cta_source: source || 'unknown', destination: 'google_calendar' });
+  chiwaTrack('cta_click_booking', { cta_source: source || 'unknown', destination: 'google_form' });
   chiwaTrack('generate_lead', { lead_type: 'booking_click', cta_source: source || 'unknown' });
   window.open(CHIWA_BOOKING_URL, '_blank', 'noopener');
 }
@@ -4187,7 +4187,7 @@ async function decrAvatar(secs) {
 
 
 <!-- LINE FLOAT -->
-<a class="consult-float" href="https://calendar.app.google/BFEdtf1wx658dbK19" target="_blank" rel="noopener" title="預約免費諮詢" onclick="chiwaTrack('cta_click_booking',{cta_source:'floating_button',destination:'google_calendar'});chiwaTrack('generate_lead',{lead_type:'booking_click',cta_source:'floating_button'});">預約<br>諮詢</a>
+<a class="consult-float" href="https://docs.google.com/forms/d/e/1FAIpQLScfqcFcYRq8ioo4AAtn9uL_cDelKGlel6YwBOn9HTMEEHyDJA/viewform" target="_blank" rel="noopener" title="預約免費諮詢" onclick="chiwaTrack('cta_click_booking',{cta_source:'floating_button',destination:'google_form'});chiwaTrack('generate_lead',{lead_type:'booking_click',cta_source:'floating_button'});">預約<br>諮詢</a>
 <a class="line-float" href="https://line.me/R/ti/p/@543xxzvk" target="_blank" rel="noopener" title="聯絡我們" onclick="chiwaTrack('cta_click_line',{cta_source:'floating_button',destination:'line'});">
   <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
     <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
@@ -5133,7 +5133,7 @@ ${cta_spoken}`;
 想讓目標受眾更容易理解你的服務嗎？專為${ind}專家打造的高效自媒體內容系統，協助你突破內容瓶頸、提升專業信任感！${ind} #短影音行銷 #專業內容 #最新AI技術
 
 【LINE 私訊推廣文】
-您好！想要讓客戶更快理解你的專業嗎？這套「自媒體內容系統」會協助${ind}專家把專業方法論轉化為清楚、有記憶點的短影音內容。你可以先預約諮詢，評估目前適不適合導入：https://calendar.app.google/BFEdtf1wx658dbK19
+您好！想要讓客戶更快理解你的專業嗎？這套「自媒體內容系統」會協助${ind}專家把專業方法論轉化為清楚、有記憶點的短影音內容。你可以先填寫諮詢評估表，讓我們了解你的狀況後安排一對一諮詢：https://docs.google.com/forms/d/e/1FAIpQLScfqcFcYRq8ioo4AAtn9uL_cDelKGlel6YwBOn9HTMEEHyDJA/viewform
 
 【5 個行動呼籲 CTA 短語】
 1. 點擊連結預約免費諮詢！
