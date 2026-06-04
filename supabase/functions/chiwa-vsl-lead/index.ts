@@ -138,7 +138,7 @@ async function sendLeadEmail(name: string, email: string) {
   const body: Record<string, unknown> = {
     from: VSL_MAIL_FROM,
     to: [email],
-    subject: "吉娃 AI 完整方法說明觀看連結",
+    subject: "吉娃AI自媒體系統",
     html: emailHtml(name),
     reply_to: VSL_MAIL_REPLY_TO,
   };
