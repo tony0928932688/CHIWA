@@ -7,7 +7,8 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const VSL_MAIL_FROM = "CHIWA AI <chivashorts@chiwaai.com>";
 const VSL_MAIL_REPLY_TO = Deno.env.get("VSL_MAIL_REPLY_TO") || "chivashorts@gmail.com";
 const VSL_NOTIFY_TO = Deno.env.get("VSL_NOTIFY_TO") || "";
-const VSL_PRIVATE_VIDEO_URL = Deno.env.get("VSL_PRIVATE_VIDEO_URL") || "https://chiwaai.com/watch-method.html";
+const VSL_PRIVATE_VIDEO_URL_BASE = Deno.env.get("VSL_PRIVATE_VIDEO_URL") || "https://chiwaai.com/watch-method.html";
+const VSL_PRIVATE_VIDEO_URL = `${VSL_PRIVATE_VIDEO_URL_BASE}${VSL_PRIVATE_VIDEO_URL_BASE.includes("?") ? "&" : "?"}v=portrait-20260604`;
 const VSL_BOOKING_URL = Deno.env.get("VSL_BOOKING_URL") || "https://calendar.app.google/BFEdtf1wx658dbK19";
 const VSL_BRAND_LOGO_URL = Deno.env.get("VSL_BRAND_LOGO_URL") || "https://chiwaai.com/assets/chiwa-email-logo.jpg";
 
