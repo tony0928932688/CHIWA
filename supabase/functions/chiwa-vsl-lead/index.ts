@@ -67,6 +67,10 @@ function validEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function boolValue(value: unknown) {
+  return value === true || value === "true" || value === 1 || value === "1";
+}
+
 function safeJson(value: unknown) {
   try {
     return JSON.parse(JSON.stringify(value || {}));
@@ -85,6 +89,11 @@ async function recordLead(req: Request, lead: Record<string, unknown>) {
     attribution: lead.attribution,
     user_agent: req.headers.get("User-Agent") || "",
     referer: req.headers.get("Referer") || "",
+    privacy_consent: !!lead.privacyConsent,
+    followup_consent: !!lead.followupConsent,
+    consent_text: lead.consentText,
+    consent_version: lead.consentVersion,
+    consent_at: lead.consentAt,
     status: "submitted",
   });
   if (error) console.error("vsl_lead_insert_failed", error.message);
@@ -167,11 +176,17 @@ Deno.serve(async (req) => {
   const source = normalizeText(body.source || "homepage_vsl_gate", 80);
   const pageUrl = normalizeText(body.pageUrl, 500);
   const attribution = safeJson(body.attribution);
+  const privacyConsent = boolValue(body.privacyConsent);
+  const followupConsent = boolValue(body.followupConsent);
+  const consentText = normalizeText(body.consentText, 600);
+  const consentVersion = normalizeText(body.consentVersion || "vsl-lead-20260604", 80);
+  const consentAt = new Date().toISOString();
 
   if (!name) return json(req, { ok: false, error: "missing_name" }, 400);
   if (!validEmail(email)) return json(req, { ok: false, error: "invalid_email" }, 400);
+  if (!privacyConsent) return json(req, { ok: false, error: "privacy_consent_required" }, 400);
 
-  await recordLead(req, { name, email, source, pageUrl, attribution });
+  await recordLead(req, { name, email, source, pageUrl, attribution, privacyConsent, followupConsent, consentText, consentVersion, consentAt });
   await sendLeadEmail(name, email);
 
   return json(req, { ok: true });

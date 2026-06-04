@@ -159,9 +159,16 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .vsl-lead-kicker{font-size:11px;letter-spacing:3px;color:var(--gold);font-family:'Space Mono',monospace;text-transform:uppercase}
 .vsl-lead-title{font-size:clamp(24px,3vw,34px);line-height:1.25;font-weight:900;color:var(--t1)}
 .vsl-lead-copy{font-size:14px;line-height:1.8;color:var(--t2)}
+.vsl-lead-summary{display:grid;gap:8px;margin:2px 0;padding:12px;border:1px solid rgba(232,197,90,.22);border-radius:12px;background:rgba(232,197,90,.055);font-size:12px;line-height:1.65;color:var(--t2)}
+.vsl-lead-summary strong{color:var(--gold-l);font-weight:900}
 .vsl-lead-form{display:flex;flex-direction:column;gap:12px}
 .vsl-lead-form label{font-size:12px;color:var(--t2);font-weight:700;text-align:left}
-.vsl-lead-form input{height:44px;background:rgba(5,6,12,.72)}
+.vsl-lead-form input[type=text],.vsl-lead-form input[type=email]{height:44px;background:rgba(5,6,12,.72)}
+.vsl-lead-consents{display:grid;gap:9px;margin-top:2px}
+.vsl-consent-row{display:grid!important;grid-template-columns:18px minmax(0,1fr);gap:9px;align-items:start;font-size:11px!important;font-weight:500!important;line-height:1.65;color:var(--t2)!important}
+.vsl-consent-row input{width:16px!important;height:16px!important;margin:3px 0 0!important;accent-color:var(--gold)}
+.vsl-consent-row a{color:var(--gold-l);text-decoration:underline;text-underline-offset:3px}
+.vsl-lead-note{font-size:11px;line-height:1.7;color:var(--t3)}
 .vsl-lead-submit{height:46px;border:0;border-radius:10px;background:linear-gradient(135deg,#f8df7b,#d7aa3e);color:#08080c;font-weight:900;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:transform .16s,box-shadow .16s,opacity .16s}
 .vsl-lead-submit:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(232,197,90,.22)}
 .vsl-lead-submit:disabled{opacity:.62;cursor:not-allowed;transform:none;box-shadow:none}
@@ -188,6 +195,7 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
   .vsl-lead-card{min-height:auto;padding:22px 18px}
   .vsl-lead-title{font-size:24px}
   .vsl-lead-copy{font-size:13px}
+  .vsl-lead-summary{font-size:11px}
   .hero-badge{font-size:clamp(14px,4.6vw,18px);letter-spacing:2px;padding:9px 18px;max-width:calc(100vw - 40px);line-height:1.35}
 }
 
@@ -2970,13 +2978,14 @@ async function decrAvatar(secs) {
         <div class="policy-close" onclick="closePolicy('privacy')">✕</div>
       </div>
       <div class="policy-body">
-        <h3>最後更新日期：2026 年 5 月</h3>
+        <h3>最後更新日期：2026 年 6 月 4 日</h3>
         <p>吉娃網路行銷（以下稱「本公司」）重視您的隱私權，並致力於保護您的個人資料。本隱私權政策說明我們如何收集、使用及保護您在使用本網站及相關服務時所提供的資訊。</p>
 
         <h3>一、資料收集範圍</h3>
         <p>當您使用本網站或申請服務時，我們可能收集以下資訊：</p>
         <ul>
           <li>姓名、電子郵件地址、電話號碼等聯絡資料</li>
+          <li>您在首頁表單索取完整操作流程影片時提供的姓名、Email、同意狀態、送出時間與來源頁面</li>
           <li>您在使用 AI 工作台時輸入的內容（腳本、選題等）</li>
           <li>語音克隆服務所使用的音頻資料</li>
           <li>網站瀏覽記錄、裝置資訊及 IP 位址</li>
@@ -2986,13 +2995,18 @@ async function decrAvatar(secs) {
         <p>我們收集的資料僅用於以下目的：</p>
         <ul>
           <li>提供及優化 AI 內容創作服務</li>
+          <li>寄送您主動索取的完整操作流程影片</li>
+          <li>在您另行勾選同意時，寄送後續 AI 短影音教學、工具更新與活動資訊</li>
           <li>處理您的服務申請及帳戶管理</li>
           <li>發送服務通知及重要更新</li>
           <li>改善網站功能及用戶體驗</li>
           <li>遵守法律義務</li>
         </ul>
 
-        <h3>三、資料保護措施</h3>
+        <h3>三、索取完整操作流程影片的資料使用</h3>
+        <p>若您在首頁表單留下姓名與 Email，表示您同意本公司依本政策收集並使用該資料，用於寄送您本次索取的完整操作流程影片連結。若您未勾選「接收後續教學與活動資訊」，我們不會將該次表單同意視為您同意接收其他行銷內容。</p>
+
+        <h3>四、資料保護措施</h3>
         <p>本公司採取以下技術及管理措施保護您的個人資料：</p>
         <ul>
           <li>所有資料傳輸均透過 HTTPS 加密</li>
@@ -3001,20 +3015,20 @@ async function decrAvatar(secs) {
           <li>定期進行安全審查及漏洞掃描</li>
         </ul>
 
-        <h3>四、資料分享</h3>
+        <h3>五、資料分享</h3>
         <p>本公司不會出售、出租或以其他方式對外提供您的個人資料，但以下情況除外：</p>
         <ul>
           <li>依法律規定或政府機關要求</li>
           <li>為提供服務所必要之第三方服務供應商（如 AI 技術提供商），且均受保密協議約束</li>
         </ul>
 
-        <h3>五、語音資料特別說明</h3>
+        <h3>六、語音資料特別說明</h3>
         <p>語音克隆服務所收集的音頻資料僅用於生成您的專屬 AI 聲音模型，不會用於其他目的。您可隨時要求刪除您的語音資料及相關模型。</p>
 
-        <h3>六、您的權利</h3>
+        <h3>七、您的權利</h3>
         <p>依據台灣個人資料保護法，您享有以下權利：查詢或請求閱覽、製給複製本、補充或更正、請求停止蒐集/處理/利用、請求刪除。如需行使上述權利，請透過 LINE 官方帳號與我們聯繫。</p>
 
-        <h3>七、政策修訂</h3>
+        <h3>八、政策修訂</h3>
         <p>本公司保留隨時修訂本政策的權利，修訂後將於本頁面公告。建議您定期查閱本政策以了解最新內容。</p>
       </div>
     </div>
@@ -9264,8 +9278,12 @@ function renderVSLVideo() {
   container.innerHTML = `
     <div class="vsl-lead-card" id="vsl-lead-card">
       <div class="vsl-lead-kicker">Private Briefing</div>
-      <div class="vsl-lead-title">看完整方法說明</div>
-      <div class="vsl-lead-copy">留下姓名與 Email，系統會把觀看連結寄到你的信箱。內容以教學與方法說明為主，實際成果會依產業、素材、執行與平台規則而不同。</div>
+      <div class="vsl-lead-title">索取完整操作流程影片</div>
+      <div class="vsl-lead-copy">首頁已公開說明服務內容、流程與常見問題，也可先觀看下方兩支公開介紹影片。若你想看更完整的操作流程，留下姓名與 Email，系統會寄送觀看連結到你的信箱。</div>
+      <div class="vsl-lead-summary" aria-label="完整影片內容摘要">
+        <div><strong>影片會說明：</strong>AI 短影音從選題、文案、語音、授權形象素材到成片輸出的流程。</div>
+        <div><strong>重要聲明：</strong>內容為教學與方法說明，實際成果會依產業、素材品質、執行方式與平台規則而不同，不保證特定流量、名單或收益結果。</div>
+      </div>
       <form class="vsl-lead-form" id="vsl-lead-form" onsubmit="submitVSLLead(event)">
         <label for="vsl-lead-name">姓名</label>
         <input id="vsl-lead-name" name="name" type="text" autocomplete="name" required maxlength="60" placeholder="請輸入姓名">
@@ -9273,7 +9291,18 @@ function renderVSLVideo() {
         <input id="vsl-lead-email" name="email" type="email" autocomplete="email" required maxlength="120" placeholder="請輸入常用信箱">
         <label class="vsl-lead-hp" for="vsl-lead-website">Website</label>
         <input class="vsl-lead-hp" id="vsl-lead-website" name="website" type="text" tabindex="-1" autocomplete="off">
+        <div class="vsl-lead-consents">
+          <label class="vsl-consent-row" for="vsl-lead-privacy">
+            <input id="vsl-lead-privacy" name="privacyConsent" type="checkbox" required>
+            <span>我已閱讀並同意 <a href="privacy.html" target="_blank" rel="noopener">隱私權政策</a>，知道此表單收集姓名與 Email 是為了寄送本次完整操作流程影片。</span>
+          </label>
+          <label class="vsl-consent-row" for="vsl-lead-followup">
+            <input id="vsl-lead-followup" name="followupConsent" type="checkbox">
+            <span>我同意接收後續 AI 短影音教學、工具更新與活動資訊。這不是必填，不勾選也可以收到本次影片連結。</span>
+          </label>
+        </div>
         <button class="vsl-lead-submit" id="vsl-lead-submit" type="submit">寄送觀看連結</button>
+        <div class="vsl-lead-note">送出後系統會寄送影片連結；若沒有看到，請檢查垃圾郵件或促銷分類。</div>
         <div class="vsl-lead-status" id="vsl-lead-status">請確認 Email 正確，觀看連結會寄到這個信箱。</div>
       </form>
     </div>
@@ -9313,6 +9342,8 @@ async function submitVSLLead(event) {
   var name = String(form.name && form.name.value || '').trim();
   var email = normalizeVSLLeadEmail(form.email && form.email.value);
   var website = String(form.website && form.website.value || '').trim();
+  var privacyConsent = !!(form.privacyConsent && form.privacyConsent.checked);
+  var followupConsent = !!(form.followupConsent && form.followupConsent.checked);
   if (website) {
     setVSLLeadStatus('觀看連結已送出，請稍後查看信箱。', 'ok');
     return;
@@ -9323,6 +9354,10 @@ async function submitVSLLead(event) {
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     setVSLLeadStatus('請填寫正確的 Email。', 'err');
+    return;
+  }
+  if (!privacyConsent) {
+    setVSLLeadStatus('請先勾選隱私權政策與本次寄送用途同意。', 'err');
     return;
   }
 
@@ -9342,6 +9377,10 @@ async function submitVSLLead(event) {
         source: 'homepage_vsl_gate',
         pageUrl: location.href,
         attribution: getVSLLeadAttribution(),
+        privacyConsent: privacyConsent,
+        followupConsent: followupConsent,
+        consentText: '同意依隱私權政策收集姓名與 Email，用於寄送本次完整操作流程影片；後續教學與活動資訊另以可選勾選取得同意。',
+        consentVersion: 'vsl-lead-20260604',
         website: website
       })
     });
