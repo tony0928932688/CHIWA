@@ -8,6 +8,7 @@ const VSL_MAIL_FROM = Deno.env.get("VSL_MAIL_FROM") || "";
 const VSL_MAIL_REPLY_TO = Deno.env.get("VSL_MAIL_REPLY_TO") || "chivashorts@gmail.com";
 const VSL_NOTIFY_TO = Deno.env.get("VSL_NOTIFY_TO") || "";
 const VSL_PRIVATE_VIDEO_URL = Deno.env.get("VSL_PRIVATE_VIDEO_URL") || "https://chiwaai.com/watch-method.html";
+const VSL_BOOKING_URL = Deno.env.get("VSL_BOOKING_URL") || "https://calendar.app.google/BFEdtf1wx658dbK19";
 
 function getSupabaseServiceKey() {
   const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -119,6 +120,8 @@ function emailHtml(name: string) {
       <p style="font-size:15px;line-height:1.8;color:#c9c4d8;margin:0 0 18px">${safeName} 你好，這是你剛剛索取的影片觀看連結。</p>
       <p style="font-size:14px;line-height:1.8;color:#b9b5c8;margin:0 0 22px">影片內容以方法與流程說明為主，實際成果會因產業、素材品質、執行方式與各平台規則而不同。</p>
       <a href="${VSL_PRIVATE_VIDEO_URL}" style="display:inline-block;background:#e8c55a;color:#080912;text-decoration:none;font-weight:800;border-radius:10px;padding:13px 18px">觀看完整方法說明</a>
+      <p style="font-size:14px;line-height:1.8;color:#b9b5c8;margin:22px 0 12px">看完後，如果你想確認自己的素材與流程是否適合，可以預約 45 分鐘流程說明。</p>
+      <a href="${VSL_BOOKING_URL}" style="display:inline-block;border:1px solid rgba(232,197,90,.55);color:#e8c55a;text-decoration:none;font-weight:800;border-radius:10px;padding:12px 16px">預約45分鐘流程說明</a>
       <p style="font-size:12px;line-height:1.7;color:#85819a;margin:22px 0 0">如果按鈕無法開啟，請複製這個連結：<br><span style="word-break:break-all;color:#e8c55a">${VSL_PRIVATE_VIDEO_URL}</span></p>
     </div>
   </div>
