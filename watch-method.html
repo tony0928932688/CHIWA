@@ -31,13 +31,13 @@
     .player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
     .note{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
     .note div{background:rgba(18,20,33,.76);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;color:var(--t2);font-size:13px;line-height:1.7}
-    .cta{margin-top:22px;display:flex;gap:12px;flex-wrap:wrap}
-    .btn{display:inline-flex;align-items:center;justify-content:center;flex:1 1 180px;min-height:42px;padding:0 18px;border-radius:10px;text-decoration:none;font-weight:900}
+    .cta{margin-top:22px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 16px;border-radius:10px;text-decoration:none;font-size:15px;font-weight:900;line-height:1.2;text-align:center;white-space:nowrap}
     .btn.gold{background:linear-gradient(135deg,#f8df7b,#d7aa3e);color:#080912}
     .btn.buy{background:linear-gradient(135deg,#ffb15c,#f97316);color:#160b03}
     .btn.line{background:#06c755;color:#fff}
     .btn.ghost{border:1px solid var(--bdr);color:var(--t1)}
-    @media(max-width:720px){.wrap{padding:20px 14px 42px}.nav{align-items:flex-start}.note{grid-template-columns:1fr}.player{border-radius:14px}.back{font-size:12px;padding:8px 12px}}
+    @media(max-width:720px){.wrap{padding:20px 14px 42px}.nav{align-items:flex-start}.note{grid-template-columns:1fr}.cta{grid-template-columns:1fr;gap:10px}.btn{width:100%;min-height:52px;font-size:17px}.player{border-radius:14px}.back{font-size:12px;padding:8px 12px}}
   </style>
 </head>
 <body>
