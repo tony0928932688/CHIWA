@@ -90,13 +90,17 @@ async function recordLead(req: Request, lead: Record<string, unknown>) {
   if (error) console.error("vsl_lead_insert_failed", error.message);
 }
 
-function emailHtml(name: string) {
-  const safeName = name.replace(/[<>&"]/g, (char) => ({
+function escapeHtml(value: string) {
+  return value.replace(/[<>&"]/g, (char) => ({
     "<": "&lt;",
     ">": "&gt;",
     "&": "&amp;",
     "\"": "&quot;",
   }[char] || char));
+}
+
+function emailHtml(name: string) {
+  const safeName = escapeHtml(name);
   return `<!doctype html>
 <html><body style="margin:0;background:#080912;color:#f6f2e8;font-family:Arial,'Noto Sans TC',sans-serif">
   <div style="max-width:620px;margin:0 auto;padding:28px 20px">
