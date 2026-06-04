@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://player.vimeo.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; frame-src https://player.vimeo.com https://vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;">
+  <title>完整方法說明 | 吉娃 AI</title>
+  <link rel="icon" href="assets/chiwa-favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#080912;--card:#121421;--card2:#171a2a;--gold:#e8c55a;--gold2:#f5dc82;--bdr:rgba(232,197,90,.24);--t1:#f6f2e8;--t2:#b9b5c8;--t3:#85819a}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:radial-gradient(circle at 20% 0%,rgba(232,197,90,.12),transparent 34%),radial-gradient(circle at 84% 18%,rgba(96,119,255,.12),transparent 32%),var(--bg);color:var(--t1);font-family:'Noto Sans TC',sans-serif}
+    body:before{content:"";position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(255,255,255,.55) 1px,transparent 1px);background-size:72px 72px;opacity:.16}
+    .wrap{position:relative;width:min(100%,1080px);margin:0 auto;padding:28px 20px 56px}
+    .nav{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.04em}
+    .brand img{width:34px;height:34px}
+    .back{color:var(--t2);text-decoration:none;border:1px solid var(--bdr);border-radius:999px;padding:9px 14px;font-size:13px}
+    .hero{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+    .kicker{font:700 12px/1 'Space Mono',monospace;letter-spacing:3px;text-transform:uppercase;color:var(--gold)}
+    h1{font-size:clamp(28px,5vw,46px);line-height:1.2;margin:10px 0 10px}
+    .sub{max-width:760px;color:var(--t2);font-size:15px;line-height:1.85;margin:0}
+    .player{position:relative;background:#000;border:1px solid var(--bdr);border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.48);aspect-ratio:16/9}
+    .player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+    .note{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
+    .note div{background:rgba(18,20,33,.76);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;color:var(--t2);font-size:13px;line-height:1.7}
+    .cta{margin-top:22px;display:flex;gap:12px;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 18px;border-radius:10px;text-decoration:none;font-weight:900}
+    .btn.gold{background:linear-gradient(135deg,#f8df7b,#d7aa3e);color:#080912}
+    .btn.ghost{border:1px solid var(--bdr);color:var(--t1)}
+    @media(max-width:720px){.wrap{padding:20px 14px 42px}.nav{align-items:flex-start}.note{grid-template-columns:1fr}.player{border-radius:14px}.back{font-size:12px;padding:8px 12px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <nav class="nav">
+      <div class="brand"><img src="assets/chiwa-logo.png" alt="">吉娃 AI</div>
+      <a class="back" href="/">返回首頁</a>
+    </nav>
+
+    <section class="hero">
+      <div>
+        <div class="kicker">Private Briefing</div>
+        <h1>完整方法說明</h1>
+        <p class="sub">這支影片會說明整套操作方式、適合的使用情境與準備素材。實際成果會因產業、素材品質、執行方式與各平台規則而不同，請依照你的狀況評估。</p>
+      </div>
+
+      <div class="player" id="private-vsl-player"></div>
+
+      <div class="note">
+        <div><b>觀看提醒</b><br>建議使用電腦或手機瀏覽器觀看，避免在社群 App 內建瀏覽器中播放。</div>
+        <div><b>內容定位</b><br>影片以方法教學與流程說明為主，不承諾任何固定結果。</div>
+        <div><b>下一步</b><br>看完後可以預約諮詢，確認你的產業與素材是否適合這套流程。</div>
+      </div>
+
+      <div class="cta">
+        <a class="btn gold" href="https://calendar.app.google/BFEdtf1wx658dbK19" target="_blank" rel="noopener">預約諮詢</a>
+        <a class="btn ghost" href="https://line.me/R/ti/p/@543xxzvk" target="_blank" rel="noopener">LINE 聯絡</a>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const PRIVATE_VSL_VIMEO_ID = '1194740595';
+    const player = document.getElementById('private-vsl-player');
+    if (player && PRIVATE_VSL_VIMEO_ID) {
+      player.innerHTML = `<iframe src="https://player.vimeo.com/video/${encodeURIComponent(PRIVATE_VSL_VIMEO_ID)}?title=0&byline=0&portrait=0&api=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+    }
+  </script>
+</body>
+</html>

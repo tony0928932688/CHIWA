@@ -155,6 +155,20 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .vsl-play{width:70px;height:70px;border-radius:50%;background:rgba(232,197,90,.15);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:26px;transition:all .2s}
 .vsl-box:hover .vsl-play{background:rgba(232,197,90,.25);transform:scale(1.05)}
 .vsl-label{color:var(--t2);font-size:13px}
+.vsl-lead-card{background:linear-gradient(180deg,rgba(19,20,32,.96),rgba(9,10,18,.98));border:1px solid rgba(232,197,90,.34);border-radius:16px;min-height:540px;padding:28px;display:flex;flex-direction:column;justify-content:center;gap:16px;box-shadow:0 18px 48px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.04)}
+.vsl-lead-kicker{font-size:11px;letter-spacing:3px;color:var(--gold);font-family:'Space Mono',monospace;text-transform:uppercase}
+.vsl-lead-title{font-size:clamp(24px,3vw,34px);line-height:1.25;font-weight:900;color:var(--t1)}
+.vsl-lead-copy{font-size:14px;line-height:1.8;color:var(--t2)}
+.vsl-lead-form{display:flex;flex-direction:column;gap:12px}
+.vsl-lead-form label{font-size:12px;color:var(--t2);font-weight:700;text-align:left}
+.vsl-lead-form input{height:44px;background:rgba(5,6,12,.72)}
+.vsl-lead-submit{height:46px;border:0;border-radius:10px;background:linear-gradient(135deg,#f8df7b,#d7aa3e);color:#08080c;font-weight:900;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:transform .16s,box-shadow .16s,opacity .16s}
+.vsl-lead-submit:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(232,197,90,.22)}
+.vsl-lead-submit:disabled{opacity:.62;cursor:not-allowed;transform:none;box-shadow:none}
+.vsl-lead-status{min-height:20px;font-size:12px;line-height:1.6;color:var(--t3);text-align:left}
+.vsl-lead-status.ok{color:var(--green)}
+.vsl-lead-status.err{color:var(--red)}
+.vsl-lead-hp{position:absolute!important;left:-10000px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important}
 .vsl-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:760px;margin:0 auto;align-items:start}
 .vsl-feature-grid .vsl-wrap{width:100%;max-width:340px;margin:0 auto;padding:0}
 .vsl-box iframe{display:block}
@@ -171,6 +185,9 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
   .vsl-box{border-radius:14px;gap:8px}
   .vsl-play{width:clamp(42px,13vw,54px);height:clamp(42px,13vw,54px);font-size:clamp(17px,5vw,21px)}
   .vsl-label{font-size:11px;line-height:1.35;padding:0 8px}
+  .vsl-lead-card{min-height:auto;padding:22px 18px}
+  .vsl-lead-title{font-size:24px}
+  .vsl-lead-copy{font-size:13px}
   .hero-badge{font-size:clamp(14px,4.6vw,18px);letter-spacing:2px;padding:9px 18px;max-width:calc(100vw - 40px);line-height:1.35}
 }
 
@@ -1465,6 +1482,7 @@ const _SB = (window.supabase && typeof supabase.createClient === 'function')
 const AVATAR_MINUTES_KEY = ['hey', 'gen_minutes'].join('');
 const CHIWA_VOICE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-voice';
 const CHIWA_SECURE_API_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-secure-api';
+const CHIWA_VSL_LEAD_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-vsl-lead';
 const CHIWA_PROFILE_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-profile';
 const CHIWA_HISTORY_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-history';
 const CHIWA_AVATAR_FUNCTION_URL = 'https://nsauscojruqjcprvsfsn.supabase.co/functions/v1/chiwa-avatar';
@@ -4072,7 +4090,7 @@ async function decrAvatar(secs) {
           <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
             <div style="flex: 2; min-width: 200px;">
               <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:6px;">Vimeo 影片 ID 或完整連結</label>
-              <input type="text" id="adm-vimeo-input" placeholder="例: 1194740595 或 https://vimeo.com/1194740595" class="tinput" style="background: var(--card)">
+              <input type="text" id="adm-vimeo-input" placeholder="例: 123456789 或 https://vimeo.com/123456789" class="tinput" style="background: var(--card)">
             </div>
             <div style="flex: 1; min-width: 100px;">
               <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:6px;">影片時長 (MM:SS)</label>
@@ -9211,7 +9229,7 @@ function getVSLConfig() {
     var config = JSON.parse(localStorage.getItem('chiwa_vsl_video_config'));
     if (config && config.vimeoId && config.status) return config;
   } catch(e) {}
-  return { vimeoId: '1194740595', status: 'publish' }; // 預設值
+  return { vimeoId: '', status: 'publish' };
 }
 
 function saveVSLConfigFromAdmin() {
@@ -9244,27 +9262,103 @@ function renderVSLVideo() {
 
   container.style.display = 'block';
   container.innerHTML = `
-    <div class="vsl-box" id="vsl-box-element" onclick="playVSLVideo('${config.vimeoId}')">
-      <div class="vsl-play">▶</div>
-      <div class="vsl-label">點擊了解AI自媒體系統</div>
-      
+    <div class="vsl-lead-card" id="vsl-lead-card">
+      <div class="vsl-lead-kicker">Private Briefing</div>
+      <div class="vsl-lead-title">看完整方法說明</div>
+      <div class="vsl-lead-copy">留下姓名與 Email，系統會把觀看連結寄到你的信箱。內容以教學與方法說明為主，實際成果會依產業、素材、執行與平台規則而不同。</div>
+      <form class="vsl-lead-form" id="vsl-lead-form" onsubmit="submitVSLLead(event)">
+        <label for="vsl-lead-name">姓名</label>
+        <input id="vsl-lead-name" name="name" type="text" autocomplete="name" required maxlength="60" placeholder="請輸入姓名">
+        <label for="vsl-lead-email">Email</label>
+        <input id="vsl-lead-email" name="email" type="email" autocomplete="email" required maxlength="120" placeholder="請輸入常用信箱">
+        <label class="vsl-lead-hp" for="vsl-lead-website">Website</label>
+        <input class="vsl-lead-hp" id="vsl-lead-website" name="website" type="text" tabindex="-1" autocomplete="off">
+        <button class="vsl-lead-submit" id="vsl-lead-submit" type="submit">寄送觀看連結</button>
+        <div class="vsl-lead-status" id="vsl-lead-status">請確認 Email 正確，觀看連結會寄到這個信箱。</div>
+      </form>
     </div>
   `;
-  applyVimeoCover('vsl-box-element', config.vimeoId, CHIWA_VSL_COVER_ASSETS.homepage);
 }
 
 function playVSLVideo(vimeoId) {
-  var box = document.getElementById('vsl-box-element');
+  var input = document.getElementById('vsl-lead-name');
+  if (input && typeof input.focus === 'function') input.focus();
+}
+
+function setVSLLeadStatus(message, cls) {
+  var box = document.getElementById('vsl-lead-status');
   if (!box) return;
-  // 安全地嵌入 Vimeo 播放器
-  chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'homepage_vsl' });
-  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
-  box.removeAttribute('onclick');
-  attachVimeoTracking(box.querySelector('iframe'), {
-    videoId: vimeoId,
-    title: '首頁 VSL 銷講影片',
-    placement: 'homepage_vsl'
-  });
+  box.textContent = message || '';
+  box.classList.remove('ok', 'err');
+  if (cls) box.classList.add(cls);
+}
+
+function normalizeVSLLeadEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function getVSLLeadAttribution() {
+  return {
+    first: readChiwaJson(CHIWA_ATTR_FIRST_KEY),
+    session: readChiwaJson(CHIWA_ATTR_SESSION_KEY),
+    page: location.href
+  };
+}
+
+async function submitVSLLead(event) {
+  if (event && event.preventDefault) event.preventDefault();
+  var form = document.getElementById('vsl-lead-form');
+  var btn = document.getElementById('vsl-lead-submit');
+  if (!form) return;
+  var name = String(form.name && form.name.value || '').trim();
+  var email = normalizeVSLLeadEmail(form.email && form.email.value);
+  var website = String(form.website && form.website.value || '').trim();
+  if (website) {
+    setVSLLeadStatus('觀看連結已送出，請稍後查看信箱。', 'ok');
+    return;
+  }
+  if (!name) {
+    setVSLLeadStatus('請先填寫姓名。', 'err');
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    setVSLLeadStatus('請填寫正確的 Email。', 'err');
+    return;
+  }
+
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '寄送中...';
+    }
+    setVSLLeadStatus('正在寄送觀看連結...', '');
+    chiwaTrack('generate_lead', { lead_type: 'vsl_email_request', cta_source: 'homepage_vsl_gate' });
+    var res = await fetch(CHIWA_VSL_LEAD_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name,
+        email: email,
+        source: 'homepage_vsl_gate',
+        pageUrl: location.href,
+        attribution: getVSLLeadAttribution(),
+        website: website
+      })
+    });
+    var data = await res.json().catch(function() { return {}; });
+    if (!res.ok || !data.ok) throw new Error(data.error || 'send_failed');
+    form.reset();
+    setVSLLeadStatus('已寄出觀看連結，請到信箱收信。若沒有看到，請檢查垃圾郵件。', 'ok');
+    chiwaTrack('vsl_lead_email_sent', { lead_type: 'vsl_email_request', cta_source: 'homepage_vsl_gate' });
+  } catch(e) {
+    console.warn('VSL lead submit failed:', e && e.message ? e.message : e);
+    setVSLLeadStatus('目前寄送服務暫時無法使用，請稍後再試或直接預約諮詢。', 'err');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '寄送觀看連結';
+    }
+  }
 }
 
 function updateAdminVSLUI() {
