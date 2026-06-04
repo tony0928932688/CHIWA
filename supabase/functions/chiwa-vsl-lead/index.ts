@@ -4,11 +4,12 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = getSupabaseServiceKey();
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const VSL_MAIL_FROM = Deno.env.get("VSL_MAIL_FROM") || "";
+const VSL_MAIL_FROM = "CHIWA AI <chivashorts@chiwaai.com>";
 const VSL_MAIL_REPLY_TO = Deno.env.get("VSL_MAIL_REPLY_TO") || "chivashorts@gmail.com";
 const VSL_NOTIFY_TO = Deno.env.get("VSL_NOTIFY_TO") || "";
 const VSL_PRIVATE_VIDEO_URL = Deno.env.get("VSL_PRIVATE_VIDEO_URL") || "https://chiwaai.com/watch-method.html";
 const VSL_BOOKING_URL = Deno.env.get("VSL_BOOKING_URL") || "https://calendar.app.google/BFEdtf1wx658dbK19";
+const VSL_BRAND_LOGO_URL = Deno.env.get("VSL_BRAND_LOGO_URL") || "https://chiwaai.com/assets/chiwa-email-logo.jpg";
 
 function getSupabaseServiceKey() {
   const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -115,6 +116,7 @@ function emailHtml(name: string) {
 <html><body style="margin:0;background:#080912;color:#f6f2e8;font-family:Arial,'Noto Sans TC',sans-serif">
   <div style="max-width:620px;margin:0 auto;padding:28px 20px">
     <div style="background:#121421;border:1px solid rgba(232,197,90,.32);border-radius:16px;padding:26px">
+      <img src="${VSL_BRAND_LOGO_URL}" width="96" height="96" alt="CHIWA AI" style="display:block;width:96px;height:96px;border-radius:18px;object-fit:cover;margin:0 0 16px;background:#080912">
       <div style="font-size:12px;letter-spacing:3px;color:#e8c55a;font-weight:700;text-transform:uppercase">CHIWA AI</div>
       <h1 style="font-size:24px;line-height:1.35;margin:14px 0 10px;color:#fff">完整方法說明觀看連結</h1>
       <p style="font-size:15px;line-height:1.8;color:#c9c4d8;margin:0 0 18px">${safeName} 你好，這是你剛剛索取的影片觀看連結。</p>
