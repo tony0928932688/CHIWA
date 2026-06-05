@@ -9479,21 +9479,33 @@ function renderVSLFeatureVideo() {
 
   container.style.display = 'block';
   wrap.innerHTML = `
-      <div class="vsl-box" id="vsl-feature-box-element" onclick="playVSLFeatureVideo('${config.leftVimeoId}')" style="aspect-ratio:9/16; margin:0 auto;">
+      <div class="vsl-box" id="vsl-feature-box-element" style="aspect-ratio:9/16; margin:0 auto;">
       <div class="vsl-play">▶</div>
       <div class="vsl-label">點擊播放特色介紹影片</div>
     </div>
   `;
-    applyVimeoCover('vsl-feature-box-element', config.leftVimeoId, CHIWA_VSL_COVER_ASSETS.featureLeft);
+  var leftBox = document.getElementById('vsl-feature-box-element');
+  if (leftBox) {
+    leftBox.addEventListener('click', function() {
+      playVSLFeatureVideo(config.leftVimeoId);
+    });
+  }
+  applyVimeoCover('vsl-feature-box-element', config.leftVimeoId, CHIWA_VSL_COVER_ASSETS.featureLeft);
   // 第二個影片框
   var wrap2 = document.getElementById('vsl-feature-video-wrap-2');
   if (wrap2) {
     wrap2.innerHTML = `
-        <div class="vsl-box" id="vsl-feature-box-element-2" onclick="playVSLFeatureVideo2('${config.rightVimeoId}')" style="aspect-ratio:9/16; margin:0 auto;">
+        <div class="vsl-box" id="vsl-feature-box-element-2" style="aspect-ratio:9/16; margin:0 auto;">
         <div class="vsl-play">▶</div>
         <div class="vsl-label">點擊播放特色介紹影片</div>
       </div>
     `;
+    var rightBox = document.getElementById('vsl-feature-box-element-2');
+    if (rightBox) {
+      rightBox.addEventListener('click', function() {
+        playVSLFeatureVideo2(config.rightVimeoId);
+      });
+    }
     applyVimeoCover('vsl-feature-box-element-2', config.rightVimeoId, CHIWA_VSL_COVER_ASSETS.featureRight);
   }
 }
