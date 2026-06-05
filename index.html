@@ -180,8 +180,8 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .vsl-lead-hp{position:absolute!important;left:-10000px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important}
 .vsl-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:760px;margin:0 auto;align-items:start}
 .vsl-feature-grid .vsl-wrap{width:100%;max-width:340px;margin:0 auto;padding:0}
-.vsl-feature-category-grid{position:relative;display:grid;grid-template-columns:340px 698px;gap:14px;max-width:1052px;margin:0 auto;align-items:stretch;justify-content:center}
-.vsl-feature-category-grid::before{content:"";position:absolute;top:0;bottom:0;left:347px;width:1px;background:linear-gradient(180deg,rgba(232,197,90,0),rgba(232,197,90,.5),rgba(232,197,90,0));box-shadow:0 0 14px rgba(232,197,90,.18);pointer-events:none}
+.vsl-feature-category-grid{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,704px));gap:42px;max-width:1450px;margin:0 auto;align-items:stretch;justify-content:center}
+.vsl-feature-category-grid::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;transform:translateX(-50%);background:linear-gradient(180deg,rgba(232,197,90,0),rgba(232,197,90,.5),rgba(232,197,90,0));box-shadow:0 0 14px rgba(232,197,90,.18);pointer-events:none}
 .vsl-feature-category{min-width:0;display:flex;flex-direction:column;align-items:center}
 .vsl-feature-category .vsl-feature-grid{display:block;width:100%;max-width:340px;margin:auto auto 0}
 .vsl-feature-category .vsl-feature-grid .vsl-wrap{width:100%;max-width:340px}
@@ -207,7 +207,7 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .vsl-course-preview-copy p{margin:0 0 12px}
 .vsl-course-preview-copy p:last-child{margin-bottom:0;color:var(--t1);font-weight:800}
 .vsl-box iframe{display:block}
-@media(max-width:1120px){
+@media(max-width:1520px){
   .vsl-feature-category-grid{grid-template-columns:1fr;gap:42px;max-width:704px}
   .vsl-feature-category-grid::before{display:none}
 }
@@ -2581,7 +2581,7 @@ async function decrAvatar(secs) {
   <div class="vsl-wrap" id="vsl-wrap-container"></div>
 
   <!-- 🎥 VSL 下方特色影片展示區 -->
-  <div class="vsl-feature-section" id="vsl-feature-container" style="max-width:1100px; margin:0 auto 80px; padding:0 24px; text-align:center;">
+  <div class="vsl-feature-section" id="vsl-feature-container" style="max-width:1500px; margin:0 auto 80px; padding:0 24px; text-align:center;">
     <h2 class="vsl-audience-title">適合哪些人</h2>
     <div class="vsl-audience-image-wrap">
       <img class="vsl-audience-image" src="assets/audience-types-16x9.png" alt="有料但沒做自媒體的三種類型" loading="lazy">
@@ -2601,7 +2601,8 @@ async function decrAvatar(secs) {
     <div class="vsl-feature-category-grid">
       <div class="vsl-feature-category">
         <h3 style="font-size: clamp(16px, 2.7vw, 21px); font-weight: 850; color: var(--gold); margin-bottom: 18px;">第1種：形象&聲音 + AI情境影片</h3>
-        <div class="vsl-feature-grid">
+        <div class="vsl-feature-grid vsl-feature-grid-pair">
+          <div class="vsl-wrap" id="vsl-feature-video-wrap-1a" style="padding:0; margin:0;"></div>
           <div class="vsl-wrap" id="vsl-feature-video-wrap" style="padding:0; margin:0;"></div>
         </div>
       </div>
@@ -9533,6 +9534,7 @@ function getVSLFeatureConfig() {
     if (config && config.status) {
       if (config.leftVimeoId || config.rightVimeoId || config.thirdVimeoId || config.coursePreviewVimeoId) {
         return {
+          firstSceneVimeoId: config.firstSceneVimeoId || '1198715221',
           leftVimeoId: config.leftVimeoId || config.vimeoId || '1194785351',
           rightVimeoId: config.rightVimeoId || '1194930791',
           thirdVimeoId: config.thirdVimeoId || '1198623622',
@@ -9542,10 +9544,10 @@ function getVSLFeatureConfig() {
           status: config.status
         };
       }
-      if (config.vimeoId) return { leftVimeoId: config.vimeoId, rightVimeoId: '1194930791', thirdVimeoId: '1198623622', voiceSceneVimeoId: '1198641587', workflowDemoVimeoId: '1198649067', coursePreviewVimeoId: '1198627488', status: config.status };
+      if (config.vimeoId) return { firstSceneVimeoId: '1198715221', leftVimeoId: config.vimeoId, rightVimeoId: '1194930791', thirdVimeoId: '1198623622', voiceSceneVimeoId: '1198641587', workflowDemoVimeoId: '1198649067', coursePreviewVimeoId: '1198627488', status: config.status };
     }
   } catch(e) {}
-  return { leftVimeoId: '1194785351', rightVimeoId: '1194930791', thirdVimeoId: '1198623622', voiceSceneVimeoId: '1198641587', workflowDemoVimeoId: '1198649067', coursePreviewVimeoId: '1198627488', status: 'publish' };
+  return { firstSceneVimeoId: '1198715221', leftVimeoId: '1194785351', rightVimeoId: '1194930791', thirdVimeoId: '1198623622', voiceSceneVimeoId: '1198641587', workflowDemoVimeoId: '1198649067', coursePreviewVimeoId: '1198627488', status: 'publish' };
 }
 
 function saveVSLFeatureConfigFromAdmin() {
@@ -9595,6 +9597,22 @@ function renderVSLFeatureVideo() {
   if (monetizationContainer) monetizationContainer.style.display = 'block';
   if (workflowDemoContainer) workflowDemoContainer.style.display = 'block';
   if (coursePreviewContainer) coursePreviewContainer.style.display = 'block';
+  var wrap1a = document.getElementById('vsl-feature-video-wrap-1a');
+  if (wrap1a) {
+    wrap1a.innerHTML = `
+      <div class="vsl-box" id="vsl-feature-box-element-1a" style="aspect-ratio:9/16; margin:0 auto;">
+        <div class="vsl-play">▶</div>
+        <div class="vsl-label">點擊播放情境示範影片</div>
+      </div>
+    `;
+    var firstSceneBox = document.getElementById('vsl-feature-box-element-1a');
+    if (firstSceneBox) {
+      firstSceneBox.addEventListener('click', function() {
+        playVSLFeatureVideo1a(config.firstSceneVimeoId);
+      });
+    }
+    applyVimeoCover('vsl-feature-box-element-1a', config.firstSceneVimeoId, null);
+  }
   wrap.innerHTML = `
       <div class="vsl-box" id="vsl-feature-box-element" style="aspect-ratio:9/16; margin:0 auto;">
       <div class="vsl-play">▶</div>
@@ -9753,6 +9771,19 @@ function playVSLFeatureVideo2(vimeoId) {
     videoId: vimeoId,
     title: '特色介紹影片右側',
     placement: 'feature_right'
+  });
+}
+
+function playVSLFeatureVideo1a(vimeoId) {
+  var box = document.getElementById('vsl-feature-box-element-1a');
+  if (!box) return;
+  chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'feature_avatar_scene_left' });
+  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=0&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  box.removeAttribute('onclick');
+  attachVimeoTracking(box.querySelector('iframe'), {
+    videoId: vimeoId,
+    title: '形象聲音情境示範影片',
+    placement: 'feature_avatar_scene_left'
   });
 }
 
