@@ -179,7 +179,7 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .vsl-lead-hp{position:absolute!important;left:-10000px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important}
 .vsl-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:760px;margin:0 auto;align-items:start}
 .vsl-feature-grid .vsl-wrap{width:100%;max-width:340px;margin:0 auto;padding:0}
-.vsl-feature-category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;max-width:820px;margin:0 auto;align-items:stretch}
+.vsl-feature-category-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;max-width:1100px;margin:0 auto;align-items:stretch}
 .vsl-feature-category{min-width:0;display:flex;flex-direction:column;align-items:center}
 .vsl-feature-category .vsl-feature-grid{display:block;width:100%;max-width:340px;margin:auto auto 0}
 .vsl-feature-category .vsl-feature-grid .vsl-wrap{width:100%;max-width:340px}
@@ -2561,6 +2561,12 @@ async function decrAvatar(secs) {
           <div class="vsl-wrap" id="vsl-feature-video-wrap-2" style="padding:0; margin:0;"></div>
         </div>
       </div>
+      <div class="vsl-feature-category">
+        <h3 style="font-size: clamp(16px, 2.7vw, 21px); font-weight: 850; color: var(--gold); margin-bottom: 18px;">用這套AI系統變現帳號案例</h3>
+        <div class="vsl-feature-grid">
+          <div class="vsl-wrap" id="vsl-feature-video-wrap-3" style="padding:0; margin:0;"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -4182,6 +4188,10 @@ async function decrAvatar(secs) {
         <div style="flex: 1.5; min-width: 250px;">
           <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:4px;">右側特色影片 ID 或連結</label>
           <input type="text" id="adm-vsl-feature-vimeo-right" placeholder="例：1194930791" class="tinput" style="background: var(--card2)">
+        </div>
+        <div style="flex: 1.5; min-width: 250px;">
+          <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:4px;">第三支特色影片 ID 或連結</label>
+          <input type="text" id="adm-vsl-feature-vimeo-third" placeholder="例：1198623622" class="tinput" style="background: var(--card2)">
         </div>
       </div>
       <button class="btn-gold" onclick="saveVSLFeatureConfigFromAdmin()" style="border-radius:10px; padding:10px 20px; height:38px; justify-content:center; white-space:nowrap; width: 100%;">💾 儲存特色影片設定</button>
@@ -9431,37 +9441,40 @@ function getVSLFeatureConfig() {
   try {
     var config = JSON.parse(localStorage.getItem('chiwa_vsl_feature_config'));
     if (config && config.status) {
-      if (config.leftVimeoId || config.rightVimeoId) {
+      if (config.leftVimeoId || config.rightVimeoId || config.thirdVimeoId) {
         return {
           leftVimeoId: config.leftVimeoId || config.vimeoId || '1194785351',
           rightVimeoId: config.rightVimeoId || '1194930791',
+          thirdVimeoId: config.thirdVimeoId || '1198623622',
           status: config.status
         };
       }
-      if (config.vimeoId) return { leftVimeoId: config.vimeoId, rightVimeoId: '1194930791', status: config.status };
+      if (config.vimeoId) return { leftVimeoId: config.vimeoId, rightVimeoId: '1194930791', thirdVimeoId: '1198623622', status: config.status };
     }
   } catch(e) {}
-  return { leftVimeoId: '1194785351', rightVimeoId: '1194930791', status: 'publish' };
+  return { leftVimeoId: '1194785351', rightVimeoId: '1194930791', thirdVimeoId: '1198623622', status: 'publish' };
 }
 
 function saveVSLFeatureConfigFromAdmin() {
   var status = document.getElementById('adm-vsl-feature-status').value;
   var leftInput = document.getElementById('adm-vsl-feature-vimeo-left').value.trim();
   var rightInput = document.getElementById('adm-vsl-feature-vimeo-right').value.trim();
-  if (!leftInput || !rightInput) { toast('❌ 請輸入左右兩側 Vimeo 特色影片 ID！'); return; }
-  
+  var thirdInput = document.getElementById('adm-vsl-feature-vimeo-third').value.trim();
+  if (!leftInput || !rightInput || !thirdInput) { toast('❌ 請輸入三支 Vimeo 特色影片 ID！'); return; }
+
   var leftVimeoId = extractVimeoId(leftInput);
   var rightVimeoId = extractVimeoId(rightInput);
-  if (!/^[0-9]+$/.test(leftVimeoId) || !/^[0-9]+$/.test(rightVimeoId)) {
+  var thirdVimeoId = extractVimeoId(thirdInput);
+  if (!/^[0-9]+$/.test(leftVimeoId) || !/^[0-9]+$/.test(rightVimeoId) || !/^[0-9]+$/.test(thirdVimeoId)) {
     toast('❌ Vimeo 特色影片 ID 格式不正確！');
     return;
   }
 
-  var config = { leftVimeoId: leftVimeoId, rightVimeoId: rightVimeoId, status: status };
+  var config = { leftVimeoId: leftVimeoId, rightVimeoId: rightVimeoId, thirdVimeoId: thirdVimeoId, status: status };
   try {
     localStorage.setItem('chiwa_vsl_feature_config', JSON.stringify(config));
     toast('✅ 特色影片設定儲存成功！');
-    logCourseOp('特色影片異動：狀態改為「' + (status === 'publish' ? '上架' : '下架') + '」，左側ID「' + leftVimeoId + '」，右側ID「' + rightVimeoId + '」。');
+    logCourseOp('特色影片異動：狀態改為「' + (status === 'publish' ? '上架' : '下架') + '」，左側ID「' + leftVimeoId + '」，右側ID「' + rightVimeoId + '」，第三支ID「' + thirdVimeoId + '」。');
     renderVSLFeatureVideo();
   } catch(e) { toast('❌ 寫入 LocalStorage 失敗'); }
 }
@@ -9508,6 +9521,35 @@ function renderVSLFeatureVideo() {
     }
     applyVimeoCover('vsl-feature-box-element-2', config.rightVimeoId, CHIWA_VSL_COVER_ASSETS.featureRight);
   }
+  var wrap3 = document.getElementById('vsl-feature-video-wrap-3');
+  if (wrap3) {
+    wrap3.innerHTML = `
+        <div class="vsl-box" id="vsl-feature-box-element-3" style="aspect-ratio:9/16; margin:0 auto;">
+        <div class="vsl-play">▶</div>
+        <div class="vsl-label">點擊播放特色介紹影片</div>
+      </div>
+    `;
+    var thirdBox = document.getElementById('vsl-feature-box-element-3');
+    if (thirdBox) {
+      thirdBox.addEventListener('click', function() {
+        playVSLFeatureVideo3(config.thirdVimeoId);
+      });
+    }
+    applyVimeoCover('vsl-feature-box-element-3', config.thirdVimeoId, null);
+  }
+}
+
+function playVSLFeatureVideo3(vimeoId) {
+  var box = document.getElementById('vsl-feature-box-element-3');
+  if (!box) return;
+  chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'feature_third' });
+  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  box.removeAttribute('onclick');
+  attachVimeoTracking(box.querySelector('iframe'), {
+    videoId: vimeoId,
+    title: '用這套AI系統變現帳號案例',
+    placement: 'feature_third'
+  });
 }
 
 function playVSLFeatureVideo2(vimeoId) {
@@ -9541,9 +9583,11 @@ function updateAdminVSLFeatureUI() {
   var statusEl = document.getElementById('adm-vsl-feature-status');
   var leftEl = document.getElementById('adm-vsl-feature-vimeo-left');
   var rightEl = document.getElementById('adm-vsl-feature-vimeo-right');
+  var thirdEl = document.getElementById('adm-vsl-feature-vimeo-third');
   if (statusEl) statusEl.value = config.status;
   if (leftEl) leftEl.value = config.leftVimeoId;
   if (rightEl) rightEl.value = config.rightVimeoId;
+  if (thirdEl) thirdEl.value = config.thirdVimeoId;
 }
 
 /* Enter 送出 */
