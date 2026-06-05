@@ -188,6 +188,9 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .vsl-feature-category .vsl-feature-grid.vsl-feature-grid-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,340px));gap:18px;width:100%;max-width:704px;margin:auto auto 0;justify-content:center}
 .vsl-feature-category .vsl-feature-grid.vsl-feature-grid-pair .vsl-wrap{width:100%;max-width:340px}
 .vsl-feature-category .vsl-box{width:100%}
+.vsl-audience-title{font-size:clamp(34px,5.4vw,58px);font-weight:950;color:var(--gold);margin:0 0 24px;line-height:1.12;letter-spacing:0}
+.vsl-audience-image-wrap{width:100%;max-width:1100px;margin:0 auto 34px;border:1px solid rgba(232,197,90,.28);border-radius:18px;overflow:hidden;background:#050509;box-shadow:0 24px 70px rgba(0,0,0,.34)}
+.vsl-audience-image{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
 .vsl-feature-copy{max-width:820px;margin:0 auto 34px;padding:24px 28px;border:1px solid rgba(232,197,90,.22);border-radius:16px;background:rgba(13,15,24,.72);text-align:left;color:var(--t2);font-size:14px;line-height:1.9}
 .vsl-feature-copy strong{display:block;color:var(--gold);font-size:16px;margin-bottom:10px}
 .vsl-feature-copy p{margin:0 0 12px}
@@ -216,6 +219,8 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
   .vsl-wrap{width:min(340px,calc(100% - 32px));max-width:340px;padding:0;margin-bottom:48px}
   #vsl-wrap-container{width:min(320px,calc(100% - 32px));max-width:320px}
   .vsl-feature-section{padding:0 16px!important;margin-bottom:64px!important}
+  .vsl-audience-title{font-size:clamp(32px,9vw,44px)!important;margin-bottom:18px!important}
+  .vsl-audience-image-wrap{border-radius:12px!important;margin-bottom:28px!important}
   .vsl-feature-copy{padding:20px 18px!important;margin-bottom:30px!important;font-size:13px!important;line-height:1.85!important}
   .vsl-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;max-width:360px!important}
   .vsl-feature-grid .vsl-wrap{width:100%!important;max-width:174px!important;padding:0!important;margin:0 auto!important}
@@ -2577,8 +2582,11 @@ async function decrAvatar(secs) {
 
   <!-- 🎥 VSL 下方特色影片展示區 -->
   <div class="vsl-feature-section" id="vsl-feature-container" style="max-width:1100px; margin:0 auto 80px; padding:0 24px; text-align:center;">
-    <div style="font-size: clamp(20px, 3vw, 28px); font-weight: 900; color: var(--t1); margin-bottom: 14px;">適合哪些人</div>
-    <h2 style="font-size: clamp(22px, 3.7vw, 32px); font-weight: 900; color: var(--gold); margin-bottom: 10px;">用AI做出比同行精緻，潛在客戶覺得有用的短影音</h2>
+    <h2 class="vsl-audience-title">適合哪些人</h2>
+    <div class="vsl-audience-image-wrap">
+      <img class="vsl-audience-image" src="assets/audience-types-16x9.png" alt="有料但沒做自媒體的三種類型" loading="lazy">
+    </div>
+    <h3 style="font-size: clamp(22px, 3.7vw, 32px); font-weight: 900; color: var(--gold); margin-bottom: 10px;">用AI做出比同行精緻，潛在客戶覺得有用的短影音</h3>
     <p style="font-size: clamp(14px, 2.4vw, 18px); color: var(--t1); font-weight: 800; margin-bottom: 22px;">同行有趣+露臉贏了觀眾緣，你靠有用+質感來超車</p>
     <div class="vsl-feature-copy">
       <strong>迷思：我沒辦法像同行那樣有趣</strong>
