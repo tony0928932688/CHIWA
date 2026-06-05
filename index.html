@@ -2617,6 +2617,11 @@ async function decrAvatar(secs) {
     <div class="vsl-wrap" id="vsl-feature-video-wrap-3" style="padding:0; margin:0 auto;"></div>
   </div>
 
+  <div class="vsl-standalone-video-section" id="vsl-workflow-demo-container">
+    <h2 style="font-size: clamp(22px, 3.7vw, 32px); font-weight: 900; color: var(--gold); margin-bottom: 24px;">AI自媒體,AI短影音快速生成系統示範</h2>
+    <div class="vsl-wrap" id="vsl-workflow-demo-video-wrap" style="padding:0; margin:0 auto;"></div>
+  </div>
+
   <div class="vsl-standalone-video-section vsl-course-preview-section" id="vsl-course-preview-container">
     <h2 style="font-size: clamp(22px, 3.7vw, 32px); font-weight: 900; color: var(--gold); margin-bottom: 24px;">【課程試看】小白快速剪輯:AI情境影音</h2>
     <div class="vsl-course-preview-copy">
@@ -9509,14 +9514,15 @@ function getVSLFeatureConfig() {
           rightVimeoId: config.rightVimeoId || '1194930791',
           thirdVimeoId: config.thirdVimeoId || '1198623622',
           voiceSceneVimeoId: config.voiceSceneVimeoId || '1198641587',
+          workflowDemoVimeoId: config.workflowDemoVimeoId || '1198649067',
           coursePreviewVimeoId: config.coursePreviewVimeoId || '1198627488',
           status: config.status
         };
       }
-      if (config.vimeoId) return { leftVimeoId: config.vimeoId, rightVimeoId: '1194930791', thirdVimeoId: '1198623622', voiceSceneVimeoId: '1198641587', coursePreviewVimeoId: '1198627488', status: config.status };
+      if (config.vimeoId) return { leftVimeoId: config.vimeoId, rightVimeoId: '1194930791', thirdVimeoId: '1198623622', voiceSceneVimeoId: '1198641587', workflowDemoVimeoId: '1198649067', coursePreviewVimeoId: '1198627488', status: config.status };
     }
   } catch(e) {}
-  return { leftVimeoId: '1194785351', rightVimeoId: '1194930791', thirdVimeoId: '1198623622', voiceSceneVimeoId: '1198641587', coursePreviewVimeoId: '1198627488', status: 'publish' };
+  return { leftVimeoId: '1194785351', rightVimeoId: '1194930791', thirdVimeoId: '1198623622', voiceSceneVimeoId: '1198641587', workflowDemoVimeoId: '1198649067', coursePreviewVimeoId: '1198627488', status: 'publish' };
 }
 
 function saveVSLFeatureConfigFromAdmin() {
@@ -9549,6 +9555,7 @@ function renderVSLFeatureVideo() {
   var config = getVSLFeatureConfig();
   var container = document.getElementById('vsl-feature-container');
   var monetizationContainer = document.getElementById('vsl-monetization-case-container');
+  var workflowDemoContainer = document.getElementById('vsl-workflow-demo-container');
   var coursePreviewContainer = document.getElementById('vsl-course-preview-container');
   var wrap = document.getElementById('vsl-feature-video-wrap');
   if (!container || !wrap) return;
@@ -9556,12 +9563,14 @@ function renderVSLFeatureVideo() {
   if (config.status === 'unpublish') {
     container.style.display = 'none';
     if (monetizationContainer) monetizationContainer.style.display = 'none';
+    if (workflowDemoContainer) workflowDemoContainer.style.display = 'none';
     if (coursePreviewContainer) coursePreviewContainer.style.display = 'none';
     return;
   }
 
   container.style.display = 'block';
   if (monetizationContainer) monetizationContainer.style.display = 'block';
+  if (workflowDemoContainer) workflowDemoContainer.style.display = 'block';
   if (coursePreviewContainer) coursePreviewContainer.style.display = 'block';
   wrap.innerHTML = `
       <div class="vsl-box" id="vsl-feature-box-element" style="aspect-ratio:9/16; margin:0 auto;">
@@ -9625,6 +9634,22 @@ function renderVSLFeatureVideo() {
     }
     applyVimeoCover('vsl-feature-box-element-3', config.thirdVimeoId, null);
   }
+  var workflowDemoWrap = document.getElementById('vsl-workflow-demo-video-wrap');
+  if (workflowDemoWrap) {
+    workflowDemoWrap.innerHTML = `
+        <div class="vsl-box" id="vsl-workflow-demo-box-element" style="aspect-ratio:9/16; margin:0 auto;">
+        <div class="vsl-play">▶</div>
+        <div class="vsl-label">點擊播放系統示範影片</div>
+      </div>
+    `;
+    var workflowDemoBox = document.getElementById('vsl-workflow-demo-box-element');
+    if (workflowDemoBox) {
+      workflowDemoBox.addEventListener('click', function() {
+        playVSLWorkflowDemoVideo(config.workflowDemoVimeoId);
+      });
+    }
+    applyVimeoCover('vsl-workflow-demo-box-element', config.workflowDemoVimeoId, null);
+  }
   var courseWrap = document.getElementById('vsl-course-preview-video-wrap');
   if (courseWrap) {
     courseWrap.innerHTML = `
@@ -9653,6 +9678,19 @@ function playVSLCoursePreviewVideo(vimeoId) {
     videoId: vimeoId,
     title: '製作AI情境影音課程試看',
     placement: 'course_preview'
+  });
+}
+
+function playVSLWorkflowDemoVideo(vimeoId) {
+  var box = document.getElementById('vsl-workflow-demo-box-element');
+  if (!box) return;
+  chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'workflow_demo' });
+  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=0&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  box.removeAttribute('onclick');
+  attachVimeoTracking(box.querySelector('iframe'), {
+    videoId: vimeoId,
+    title: 'AI自媒體,AI短影音快速生成系統示範',
+    placement: 'workflow_demo'
   });
 }
 
