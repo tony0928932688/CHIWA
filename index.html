@@ -179,11 +179,15 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .vsl-lead-hp{position:absolute!important;left:-10000px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important}
 .vsl-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:760px;margin:0 auto;align-items:start}
 .vsl-feature-grid .vsl-wrap{width:100%;max-width:340px;margin:0 auto;padding:0}
-.vsl-feature-category-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;max-width:1100px;margin:0 auto;align-items:stretch}
+.vsl-feature-category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;max-width:820px;margin:0 auto;align-items:stretch}
 .vsl-feature-category{min-width:0;display:flex;flex-direction:column;align-items:center}
 .vsl-feature-category .vsl-feature-grid{display:block;width:100%;max-width:340px;margin:auto auto 0}
 .vsl-feature-category .vsl-feature-grid .vsl-wrap{width:100%;max-width:340px}
 .vsl-feature-category .vsl-box{width:100%}
+.vsl-standalone-video-section{max-width:1100px;margin:0 auto 80px;padding:0 24px;text-align:center}
+.vsl-standalone-video-section .vsl-wrap{width:min(360px,calc(100% - 32px));max-width:360px;margin:0 auto}
+.vsl-course-preview-section .vsl-wrap{width:min(860px,calc(100% - 32px));max-width:860px}
+.vsl-course-preview-section .vsl-box{aspect-ratio:16/9!important}
 .vsl-box iframe{display:block}
 @media(max-width:640px){
   body{padding-bottom:120px}
@@ -198,6 +202,9 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
   .vsl-feature-category-grid{grid-template-columns:1fr!important;gap:42px!important;max-width:340px!important}
   .vsl-feature-category .vsl-feature-grid{display:block!important;width:100%!important;max-width:320px!important}
   .vsl-feature-category .vsl-feature-grid .vsl-wrap{width:100%!important;max-width:320px!important}
+  .vsl-standalone-video-section{padding:0 16px!important;margin-bottom:64px!important}
+  .vsl-standalone-video-section .vsl-wrap{width:min(320px,calc(100% - 32px))!important;max-width:320px!important}
+  .vsl-course-preview-section .vsl-wrap{width:min(340px,calc(100% - 24px))!important;max-width:340px!important}
   .vsl-box{border-radius:14px;gap:8px}
   .vsl-play{width:clamp(42px,13vw,54px);height:clamp(42px,13vw,54px);font-size:clamp(17px,5vw,21px)}
   .vsl-label{font-size:11px;line-height:1.35;padding:0 8px}
@@ -2561,13 +2568,17 @@ async function decrAvatar(secs) {
           <div class="vsl-wrap" id="vsl-feature-video-wrap-2" style="padding:0; margin:0;"></div>
         </div>
       </div>
-      <div class="vsl-feature-category">
-        <h3 style="font-size: clamp(16px, 2.7vw, 21px); font-weight: 850; color: var(--gold); margin-bottom: 18px;">用這套AI系統變現帳號案例</h3>
-        <div class="vsl-feature-grid">
-          <div class="vsl-wrap" id="vsl-feature-video-wrap-3" style="padding:0; margin:0;"></div>
-        </div>
-      </div>
     </div>
+  </div>
+
+  <div class="vsl-standalone-video-section" id="vsl-monetization-case-container">
+    <h2 style="font-size: clamp(22px, 3.7vw, 32px); font-weight: 900; color: var(--gold); margin-bottom: 24px;">用這套AI系統變現帳號案例</h2>
+    <div class="vsl-wrap" id="vsl-feature-video-wrap-3" style="padding:0; margin:0;"></div>
+  </div>
+
+  <div class="vsl-standalone-video-section vsl-course-preview-section" id="vsl-course-preview-container">
+    <h2 style="font-size: clamp(22px, 3.7vw, 32px); font-weight: 900; color: var(--gold); margin-bottom: 24px;">製作AI情境影音課程試看</h2>
+    <div class="vsl-wrap" id="vsl-course-preview-video-wrap" style="padding:0; margin:0;"></div>
   </div>
 
   <div id="solutions-anchor" style="position:relative;top:-80px;"></div>
@@ -4190,8 +4201,12 @@ async function decrAvatar(secs) {
           <input type="text" id="adm-vsl-feature-vimeo-right" placeholder="例：1194930791" class="tinput" style="background: var(--card2)">
         </div>
         <div style="flex: 1.5; min-width: 250px;">
-          <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:4px;">第三支特色影片 ID 或連結</label>
+          <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:4px;">變現帳號案例影片 ID 或連結</label>
           <input type="text" id="adm-vsl-feature-vimeo-third" placeholder="例：1198623622" class="tinput" style="background: var(--card2)">
+        </div>
+        <div style="flex: 1.5; min-width: 250px;">
+          <label style="display:block; font-size:11px; color:var(--t2); margin-bottom:4px;">課程試看影片 ID 或連結</label>
+          <input type="text" id="adm-vsl-feature-vimeo-course" placeholder="例：1198627488" class="tinput" style="background: var(--card2)">
         </div>
       </div>
       <button class="btn-gold" onclick="saveVSLFeatureConfigFromAdmin()" style="border-radius:10px; padding:10px 20px; height:38px; justify-content:center; white-space:nowrap; width: 100%;">💾 儲存特色影片設定</button>
@@ -9441,18 +9456,19 @@ function getVSLFeatureConfig() {
   try {
     var config = JSON.parse(localStorage.getItem('chiwa_vsl_feature_config'));
     if (config && config.status) {
-      if (config.leftVimeoId || config.rightVimeoId || config.thirdVimeoId) {
+      if (config.leftVimeoId || config.rightVimeoId || config.thirdVimeoId || config.coursePreviewVimeoId) {
         return {
           leftVimeoId: config.leftVimeoId || config.vimeoId || '1194785351',
           rightVimeoId: config.rightVimeoId || '1194930791',
           thirdVimeoId: config.thirdVimeoId || '1198623622',
+          coursePreviewVimeoId: config.coursePreviewVimeoId || '1198627488',
           status: config.status
         };
       }
-      if (config.vimeoId) return { leftVimeoId: config.vimeoId, rightVimeoId: '1194930791', thirdVimeoId: '1198623622', status: config.status };
+      if (config.vimeoId) return { leftVimeoId: config.vimeoId, rightVimeoId: '1194930791', thirdVimeoId: '1198623622', coursePreviewVimeoId: '1198627488', status: config.status };
     }
   } catch(e) {}
-  return { leftVimeoId: '1194785351', rightVimeoId: '1194930791', thirdVimeoId: '1198623622', status: 'publish' };
+  return { leftVimeoId: '1194785351', rightVimeoId: '1194930791', thirdVimeoId: '1198623622', coursePreviewVimeoId: '1198627488', status: 'publish' };
 }
 
 function saveVSLFeatureConfigFromAdmin() {
@@ -9460,21 +9476,23 @@ function saveVSLFeatureConfigFromAdmin() {
   var leftInput = document.getElementById('adm-vsl-feature-vimeo-left').value.trim();
   var rightInput = document.getElementById('adm-vsl-feature-vimeo-right').value.trim();
   var thirdInput = document.getElementById('adm-vsl-feature-vimeo-third').value.trim();
-  if (!leftInput || !rightInput || !thirdInput) { toast('❌ 請輸入三支 Vimeo 特色影片 ID！'); return; }
+  var courseInput = document.getElementById('adm-vsl-feature-vimeo-course').value.trim();
+  if (!leftInput || !rightInput || !thirdInput || !courseInput) { toast('❌ 請輸入首頁影片的 Vimeo ID！'); return; }
 
   var leftVimeoId = extractVimeoId(leftInput);
   var rightVimeoId = extractVimeoId(rightInput);
   var thirdVimeoId = extractVimeoId(thirdInput);
-  if (!/^[0-9]+$/.test(leftVimeoId) || !/^[0-9]+$/.test(rightVimeoId) || !/^[0-9]+$/.test(thirdVimeoId)) {
+  var coursePreviewVimeoId = extractVimeoId(courseInput);
+  if (!/^[0-9]+$/.test(leftVimeoId) || !/^[0-9]+$/.test(rightVimeoId) || !/^[0-9]+$/.test(thirdVimeoId) || !/^[0-9]+$/.test(coursePreviewVimeoId)) {
     toast('❌ Vimeo 特色影片 ID 格式不正確！');
     return;
   }
 
-  var config = { leftVimeoId: leftVimeoId, rightVimeoId: rightVimeoId, thirdVimeoId: thirdVimeoId, status: status };
+  var config = { leftVimeoId: leftVimeoId, rightVimeoId: rightVimeoId, thirdVimeoId: thirdVimeoId, coursePreviewVimeoId: coursePreviewVimeoId, status: status };
   try {
     localStorage.setItem('chiwa_vsl_feature_config', JSON.stringify(config));
     toast('✅ 特色影片設定儲存成功！');
-    logCourseOp('特色影片異動：狀態改為「' + (status === 'publish' ? '上架' : '下架') + '」，左側ID「' + leftVimeoId + '」，右側ID「' + rightVimeoId + '」，第三支ID「' + thirdVimeoId + '」。');
+    logCourseOp('特色影片異動：狀態改為「' + (status === 'publish' ? '上架' : '下架') + '」，左側ID「' + leftVimeoId + '」，右側ID「' + rightVimeoId + '」，帳號案例ID「' + thirdVimeoId + '」，課程試看ID「' + coursePreviewVimeoId + '」。');
     renderVSLFeatureVideo();
   } catch(e) { toast('❌ 寫入 LocalStorage 失敗'); }
 }
@@ -9482,15 +9500,21 @@ function saveVSLFeatureConfigFromAdmin() {
 function renderVSLFeatureVideo() {
   var config = getVSLFeatureConfig();
   var container = document.getElementById('vsl-feature-container');
+  var monetizationContainer = document.getElementById('vsl-monetization-case-container');
+  var coursePreviewContainer = document.getElementById('vsl-course-preview-container');
   var wrap = document.getElementById('vsl-feature-video-wrap');
   if (!container || !wrap) return;
 
   if (config.status === 'unpublish') {
     container.style.display = 'none';
+    if (monetizationContainer) monetizationContainer.style.display = 'none';
+    if (coursePreviewContainer) coursePreviewContainer.style.display = 'none';
     return;
   }
 
   container.style.display = 'block';
+  if (monetizationContainer) monetizationContainer.style.display = 'block';
+  if (coursePreviewContainer) coursePreviewContainer.style.display = 'block';
   wrap.innerHTML = `
       <div class="vsl-box" id="vsl-feature-box-element" style="aspect-ratio:9/16; margin:0 auto;">
       <div class="vsl-play">▶</div>
@@ -9537,6 +9561,35 @@ function renderVSLFeatureVideo() {
     }
     applyVimeoCover('vsl-feature-box-element-3', config.thirdVimeoId, null);
   }
+  var courseWrap = document.getElementById('vsl-course-preview-video-wrap');
+  if (courseWrap) {
+    courseWrap.innerHTML = `
+        <div class="vsl-box" id="vsl-course-preview-box-element" style="aspect-ratio:16/9; margin:0 auto;">
+        <div class="vsl-play">▶</div>
+        <div class="vsl-label">點擊播放課程試看影片</div>
+      </div>
+    `;
+    var courseBox = document.getElementById('vsl-course-preview-box-element');
+    if (courseBox) {
+      courseBox.addEventListener('click', function() {
+        playVSLCoursePreviewVideo(config.coursePreviewVimeoId);
+      });
+    }
+    applyVimeoCover('vsl-course-preview-box-element', config.coursePreviewVimeoId, null);
+  }
+}
+
+function playVSLCoursePreviewVideo(vimeoId) {
+  var box = document.getElementById('vsl-course-preview-box-element');
+  if (!box) return;
+  chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'course_preview' });
+  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  box.removeAttribute('onclick');
+  attachVimeoTracking(box.querySelector('iframe'), {
+    videoId: vimeoId,
+    title: '製作AI情境影音課程試看',
+    placement: 'course_preview'
+  });
 }
 
 function playVSLFeatureVideo3(vimeoId) {
@@ -9584,10 +9637,12 @@ function updateAdminVSLFeatureUI() {
   var leftEl = document.getElementById('adm-vsl-feature-vimeo-left');
   var rightEl = document.getElementById('adm-vsl-feature-vimeo-right');
   var thirdEl = document.getElementById('adm-vsl-feature-vimeo-third');
+  var courseEl = document.getElementById('adm-vsl-feature-vimeo-course');
   if (statusEl) statusEl.value = config.status;
   if (leftEl) leftEl.value = config.leftVimeoId;
   if (rightEl) rightEl.value = config.rightVimeoId;
   if (thirdEl) thirdEl.value = config.thirdVimeoId;
+  if (courseEl) courseEl.value = config.coursePreviewVimeoId;
 }
 
 /* Enter 送出 */
