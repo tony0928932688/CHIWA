@@ -184,6 +184,10 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .vsl-feature-category .vsl-feature-grid{display:block;width:100%;max-width:340px;margin:auto auto 0}
 .vsl-feature-category .vsl-feature-grid .vsl-wrap{width:100%;max-width:340px}
 .vsl-feature-category .vsl-box{width:100%}
+.vsl-feature-copy{max-width:820px;margin:0 auto 34px;padding:24px 28px;border:1px solid rgba(232,197,90,.22);border-radius:16px;background:rgba(13,15,24,.72);text-align:left;color:var(--t2);font-size:14px;line-height:1.9}
+.vsl-feature-copy strong{display:block;color:var(--gold);font-size:16px;margin-bottom:10px}
+.vsl-feature-copy p{margin:0 0 12px}
+.vsl-feature-copy p:last-child{margin-bottom:0;color:var(--t1);font-weight:800}
 .vsl-standalone-video-section{max-width:1100px;margin:0 auto 80px;padding:0 24px;text-align:center}
 .vsl-standalone-video-section .vsl-wrap{width:min(360px,calc(100% - 32px));max-width:360px;margin:0 auto}
 .vsl-course-preview-section .vsl-wrap{width:min(860px,calc(100% - 32px));max-width:860px}
@@ -197,6 +201,7 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
   .vsl-wrap{width:min(340px,calc(100% - 32px));max-width:340px;padding:0;margin-bottom:48px}
   #vsl-wrap-container{width:min(320px,calc(100% - 32px));max-width:320px}
   .vsl-feature-section{padding:0 16px!important;margin-bottom:64px!important}
+  .vsl-feature-copy{padding:20px 18px!important;margin-bottom:30px!important;font-size:13px!important;line-height:1.85!important}
   .vsl-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;max-width:360px!important}
   .vsl-feature-grid .vsl-wrap{width:100%!important;max-width:174px!important;padding:0!important;margin:0 auto!important}
   .vsl-feature-category-grid{grid-template-columns:1fr!important;gap:42px!important;max-width:340px!important}
@@ -2554,7 +2559,17 @@ async function decrAvatar(secs) {
   <!-- 🎥 VSL 下方特色影片展示區 -->
   <div class="vsl-feature-section" id="vsl-feature-container" style="max-width:1100px; margin:0 auto 80px; padding:0 24px; text-align:center;">
     <h2 style="font-size: clamp(22px, 3.7vw, 32px); font-weight: 900; color: var(--gold); margin-bottom: 10px;">用AI做出比同行精緻，潛在客戶覺得有用的短影音</h2>
-    <p style="font-size: clamp(14px, 2.4vw, 18px); color: var(--t1); font-weight: 800; margin-bottom: 28px;">同行有趣，你有用</p>
+    <p style="font-size: clamp(14px, 2.4vw, 18px); color: var(--t1); font-weight: 800; margin-bottom: 22px;">同行有趣，你有用</p>
+    <div class="vsl-feature-copy">
+      <strong>迷思：我沒辦法像同行那樣有趣</strong>
+      <p>你有沒有看過你的同行在 TikTok 或 Reels 拍短影音，他講話很有趣、很有鏡頭感，然後你就覺得：「我沒辦法像他這樣，我說話不夠有趣。」</p>
+      <p>等一下。你搞錯了一件事。</p>
+      <p>你同行用有趣的方式讓人記住他，這沒錯。但你的潛在客戶上 TikTok，不是只在找有趣的東西。他們也在找有用的。</p>
+      <p>他們想知道買房子要注意什麼，想知道保險怎麼選，想知道茶葉好壞怎麼分辨，想知道發生這種事情該怎麼辦。</p>
+      <p>你的同行用有趣贏了觀眾緣，但你有一個他沒有的東西：有用。</p>
+      <p>你服務過的客戶問過你的每一個問題，你每天在做的每一件事，就是短影音最值錢的素材。你不需要站在鏡頭前面表演，你只要把你知道的東西說出來，用你的聲音，配上 AI 生成的寫實情境畫面，你的影片就是你潛在客戶在找的那種。</p>
+      <p>有趣的人吸引路人，有用的人吸引客戶。你要的是客戶，不是路人。</p>
+    </div>
     <div class="vsl-feature-category-grid">
       <div class="vsl-feature-category">
         <h3 style="font-size: clamp(16px, 2.7vw, 21px); font-weight: 850; color: var(--gold); margin-bottom: 18px;">第1種：形象&聲音 + AI情境影片</h3>
