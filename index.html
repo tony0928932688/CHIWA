@@ -9583,7 +9583,7 @@ function playVSLCoursePreviewVideo(vimeoId) {
   var box = document.getElementById('vsl-course-preview-box-element');
   if (!box) return;
   chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'course_preview' });
-  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=0&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
   box.removeAttribute('onclick');
   attachVimeoTracking(box.querySelector('iframe'), {
     videoId: vimeoId,
@@ -9596,7 +9596,7 @@ function playVSLFeatureVideo3(vimeoId) {
   var box = document.getElementById('vsl-feature-box-element-3');
   if (!box) return;
   chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'feature_third' });
-  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=0&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
   box.removeAttribute('onclick');
   attachVimeoTracking(box.querySelector('iframe'), {
     videoId: vimeoId,
@@ -9609,7 +9609,7 @@ function playVSLFeatureVideo2(vimeoId) {
   var box = document.getElementById('vsl-feature-box-element-2');
   if (!box) return;
   chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'feature_right' });
-  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=0&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
   box.removeAttribute('onclick');
   attachVimeoTracking(box.querySelector('iframe'), {
     videoId: vimeoId,
@@ -9622,7 +9622,7 @@ function playVSLFeatureVideo(vimeoId) {
   var box = document.getElementById('vsl-feature-box-element');
   if (!box) return;
   chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'feature_left' });
-  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=0&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
   box.removeAttribute('onclick');
   attachVimeoTracking(box.querySelector('iframe'), {
     videoId: vimeoId,
