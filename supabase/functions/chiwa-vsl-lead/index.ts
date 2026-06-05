@@ -123,8 +123,8 @@ function emailHtml(name: string) {
       <p style="font-size:15px;line-height:1.8;color:#c9c4d8;margin:0 0 18px">${safeName} 你好，這是你剛剛索取的影片觀看連結。</p>
       <p style="font-size:14px;line-height:1.8;color:#b9b5c8;margin:0 0 22px">影片內容以方法與流程說明為主，實際成果會因產業、素材品質、執行方式與各平台規則而不同。</p>
       <a href="${VSL_PRIVATE_VIDEO_URL}" style="display:inline-block;background:#e8c55a;color:#080912;text-decoration:none;font-weight:800;border-radius:10px;padding:13px 18px">觀看完整方法說明</a>
-      <p style="font-size:14px;line-height:1.8;color:#b9b5c8;margin:22px 0 12px">看完後，如果你想確認自己的素材與流程是否適合，可以先填寫諮詢評估表，我們會依你的狀況安排 45 分鐘一對一諮詢。</p>
-      <a href="${VSL_BOOKING_URL}" style="display:inline-block;border:1px solid rgba(232,197,90,.55);color:#e8c55a;text-decoration:none;font-weight:800;border-radius:10px;padding:12px 16px">填寫諮詢評估表</a>
+      <p style="font-size:14px;line-height:1.8;color:#b9b5c8;margin:22px 0 12px">看完後，如果你想確認自己的素材與流程是否適合，可以先預約一對一諮詢。表單會先請你填寫產業、商品服務與目前狀況，方便我們在諮詢前了解你。</p>
+      <a href="${VSL_BOOKING_URL}" style="display:inline-block;border:1px solid rgba(232,197,90,.55);color:#e8c55a;text-decoration:none;font-weight:800;border-radius:10px;padding:12px 16px">預約一對一諮詢</a>
       <p style="font-size:12px;line-height:1.7;color:#85819a;margin:22px 0 0">如果按鈕無法開啟，請複製這個連結：<br><span style="word-break:break-all;color:#e8c55a">${VSL_PRIVATE_VIDEO_URL}</span></p>
     </div>
   </div>
