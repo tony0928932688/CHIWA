@@ -179,6 +179,10 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .vsl-lead-hp{position:absolute!important;left:-10000px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important}
 .vsl-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:760px;margin:0 auto;align-items:start}
 .vsl-feature-grid .vsl-wrap{width:100%;max-width:340px;margin:0 auto;padding:0}
+.vsl-feature-category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;max-width:820px;margin:0 auto;align-items:start}
+.vsl-feature-category{min-width:0}
+.vsl-feature-category .vsl-feature-grid{display:block;max-width:340px;margin:0 auto}
+.vsl-feature-category .vsl-feature-grid .vsl-wrap{width:100%;max-width:340px}
 .vsl-box iframe{display:block}
 @media(max-width:640px){
   body{padding-bottom:120px}
@@ -190,6 +194,9 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
   .vsl-feature-section{padding:0 16px!important;margin-bottom:64px!important}
   .vsl-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;max-width:360px!important}
   .vsl-feature-grid .vsl-wrap{width:100%!important;max-width:174px!important;padding:0!important;margin:0 auto!important}
+  .vsl-feature-category-grid{grid-template-columns:1fr!important;gap:42px!important;max-width:340px!important}
+  .vsl-feature-category .vsl-feature-grid{display:block!important;max-width:320px!important}
+  .vsl-feature-category .vsl-feature-grid .vsl-wrap{width:100%!important;max-width:320px!important}
   .vsl-box{border-radius:14px;gap:8px}
   .vsl-play{width:clamp(42px,13vw,54px);height:clamp(42px,13vw,54px);font-size:clamp(17px,5vw,21px)}
   .vsl-label{font-size:11px;line-height:1.35;padding:0 8px}
@@ -2538,13 +2545,23 @@ async function decrAvatar(secs) {
 
   <!-- 🎥 VSL 下方特色影片展示區 -->
   <div class="vsl-feature-section" id="vsl-feature-container" style="max-width:1100px; margin:0 auto 80px; padding:0 24px; text-align:center;">
-    <h2 style="font-size: clamp(20px, 3.5vw, 28px); font-weight: 800; color: var(--gold); margin-bottom: 8px;">不露臉，只用聲音反而可以做出更精緻的短影音</h2>
-    <p style="font-size: clamp(13px, 2.2vw, 16px); color: var(--t1); font-weight: 700; margin-bottom: 6px;">AI 輔助你完成口播</p>
-    <p style="font-size: clamp(12px, 2vw, 15px); color: var(--t2); margin-bottom: 24px;">使用你授權建立的 AI 聲音風格，讓你傳達商品/服務/知識更輕鬆</p>
-    
-    <div class="vsl-feature-grid">
-      <div class="vsl-wrap" id="vsl-feature-video-wrap" style="padding:0; margin:0;"></div>
-      <div class="vsl-wrap" id="vsl-feature-video-wrap-2" style="padding:0; margin:0;"></div>
+    <div class="vsl-feature-category-grid">
+      <div class="vsl-feature-category">
+        <h2 style="font-size: clamp(20px, 3.5vw, 28px); font-weight: 800; color: var(--gold); margin-bottom: 8px;">用數字人，讓自己的克隆形象露臉</h2>
+        <p style="font-size: clamp(13px, 2.2vw, 16px); color: var(--t1); font-weight: 700; margin-bottom: 6px;">搭配 AI 生成的情境影片</p>
+        <p style="font-size: clamp(12px, 2vw, 15px); color: var(--t2); margin-bottom: 24px;">做出比同行更精緻的短影音</p>
+        <div class="vsl-feature-grid">
+          <div class="vsl-wrap" id="vsl-feature-video-wrap" style="padding:0; margin:0;"></div>
+        </div>
+      </div>
+      <div class="vsl-feature-category">
+        <h2 style="font-size: clamp(20px, 3.5vw, 28px); font-weight: 800; color: var(--gold); margin-bottom: 8px;">不露臉，只用聲音反而可以做出更精緻的短影音</h2>
+        <p style="font-size: clamp(13px, 2.2vw, 16px); color: var(--t1); font-weight: 700; margin-bottom: 6px;">AI 輔助你完成口播</p>
+        <p style="font-size: clamp(12px, 2vw, 15px); color: var(--t2); margin-bottom: 24px;">使用你授權建立的 AI 聲音風格，讓你傳達商品/服務/知識更輕鬆</p>
+        <div class="vsl-feature-grid">
+          <div class="vsl-wrap" id="vsl-feature-video-wrap-2" style="padding:0; margin:0;"></div>
+        </div>
+      </div>
     </div>
   </div>
 
