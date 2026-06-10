@@ -43,3 +43,5 @@
 #page-home .vsl-feature-copy,#page-home .vsl-monetization-copy,#page-home .vsl-course-preview-copy{padding:20px 18px;font-size:14px!important}
 #page-home .funnel-clarity-section,#page-home .funnel-decision-section,#page-home .funnel-not-fit-section,#page-home .vsl-standalone-video-section{margin-bottom:60px;padding:0 16px}
 }
+#page-home .column-title,#page-home .column-title-stacked{font-size:clamp(24px,3.5vw,32px)!important;font-weight:950!important}
+#page-home #vsl-main-container p,#page-home #vsl-main-container div>p{text-align:left!important;font-size:15px!important;line-height:1.9!important}
