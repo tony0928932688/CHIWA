@@ -1,28 +1,16 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const SHOTSTACK_RENDER_URL =
-  Deno.env.get("SHOTSTACK_RENDER_URL") ||
-  (Deno.env.get("SHOTSTACK_API_KEY") ? "https://api.shotstack.io/edit/v1/render" : "https://api.shotstack.io/edit/stage/render");
+const SHOTSTACK_RENDER_URL = Deno.env.get("SHOTSTACK_RENDER_URL") || "https://api.shotstack.io/edit/stage/render";
 const AVATAR_WORKER_URL = "https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev";
 
-const ALLOWED_ORIGINS = new Set([
-  "https://chiwaai.com",
-  "http://localhost:8787",
-  "http://127.0.0.1:8787",
-]);
-
-function corsHeaders(req?: Request) {
-  const origin = req?.headers.get("Origin") || "";
-  const allowOrigin = ALLOWED_ORIGINS.has(origin) ? origin : "https://chiwaai.com";
-  return {
-    "Access-Control-Allow-Origin": allowOrigin,
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Max-Age": "86400",
-    "Vary": "Origin",
-  };
-}
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "https://chiwaai.com",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400",
+  "Vary": "Origin",
+};
 
 const supabaseAdmin = createClient(
   Deno.env.get("SUPABASE_URL") || "",
@@ -30,15 +18,15 @@ const supabaseAdmin = createClient(
   { auth: { persistSession: false } },
 );
 
-function jsonResponse(body: unknown, status = 200, req?: Request) {
+function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders(req), "Content-Type": "application/json; charset=utf-8" },
+    headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8" },
   });
 }
 
-function neutralError(message = "video_render_failed", status = 500, req?: Request) {
-  return jsonResponse({ error: message }, status, req);
+function neutralError(message = "video_render_failed", status = 500) {
+  return jsonResponse({ error: message }, status);
 }
 
 function normalizeEmail(value: unknown) {
@@ -130,7 +118,6 @@ function shotstackHeaders(apiKey: string) {
 function internalWorkerSecret() {
   return (
     Deno.env.get("AVATAR_WORKER_INTERNAL_SECRET") ||
-    Deno.env.get("AVATAR_R2_WORKER_SECRET") ||
     Deno.env.get("RUNNINGHUB_API_KEY") ||
     ""
   );
@@ -191,104 +178,23 @@ async function uploadSubtitleToR2(token: string, srtText: string) {
   });
 }
 
-function parseSrtTime(value: string) {
-  const match = String(value || "").trim().match(/^(\d{2}):(\d{2}):(\d{2})[,.](\d{3})$/);
-  if (!match) return 0;
-  const [, hh, mm, ss, ms] = match;
-  return Number(hh) * 3600 + Number(mm) * 60 + Number(ss) + Number(ms) / 1000;
-}
-
-function normalizeCueText(value: unknown) {
-  return String(value || "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 90);
-}
-
-function escapeHtml(value: unknown) {
-  return String(value || "").replace(/[&<>"']/g, (char) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    "\"": "&quot;",
-    "'": "&#39;",
-  }[char] || char));
-}
-
-function htmlTextAsset(text: string, fontSize: number, height: number) {
-  return {
-    type: "html",
-    html: `<p>${escapeHtml(text)}</p>`,
-    css: `p { box-sizing: border-box; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; margin: 0; padding: 10px 18px; font-family: 'Noto Sans SC'; font-size: ${fontSize}px; font-weight: 900; line-height: 1.22; color: #ffffff; text-shadow: 0 3px 14px rgba(0,0,0,.95), 0 0 4px rgba(0,0,0,.9); }`,
-    width: 920,
-    height,
-  };
-}
-
-function parseSrtCues(srtText: string, duration: number) {
-  const length = normalizeSeconds(duration);
-  const cues: Array<{ start: number; end: number; text: string }> = [];
-  const blocks = String(srtText || "").replace(/\r\n/g, "\n").split(/\n\s*\n/);
-
-  for (const block of blocks) {
-    const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
-    const timeIndex = lines.findIndex((line) => line.includes("-->"));
-    if (timeIndex < 0) continue;
-    const timing = lines[timeIndex].match(/(\d{2}:\d{2}:\d{2}[,.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,.]\d{3})/);
-    if (!timing) continue;
-
-    const start = Math.max(0, Math.min(length, parseSrtTime(timing[1])));
-    const end = Math.max(start + 0.25, Math.min(length, parseSrtTime(timing[2])));
-    const text = normalizeCueText(lines.slice(timeIndex + 1).join(" "));
-    if (text) cues.push({ start, end, text });
-  }
-
-  return cues.slice(0, 180);
-}
-
-function buildSubtitleClips(srtText: string, duration: number) {
-  const length = normalizeSeconds(duration);
-  let cues = parseSrtCues(srtText, length);
-  if (!cues.length) {
-    const lines = String(srtText || "")
-      .replace(/\r\n/g, "\n")
-      .split(/\n+/)
-      .map(normalizeCueText)
-      .filter(Boolean)
-      .slice(0, 120);
-    const cueLength = lines.length ? length / lines.length : length;
-    cues = lines.map((text, index) => ({
-      start: index * cueLength,
-      end: Math.min(length, (index + 1) * cueLength),
-      text,
-    }));
-  }
-  return cues.map((cue) => ({
-    asset: htmlTextAsset(cue.text, 42, 170),
-    start: Number(cue.start.toFixed(3)),
-    length: Number(Math.max(0.25, cue.end - cue.start).toFixed(3)),
-    position: "bottom",
-    offset: { y: 0.18 },
-  }));
-}
-
-function buildShotstackEdit(videoUrl: string, title: string, duration: number, srtText: string) {
+function buildShotstackEdit(videoUrl: string, subtitleUrl: string, title: string, duration: number) {
   const safeTitle = cleanText(title, 80) || "AI自媒體系統";
   const length = normalizeSeconds(duration);
-  const subtitleClips = buildSubtitleClips(srtText, length);
   return {
     timeline: {
       background: "#000000",
-      fonts: [
-        {
-          src: "https://shotstack-assets.s3-ap-southeast-2.amazonaws.com/fonts/NotoSansSC-Regular.otf",
-        },
-      ],
       tracks: [
         {
           clips: [
             {
-              asset: htmlTextAsset(safeTitle, 56, 150),
+              asset: {
+                type: "title",
+                text: safeTitle,
+                style: "minimal",
+                color: "#ffffff",
+                size: "medium",
+              },
               start: 0,
               length,
               position: "top",
@@ -297,7 +203,32 @@ function buildShotstackEdit(videoUrl: string, title: string, duration: number, s
           ],
         },
         {
-          clips: subtitleClips,
+          clips: [
+            {
+              asset: {
+                type: "caption",
+                src: subtitleUrl,
+                font: {
+                  family: "Noto Sans",
+                  color: "#ffffff",
+                  size: 32,
+                  lineHeight: 0.92,
+                  stroke: "#000000",
+                  strokeWidth: 1.6,
+                },
+                background: {
+                  color: "#000000",
+                  opacity: 0.18,
+                  padding: 14,
+                  borderRadius: 10,
+                },
+              },
+              start: 0,
+              length,
+              position: "bottom",
+              offset: { y: 0.15 },
+            },
+          ],
         },
         {
           clips: [
@@ -335,18 +266,19 @@ function normalizeShotstackStatus(data: any) {
 
 async function handleSubmit(req: Request, body: any) {
   const apiKey = Deno.env.get("SHOTSTACK_API_KEY") || Deno.env.get("SHOTSTACK_SANDBOX_API_KEY") || "";
-  if (!apiKey) return neutralError("video_render_not_configured", 500, req);
+  if (!apiKey) return neutralError("video_render_not_configured", 500);
 
-  const { student } = await getAuthorizedStudent(req);
+  const { student, token } = await getAuthorizedStudent(req);
   const videoUrl = assertUrl(body.video_url, "video_url");
   const srtText = cleanText(body.srt_text, 50000);
-  if (!srtText) return neutralError("missing_subtitles", 400, req);
+  if (!srtText) return neutralError("missing_subtitles", 400);
 
+  const subtitle = await uploadSubtitleToR2(token, srtText);
   const edit = buildShotstackEdit(
     videoUrl,
+    subtitle.signedUrl,
     body.title,
     body.duration_seconds,
-    srtText,
   );
 
   const res = await fetch(SHOTSTACK_RENDER_URL, {
@@ -357,7 +289,7 @@ async function handleSubmit(req: Request, body: any) {
   const data = await readJsonOrText(res);
   if (!res.ok) {
     console.error("video_render_submit_failed", JSON.stringify(data));
-    return neutralError("video_render_submit_failed", res.status || 500, req);
+    return neutralError("video_render_submit_failed", res.status || 500);
   }
 
   const normalized = normalizeShotstackStatus(data);
@@ -365,7 +297,7 @@ async function handleSubmit(req: Request, body: any) {
     renderId: normalized.id,
     status: normalized.status || "QUEUED",
     studentId: student.id,
-  }, 200, req);
+  });
 }
 
 async function importRenderedOutput(student: any, renderId: string, sourceUrl: string) {
@@ -392,11 +324,11 @@ async function importRenderedOutput(student: any, renderId: string, sourceUrl: s
 
 async function handleQuery(req: Request, body: any) {
   const apiKey = Deno.env.get("SHOTSTACK_API_KEY") || Deno.env.get("SHOTSTACK_SANDBOX_API_KEY") || "";
-  if (!apiKey) return neutralError("video_render_not_configured", 500, req);
+  if (!apiKey) return neutralError("video_render_not_configured", 500);
 
   const { student } = await getAuthorizedStudent(req);
   const renderId = safePathSegment(body.render_id || body.renderId, "");
-  if (!renderId) return neutralError("missing_render_id", 400, req);
+  if (!renderId) return neutralError("missing_render_id", 400);
 
   const queryUrl = `${SHOTSTACK_RENDER_URL.replace(/\/+$/, "")}/${encodeURIComponent(renderId)}`;
   const res = await fetch(queryUrl, {
@@ -406,7 +338,7 @@ async function handleQuery(req: Request, body: any) {
   const data = await readJsonOrText(res);
   if (!res.ok) {
     console.error("video_render_query_failed", JSON.stringify(data));
-    return neutralError("video_render_query_failed", res.status || 500, req);
+    return neutralError("video_render_query_failed", res.status || 500);
   }
 
   const normalized = normalizeShotstackStatus(data);
@@ -419,34 +351,34 @@ async function handleQuery(req: Request, body: any) {
       previewUrl: imported.previewUrl,
       downloadUrl: imported.downloadUrl,
       outputExpiresAt: imported.expiresAt,
-    }, 200, req);
+    });
   }
 
   if (["FAILED", "ERROR"].includes(status)) {
     console.error("video_render_failed", JSON.stringify(normalized.response || data));
-    return jsonResponse({ status: "FAILED", renderId, error: "video_render_failed" }, 200, req);
+    return jsonResponse({ status: "FAILED", renderId, error: "video_render_failed" });
   }
 
   return jsonResponse({
     status: status || "RUNNING",
     renderId,
-  }, 200, req);
+  });
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
-  if (req.method !== "POST") return neutralError("method_not_allowed", 405, req);
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method !== "POST") return neutralError("method_not_allowed", 405);
 
   try {
     const body = await req.json().catch(() => ({}));
     const action = String(body.action || "").trim();
     if (action === "submit") return await handleSubmit(req, body);
     if (action === "query") return await handleQuery(req, body);
-    return neutralError("unknown_action", 400, req);
+    return neutralError("unknown_action", 400);
   } catch (error) {
     console.error(error);
     const status = Number((error as any)?.status || 500);
     const message = error instanceof Error ? error.message : "unexpected_error";
-    return neutralError(message, status, req);
+    return neutralError(message, status);
   }
 });

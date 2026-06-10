@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com https://analytics.tiktok.com https://business-api.tiktok.com https://connect.facebook.net https://player.vimeo.com https://www.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://nsauscojruqjcprvsfsn.supabase.co https://nsauscojruqjcprvsfsn.storage.supabase.co wss://nsauscojruqjcprvsfsn.supabase.co https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev https://chiwa-avatar-r2.tony0928932688.workers.dev https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://analytics.tiktok.com https://business-api.tiktok.com https://connect.facebook.net https://www.facebook.com https://*.clarity.ms; frame-src https://player.vimeo.com https://vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://calendar.app.google https://p.ecpay.com.tw; upgrade-insecure-requests;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com https://player.vimeo.com https://www.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://nsauscojruqjcprvsfsn.supabase.co https://nsauscojruqjcprvsfsn.storage.supabase.co wss://nsauscojruqjcprvsfsn.supabase.co https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev https://chiwa-avatar-r2.tony0928932688.workers.dev https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://*.clarity.ms; frame-src https://player.vimeo.com https://vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://calendar.app.google https://p.ecpay.com.tw; upgrade-insecure-requests;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>吉娃AI自媒體系統</title>
 <meta name="description" content="AI自媒體系統，讓AI替你說話、做好自媒體。AI幫你想文案，幫你用你的聲音說話，只需錄一次60秒影片，AI分身替你經營短影音。">
@@ -113,7 +113,7 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 #toast.show{opacity:1}
 
 /* ── LINE FLOAT ── */
-.line-float{display:none!important;pointer-events:none!important;visibility:hidden!important}
+.line-float{position:fixed;right:22px;bottom:28px;width:54px;height:54px;border-radius:50%;background:var(--line);box-shadow:0 4px 16px rgba(6,199,85,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:8000;transition:transform .2s,box-shadow .2s;text-decoration:none}
 .line-float:hover{transform:scale(1.1);box-shadow:0 6px 24px rgba(6,199,85,.55)}
 .line-float:active{transform:scale(.95)}
 .line-float svg{width:30px;height:30px}
@@ -121,7 +121,7 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .consult-float:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 0 0 6px rgba(232,197,90,.18),0 12px 34px rgba(232,197,90,.55)}
 .consult-float:active{transform:scale(.96)}
 @keyframes consultPulse{0%,100%{box-shadow:0 0 0 5px rgba(232,197,90,.12),0 10px 30px rgba(232,197,90,.42)}50%{box-shadow:0 0 0 9px rgba(232,197,90,.2),0 12px 36px rgba(232,197,90,.58)}}
-.line-tip{display:none!important;pointer-events:none!important;visibility:hidden!important}
+.line-tip{position:fixed;right:84px;bottom:41px;background:#fff;color:#0a0a0f;font-size:12px;font-weight:700;padding:5px 12px;border-radius:100px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;box-shadow:0 2px 10px rgba(0,0,0,.25)}
 .line-float:hover+.line-tip{opacity:1}
 
 /* ══════════════════════════════════
@@ -148,10 +148,7 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 
 .vsl-wrap{margin:0 auto 80px;width:min(430px,calc(100% - 32px));max-width:430px;padding:0}
-.vsl-box{background:var(--card);border:1px solid var(--bdr);border-radius:16px;aspect-ratio:9/16;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;position:relative;overflow:hidden;background-size:cover;background-position:center}
-.vsl-box::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.52));z-index:0;opacity:0;transition:opacity .2s}
-.vsl-box.has-cover::before{opacity:1}
-.vsl-box .vsl-play,.vsl-box .vsl-label{position:relative;z-index:1}
+.vsl-box{background:var(--card);border:1px solid var(--bdr);border-radius:16px;aspect-ratio:9/16;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;position:relative;overflow:hidden}
 .vsl-play{width:70px;height:70px;border-radius:50%;background:rgba(232,197,90,.15);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:26px;transition:all .2s}
 .vsl-box:hover .vsl-play{background:rgba(232,197,90,.25);transform:scale(1.05)}
 .vsl-label{color:var(--t2);font-size:13px}
@@ -1280,42 +1277,11 @@ const CHIWA_LINE_URL = 'https://line.me/R/ti/p/@543xxzvk';
 const CHIWA_ECPAY_URL = 'https://p.ecpay.com.tw/20FFCB5';
 const CHIWA_GA4_MEASUREMENT_ID = '';
 const CHIWA_GTM_CONTAINER_ID = 'GTM-N9XQS54H';
-const CHIWA_META_PIXEL_ID = '1568355111381071';
 const CHIWA_CLARITY_PROJECT_ID = '';
 let chiwaAnalyticsReady = false;
 let chiwaVimeoSdkPromise = null;
 const chiwaVideoSessions = {};
 const chiwaScrollMarks = {};
-const CHIWA_ATTR_SESSION_KEY = 'chiwa_ad_attribution_session';
-const CHIWA_ATTR_FIRST_KEY = 'chiwa_ad_attribution_first';
-const CHIWA_TIKTOK_EVENT_MAP = {
-  cta_click_booking: 'Schedule',
-  cta_click_line: 'Contact',
-  begin_checkout: 'InitiateCheckout',
-  login_success: 'CompleteRegistration',
-  vsl_start: 'ViewContent'
-};
-const CHIWA_META_EVENT_MAP = {
-  ad_landing: { name: 'ChiwaAdLanding', custom: true },
-  cta_click_booking: { name: 'Schedule' },
-  generate_lead: { name: 'Lead' },
-  cta_click_line: { name: 'Contact' },
-  begin_checkout: { name: 'InitiateCheckout' },
-  login_success: { name: 'CompleteRegistration' },
-  vsl_click_play: { name: 'ChiwaVideoClick', custom: true },
-  vsl_start: { name: 'ViewContent' },
-  vsl_resume: { name: 'ChiwaVideoResume', custom: true },
-  vsl_complete: { name: 'ChiwaVideoComplete', custom: true },
-  vsl_watch_seconds: { name: 'ChiwaVideoWatchTime', custom: true },
-  scroll_depth: { name: 'ChiwaScrollDepth', custom: true },
-  section_view: { name: 'ChiwaSectionView', custom: true },
-  page_engagement: { name: 'ChiwaPageEngagement', custom: true },
-  outbound_click: { name: 'ChiwaOutboundClick', custom: true },
-  site_click: { name: 'ChiwaSiteClick', custom: true }
-};
-let chiwaSessionStartedAt = Date.now();
-let chiwaSectionObserverReady = false;
-let chiwaClickTrackerReady = false;
 
 function loadChiwaScript(src, id) {
   if (id && document.getElementById(id)) return Promise.resolve();
@@ -1334,7 +1300,6 @@ function initChiwaAnalytics() {
   if (chiwaAnalyticsReady) return;
   chiwaAnalyticsReady = true;
   window.dataLayer = window.dataLayer || [];
-  captureChiwaAttribution();
 
   if (CHIWA_GTM_CONTAINER_ID) {
     window.dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' });
@@ -1360,295 +1325,19 @@ function initChiwaAnalytics() {
       y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, 'clarity', 'script', CHIWA_CLARITY_PROJECT_ID);
   }
-  initChiwaMetaPixel();
-  pushChiwaLandingEvent();
-  initChiwaClickTracking();
-  initChiwaSectionTracking();
-}
-
-function initChiwaMetaPixel() {
-  if (!CHIWA_META_PIXEL_ID || window.__chiwaMetaPixelReady) return;
-  window.__chiwaMetaPixelReady = true;
-  !function(f,b,e,v,n,t,s){
-    if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s);
-  }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-  window.fbq('init', CHIWA_META_PIXEL_ID);
-  window.fbq('track', 'PageView', {
-    page_location: location.href,
-    page_path: location.pathname || '/',
-    traffic_source: getChiwaAttribution().traffic_source || '',
-    traffic_medium: getChiwaAttribution().traffic_medium || '',
-    traffic_campaign: getChiwaAttribution().traffic_campaign || '',
-    fbclid: getChiwaAttribution().fbclid || ''
-  }, { eventID: 'chiwa_page_view_' + Date.now() });
-}
-
-function parseChiwaAttributionFromUrl() {
-  const params = new URLSearchParams(location.search || '');
-  const keys = [
-    'ttclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content',
-    'utm_term', 'utm_campaign_name', 'utm_placement', 'campaignid',
-    'adgroupid', 'adsetid', 'adid', 'gbraid', 'gclid', 'fbclid'
-  ];
-  const data = {};
-  keys.forEach(function(key) {
-    const value = params.get(key);
-    if (value) data[key] = value.slice(0, 220);
-  });
-  if (!data.utm_source && data.ttclid) data.utm_source = 'tiktok';
-  if (!data.utm_medium && data.ttclid) data.utm_medium = 'paid_social';
-  if (!data.utm_source && data.fbclid) data.utm_source = 'meta';
-  if (!data.utm_medium && data.fbclid) data.utm_medium = 'paid_social';
-  return data;
-}
-
-function readChiwaJson(key) {
-  try { return JSON.parse(localStorage.getItem(key) || 'null') || {}; } catch(e) { return {}; }
-}
-
-function writeChiwaJson(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value || {})); } catch(e) {}
-}
-
-function captureChiwaAttribution() {
-  const current = parseChiwaAttributionFromUrl();
-  const hasCurrent = Object.keys(current).length > 0;
-  const sessionData = Object.assign({}, readChiwaJson(CHIWA_ATTR_SESSION_KEY));
-  const firstData = Object.assign({}, readChiwaJson(CHIWA_ATTR_FIRST_KEY));
-  if (hasCurrent) {
-    const stamped = Object.assign({}, current, {
-      landing_page: location.href,
-      landing_path: location.pathname || '/',
-      referrer: document.referrer || '',
-      captured_at: new Date().toISOString()
-    });
-    writeChiwaJson(CHIWA_ATTR_SESSION_KEY, stamped);
-    if (!firstData.captured_at) writeChiwaJson(CHIWA_ATTR_FIRST_KEY, stamped);
-  } else if (!sessionData.captured_at && document.referrer) {
-    writeChiwaJson(CHIWA_ATTR_SESSION_KEY, {
-      referrer: document.referrer,
-      landing_page: location.href,
-      landing_path: location.pathname || '/',
-      captured_at: new Date().toISOString()
-    });
-  }
-}
-
-function getChiwaAttribution() {
-  const sessionData = readChiwaJson(CHIWA_ATTR_SESSION_KEY);
-  const firstData = readChiwaJson(CHIWA_ATTR_FIRST_KEY);
-  return {
-    traffic_source: sessionData.utm_source || sessionData.source || '',
-    traffic_medium: sessionData.utm_medium || '',
-    traffic_campaign: sessionData.utm_campaign || '',
-    traffic_content: sessionData.utm_content || '',
-    traffic_term: sessionData.utm_term || '',
-    traffic_campaign_name: sessionData.utm_campaign_name || '',
-    traffic_placement: sessionData.utm_placement || '',
-    ttclid: sessionData.ttclid || '',
-    fbclid: sessionData.fbclid || '',
-    ad_id: sessionData.adid || '',
-    adgroup_id: sessionData.adgroupid || sessionData.adsetid || '',
-    campaign_id: sessionData.campaignid || '',
-    first_traffic_source: firstData.utm_source || '',
-    first_traffic_campaign: firstData.utm_campaign || '',
-    landing_page: sessionData.landing_page || firstData.landing_page || '',
-    landing_referrer: sessionData.referrer || firstData.referrer || document.referrer || ''
-  };
-}
-
-function pushChiwaLandingEvent() {
-  const attribution = getChiwaAttribution();
-  chiwaTrack('ad_landing', {
-    landing_has_ttclid: !!attribution.ttclid,
-    landing_has_fbclid: !!attribution.fbclid,
-    landing_source: attribution.traffic_source || 'direct_or_unknown',
-    landing_medium: attribution.traffic_medium || '',
-    landing_campaign: attribution.traffic_campaign || '',
-    landing_path: location.pathname || '/'
-  });
 }
 
 function chiwaTrack(eventName, params) {
   const payload = Object.assign({
     page_location: location.href,
     page_title: document.title,
-    page_path: location.pathname || '/',
-    logged_in: !!currentUser,
-    event_id: eventName + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)
-  }, getChiwaAttribution(), params || {});
+    logged_in: !!currentUser
+  }, params || {});
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push(Object.assign({ event: eventName }, payload));
-  try {
-    document.documentElement.setAttribute('data-chiwa-last-event', eventName);
-    document.documentElement.setAttribute('data-chiwa-last-source', payload.traffic_source || '');
-    document.documentElement.setAttribute('data-chiwa-last-campaign', payload.traffic_campaign || '');
-  } catch(e) {}
   if (typeof window.gtag === 'function' && CHIWA_GA4_MEASUREMENT_ID) {
     window.gtag('event', eventName, payload);
   }
-  pushChiwaTikTokEvent(eventName, payload);
-  pushChiwaMetaEvent(eventName, payload);
-}
-
-function buildChiwaMetaCustomData(eventName, payload) {
-  const data = {
-    content_name: payload.content_name || payload.video_title || payload.description || 'Chiwa AI',
-    content_category: payload.content_type || 'service',
-    content_type: payload.content_type || 'service',
-    content_ids: [payload.content_id || payload.video_id || 'chiwa_ai'],
-    currency: payload.currency || 'TWD',
-    page_location: payload.page_location,
-    page_path: payload.page_path,
-    traffic_source: payload.traffic_source,
-    traffic_medium: payload.traffic_medium,
-    traffic_campaign: payload.traffic_campaign,
-    traffic_campaign_name: payload.traffic_campaign_name,
-    traffic_content: payload.traffic_content,
-    traffic_placement: payload.traffic_placement,
-    fbclid: payload.fbclid,
-    cta_source: payload.cta_source,
-    destination: payload.destination,
-    lead_type: payload.lead_type,
-    video_id: payload.video_id,
-    video_placement: payload.video_placement,
-    video_progress: payload.video_progress,
-    watch_seconds: payload.watch_seconds,
-    scroll_percent: payload.scroll_percent,
-    section_id: payload.section_id,
-    section_label: payload.section_label,
-    engagement_seconds: payload.engagement_seconds,
-    engagement_reason: payload.engagement_reason,
-    click_text: payload.click_text,
-    click_url: payload.click_url,
-    click_destination: payload.click_destination,
-    click_section: payload.click_section
-  };
-  if (eventName === 'begin_checkout') {
-    data.content_name = 'Chiwa AI course checkout';
-    data.content_category = 'course';
-    data.content_type = 'product';
-    data.content_ids = ['chiwa_course'];
-  } else if (eventName === 'cta_click_booking' || eventName === 'generate_lead') {
-    data.content_name = 'Chiwa AI consultation booking';
-    data.content_category = 'consultation';
-    data.content_ids = ['chiwa_consultation'];
-  } else if (eventName === 'cta_click_line') {
-    data.content_name = 'Chiwa LINE contact';
-    data.content_category = 'contact';
-    data.content_ids = ['chiwa_line_contact'];
-  } else if (eventName === 'login_success') {
-    data.content_name = 'Chiwa student workspace';
-    data.content_category = 'account';
-    data.content_ids = ['chiwa_student_workspace'];
-  } else if (eventName === 'vsl_start') {
-    data.content_name = payload.video_title || 'Chiwa VSL video';
-    data.content_category = 'video';
-    data.content_type = 'video';
-    data.content_ids = [payload.video_id || 'chiwa_vsl'];
-  } else if (eventName === 'vsl_click_play' || eventName === 'vsl_resume' || eventName === 'vsl_complete' || eventName === 'vsl_watch_seconds' || /^vsl_progress_/.test(eventName)) {
-    data.content_name = payload.video_title || 'Chiwa landing page video';
-    data.content_category = 'video';
-    data.content_type = 'video';
-    data.content_ids = [payload.video_id || payload.video_placement || 'chiwa_vsl'];
-  } else if (eventName === 'scroll_depth') {
-    data.content_name = 'Landing page scroll ' + (payload.scroll_percent || 0) + '%';
-    data.content_category = 'landing_page_engagement';
-    data.content_ids = ['scroll_' + (payload.scroll_percent || 0)];
-  } else if (eventName === 'section_view') {
-    data.content_name = payload.section_label || payload.section_id || 'Landing page section';
-    data.content_category = 'landing_page_section';
-    data.content_ids = [payload.section_id || 'landing_section'];
-  } else if (eventName === 'page_engagement') {
-    data.content_name = 'Landing page engagement';
-    data.content_category = 'landing_page_engagement';
-    data.content_ids = [payload.page_id || 'landing_page'];
-    data.value = Number(payload.engagement_seconds || 0);
-  } else if (eventName === 'outbound_click' || eventName === 'site_click') {
-    data.content_name = payload.click_text || payload.click_id || payload.click_url || 'Landing page click';
-    data.content_category = eventName === 'outbound_click' ? 'outbound_click' : 'site_click';
-    data.content_ids = [payload.click_id || payload.click_url || payload.click_text || eventName];
-  }
-  Object.keys(data).forEach(function(key) {
-    if (data[key] === '' || data[key] == null) delete data[key];
-  });
-  return data;
-}
-
-function resolveChiwaMetaEvent(eventName) {
-  if (CHIWA_META_EVENT_MAP[eventName]) return CHIWA_META_EVENT_MAP[eventName];
-  if (/^vsl_progress_/.test(eventName)) return { name: 'ChiwaVideoProgress', custom: true };
-  return null;
-}
-
-function pushChiwaMetaEvent(eventName, payload) {
-  const metaEvent = resolveChiwaMetaEvent(eventName);
-  if (!metaEvent) return;
-  const customData = buildChiwaMetaCustomData(eventName, payload);
-  const eventOptions = { eventID: payload.event_id };
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push(Object.assign({
-    event: metaEvent.name,
-    meta_event_name: metaEvent.name,
-    chiwa_event_name: eventName,
-    event_id: payload.event_id
-  }, customData));
-  if (typeof window.fbq === 'function' && CHIWA_META_PIXEL_ID) {
-    if (metaEvent.custom) {
-      window.fbq('trackCustom', metaEvent.name, customData, eventOptions);
-    } else {
-      window.fbq('track', metaEvent.name, customData, eventOptions);
-    }
-  }
-}
-
-function pushChiwaTikTokEvent(eventName, payload) {
-  const tiktokEventName = CHIWA_TIKTOK_EVENT_MAP[eventName];
-  if (!tiktokEventName) return;
-  const eventData = {
-    event: tiktokEventName,
-    tiktok_event_name: tiktokEventName,
-    chiwa_event_name: eventName,
-    event_id: payload.event_id,
-    page_location: payload.page_location,
-    page_path: payload.page_path,
-    traffic_source: payload.traffic_source,
-    traffic_medium: payload.traffic_medium,
-    traffic_campaign: payload.traffic_campaign,
-    traffic_content: payload.traffic_content,
-    ttclid: payload.ttclid
-  };
-
-  if (eventName === 'cta_click_booking') {
-    eventData.content_type = 'service';
-    eventData.content_id = 'chiwa_consultation';
-    eventData.description = 'Chiwa consultation booking click';
-  } else if (eventName === 'cta_click_line') {
-    eventData.content_type = 'service';
-    eventData.content_id = 'chiwa_line_contact';
-    eventData.description = 'Chiwa LINE contact click';
-  } else if (eventName === 'begin_checkout') {
-    eventData.content_type = 'product';
-    eventData.content_id = 'chiwa_course';
-    eventData.currency = 'TWD';
-    eventData.description = 'Chiwa course checkout click';
-  } else if (eventName === 'login_success') {
-    eventData.content_type = 'account';
-    eventData.content_id = 'chiwa_student_workspace';
-    eventData.description = 'Chiwa student workspace login';
-  } else if (eventName === 'vsl_start') {
-    eventData.content_type = 'video';
-    eventData.content_id = payload.video_id || 'chiwa_vsl';
-    eventData.description = payload.video_title || 'Chiwa VSL video start';
-  }
-
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push(eventData);
 }
 
 function openBooking(source) {
@@ -1777,11 +1466,7 @@ function flushVideoAnalytics(reason, onlyKey) {
   });
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initChiwaAnalytics);
-} else {
-  initChiwaAnalytics();
-}
+document.addEventListener('DOMContentLoaded', initChiwaAnalytics);
 document.addEventListener('visibilitychange', function() {
   if (document.visibilityState === 'hidden') flushVideoAnalytics('visibility_hidden');
 });
@@ -1802,86 +1487,6 @@ window.addEventListener('scroll', function() {
     }
   });
 }, { passive: true });
-
-function cleanTrackText(value) {
-  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, 80);
-}
-
-function describeTrackElement(el) {
-  if (!el) return {};
-  const target = el.closest('a,button,[onclick],.nav-link,.faq-item,.vsl-box,.chip,.sb-item,.mn-item,.copy-btn');
-  if (!target) return {};
-  const href = target.getAttribute('href') || '';
-  let destination = '';
-  try { if (href) destination = new URL(href, location.href).hostname; } catch(e) {}
-  return {
-    click_text: cleanTrackText(target.getAttribute('aria-label') || target.getAttribute('title') || target.innerText || target.textContent || target.id || target.className),
-    click_id: target.id || '',
-    click_classes: cleanTrackText(target.className || ''),
-    click_url: href,
-    click_destination: destination,
-    click_is_outbound: !!(destination && destination !== location.hostname),
-    click_section: target.closest('section,.section,.cta-section,.nav,.vsl-wrap,.split-solution,.faq,.page')?.id || target.closest('.page')?.id || ''
-  };
-}
-
-function initChiwaClickTracking() {
-  if (chiwaClickTrackerReady) return;
-  chiwaClickTrackerReady = true;
-  document.addEventListener('click', function(e) {
-    const info = describeTrackElement(e.target);
-    if (!info.click_text && !info.click_id && !info.click_url) return;
-    chiwaTrack(info.click_is_outbound ? 'outbound_click' : 'site_click', info);
-  }, true);
-}
-
-function initChiwaSectionTracking() {
-  if (chiwaSectionObserverReady || !('IntersectionObserver' in window)) return;
-  chiwaSectionObserverReady = true;
-  const seen = {};
-  const observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      if (!entry.isIntersecting || entry.intersectionRatio < 0.35) return;
-      const el = entry.target;
-      const sectionId = el.id || el.getAttribute('data-track-section') || '';
-      if (!sectionId || seen[sectionId]) return;
-      seen[sectionId] = true;
-      chiwaTrack('section_view', {
-        section_id: sectionId,
-        section_label: cleanTrackText(el.getAttribute('data-track-label') || el.querySelector('h1,h2,.section-h,.column-title')?.textContent || sectionId)
-      });
-    });
-  }, { threshold: [0.35] });
-  [
-    'vsl-wrap-container',
-    'vsl-feature-container',
-    'solutions-anchor',
-    'faq-anchor'
-  ].forEach(function(id) {
-    const el = document.getElementById(id);
-    if (el) observer.observe(el);
-  });
-  document.querySelectorAll('.cta-section').forEach(function(el, index) {
-    el.setAttribute('data-track-section', el.id || 'cta-section-' + (index + 1));
-    observer.observe(el);
-  });
-}
-
-function trackChiwaEngagement(reason) {
-  const seconds = Math.max(1, Math.round((Date.now() - chiwaSessionStartedAt) / 1000));
-  chiwaTrack('page_engagement', {
-    engagement_seconds: seconds,
-    engagement_reason: reason || 'update',
-    page_id: document.querySelector('.page.active')?.id || 'unknown'
-  });
-}
-
-document.addEventListener('visibilitychange', function() {
-  if (document.visibilityState === 'hidden') trackChiwaEngagement('visibility_hidden');
-});
-window.addEventListener('pagehide', function() {
-  trackChiwaEngagement('pagehide');
-});
 
 function setChiwaLocal(key, value) {
   try { localStorage.setItem(key, String(value)); } catch(e) {}
@@ -2441,7 +2046,7 @@ async function decrAvatar(secs) {
   </nav>
 
   <div class="hero">
-    <div class="hero-badge">台灣 I 人友善的AI自媒體系統</div>
+    <div class="hero-badge">台灣最懂I人的AI自媒體系統</div>
     <h1 class="hero-title" style="line-height:1.3">
       <span style="color:var(--gold)">AI 自媒體系統</span><br>
       讓 AI 替你說話、做好自媒體<br>
@@ -2483,14 +2088,14 @@ async function decrAvatar(secs) {
               <span class="split-card-icon">🎬</span>
               <h4 class="split-card-title">每月 8 支 AI 短影音</h4>
             </div>
-            <p class="split-card-desc">每週規劃並產出 2 支影片，協助你維持內容更新。你提供聲音素材後，我們協助完成腳本撰寫、合規文字檢查、AI 分身製作、剪輯上字幕與排程發布。</p>
+            <p class="split-card-desc">每週穩定產出 2 支影片，持續餵養演算法。你只需錄 60 秒聲音，其餘全部由我們完成——腳本撰寫、法務審查、AI 分身製作、剪輯上字幕、排程發布。</p>
           </div>
           <div class="split-card-item">
             <div class="split-card-header">
               <span class="split-card-icon">🤖</span>
               <h4 class="split-card-title">AI 形象 + 聲音克隆</h4>
             </div>
-            <p class="split-card-desc">一次正面拍攝 60 秒 + 一次錄音 60 秒，完成你的 AI 分身建立。之後可由 AI 分身出鏡、AI 聲音配音，呈現高度相似的聲音與外型，減少你反覆面對鏡頭的時間。</p>
+            <p class="split-card-desc">一次正面拍攝 60 秒 + 一次錄音 60 秒，完成你的 AI 分身建立。之後所有影片由 AI 分身出鏡、AI 聲音配音，90% 相似度，你完全不需要再次面對鏡頭。</p>
           </div>
           <div class="split-card-item">
             <div class="split-card-header">
@@ -2498,6 +2103,13 @@ async function decrAvatar(secs) {
               <h4 class="split-card-title">AI 腳本 + 選題策略</h4>
             </div>
             <p class="split-card-desc">每月月初我們與你進行 30 分鐘策略規劃視訊或電話，確定 8 支影片選題。所有腳本由 AI 生成後人工審查，符合你的行業語氣與客群痛點。</p>
+          </div>
+          <div class="split-card-item">
+            <div class="split-card-header">
+              <span class="split-card-icon">✅</span>
+              <h4 class="split-card-title">法務審查（創始限時免費）</h4>
+            </div>
+            <p class="split-card-desc">每支影片上線前均通過法務團隊審查，確認符合 TikTok 廣告政策與台灣公平交易法。現階段創始客戶享免費法務審查資格，僅開放 8 個名額。</p>
           </div>
           <div class="split-card-item">
             <div class="split-card-header">
@@ -2511,7 +2123,7 @@ async function decrAvatar(secs) {
               <span class="split-card-icon">🎙️</span>
               <h4 class="split-card-title" style="color: var(--gold)">你的工作只有一件事</h4>
             </div>
-            <p class="split-card-desc">對著手機錄下 60 秒的聲音。其餘的選題、腳本、合規文字檢查、製作、剪輯與發布，由我們協助完成。</p>
+            <p class="split-card-desc">對著手機錄下 60 秒的聲音。其餘的一切：選題、腳本、法務、製作、剪輯、發布，全部由我們完成。</p>
           </div>
         </div>
       </div>
@@ -2538,7 +2150,7 @@ async function decrAvatar(secs) {
             <div class="timeline-step-num">3</div>
             <div class="timeline-step-content">
               <span class="timeline-step-title">AI 製作影片</span>
-              <span class="timeline-step-desc">團隊完成腳本剪輯、合規文字檢查與 AI 分身製作</span>
+              <span class="timeline-step-desc">團隊完成腳本剪輯、法務審查與最新 AI 分身製作</span>
             </div>
           </div>
           <div class="timeline-step-item">
@@ -2580,7 +2192,7 @@ async function decrAvatar(secs) {
           <div class="tech-badge-card">
             <span class="icon">✅</span>
             <span class="title">自動合規審查</span>
-            <span class="desc">逐字核對廣告規範，避免帳號違規風險。</span>
+            <span class="desc">逐字核對廣告政策與公平交易法規範，規避帳號被封風險。</span>
           </div>
         </div>
       </div>
@@ -2602,7 +2214,7 @@ async function decrAvatar(secs) {
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(232,197,90,.15);border:1px solid rgba(232,197,90,.3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--gold);flex-shrink:0">01</div>
           <div>
             <div style="font-size:16px;font-weight:700;margin-bottom:5px">帳號定位</div>
-            <div style="font-size:14px;color:var(--t2);line-height:1.8">適合多數知識型與服務型行業，AI 輔助定位帳號，讓目標受眾更快理解你能提供什麼。一次設定約 5 分鐘，實際時間因人而異。</div>
+            <div style="font-size:14px;color:var(--t2);line-height:1.8">無論 any 行業，AI 輔助定位帳號，讓對的人第一眼就知道你能幫他什麼。一次設定，不超過 5 分鐘。</div>
           </div>
         </div>
         
@@ -2610,7 +2222,7 @@ async function decrAvatar(secs) {
           <div style="width:36px;height:36px;border-radius:10px;background:var(--blue-bg);border:1px solid var(--blue-bdr);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--blue);flex-shrink:0">02</div>
           <div>
             <div style="font-size:16px;font-weight:700;margin-bottom:5px">主題規劃 ＋ 腳本生成 ＋ 合規把關</div>
-            <div style="font-size:14px;color:var(--t2);line-height:1.8">每月用一段時間規劃內容方向，AI 協助排好 8 支主題（實際時間因人而異）。每支腳本從主題到完稿約 15 分鐘起（實際時間因內容與修改需求而異），內建合規檢查輔助逐句把關，降低內容違規風險。</div>
+            <div style="font-size:14px;color:var(--t2);line-height:1.8">每月十分鐘，AI 排好 8 支主題。每支腳本從主題到完稿不超過 15 分鐘，內建合規系統上線前逐句把關，省時也省風險。</div>
           </div>
         </div>
         
@@ -2626,7 +2238,7 @@ async function decrAvatar(secs) {
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(62,207,142,.08);border:1px solid rgba(62,207,142,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--green);flex-shrink:0">04</div>
           <div>
             <div style="font-size:16px;font-weight:700;margin-bottom:5px">AI 聲音克隆 ＋ 影片生成</div>
-            <div style="font-size:14px;color:var(--t2);line-height:1.8">不想露臉，也可以用聲音口播建立內容。影片製作時間會依素材、腳本長度與審稿需求而異，協助降低重複製作成本。</div>
+            <div style="font-size:14px;color:var(--t2);line-height:1.8">不想露臉，只克隆聲音做口播同樣有效。每支影片十幾分鐘出片，大幅壓低內容生產成本。</div>
           </div>
         </div>
         
@@ -2642,7 +2254,7 @@ async function decrAvatar(secs) {
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--blue);flex-shrink:0">06</div>
           <div>
             <div style="font-size:16px;font-weight:700;margin-bottom:5px">廣告投放</div>
-            <div style="font-size:14px;color:var(--t2);line-height:1.8">每支影片投放 5 分鐘，每週看數據 10 分鐘，以精準受眾設定降低無效花費，讓影片觸及最精準的客群。</div>
+            <div style="font-size:14px;color:var(--t2);line-height:1.8">每支影片投放 5 分鐘，每週看數據 10 分鐘，花最少的錢讓影片觸及最精準的客群。</div>
           </div>
         </div>
         
@@ -2712,13 +2324,13 @@ async function decrAvatar(secs) {
           <div class="faq-sub-title">關於服務內容</div>
           
           <div class="faq-item" onclick="toggleFaq(this)">
-            <div class="faq-q">我不懂拍片，也不想經常出現在鏡頭前可以嗎？<span class="faq-arrow">▼</span></div>
+            <div class="faq-q">我完全不懂拍片，也不需要出現在鏡頭前嗎？<span class="faq-arrow">▼</span></div>
             <div class="faq-a">不需要。你只需要對著手機錄下語音回答題目，每段約 1–2 分鐘，其他全部由我們的 AI 系統和團隊處理，包含腳本、AI 數位分身、剪輯、字幕、發片。</div>
           </div>
           
           <div class="faq-item" onclick="toggleFaq(this)">
             <div class="faq-q">AI 數位分身跟真人有多像？<span class="faq-arrow">▼</span></div>
-            <div class="faq-a">外型和聲音會以你本人提供的素材為基礎建立，因此能呈現高度相似的聲音、語氣和說話方式。首次建立需要你錄製一段 60 秒的正面說話影片和 60 秒語音。</div>
+            <div class="faq-a">外型和聲音都是由你本人錄製，所以呈現出來就是你本人的聲音、語氣和說話方式，100% 相似。首次建立需要你錄製一段 60 秒的正面說話影片和 60 秒語音。</div>
           </div>
           
           <div class="faq-item" onclick="toggleFaq(this)">
@@ -2733,9 +2345,13 @@ async function decrAvatar(secs) {
           
           <div class="faq-item" onclick="toggleFaq(this)">
             <div class="faq-q">你們能做哪些行業？<span class="faq-arrow">▼</span></div>
-            <div class="faq-a">口播知識型內容適合多數知識型與服務型行業，包含保險、房產、法律、醫療、教育、顧問、美容、財務等。較不適合大量依賴現場視覺示範的內容，例如料理教學、手術示範。</div>
+            <div class="faq-a">口播知識型內容適合所有行業，包含保險、房產、法律、醫療、教育、顧問、美容、財務等。唯一不適合的是需要大量視覺示範的內容，例如料理教學、手術示範。</div>
           </div>
           
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q">影片內容的法律合規由誰負責？<span class="faq-arrow">▼</span></div>
+            <div class="faq-a">每支影片在製作過程中都會經過法律合規審查，確保符合公平交易法及 TikTok 廣告政策，才會送交你審核。</div>
+          </div>
         </div>
         
         <!-- Sub-section: 關於合約與費用 -->
@@ -2799,7 +2415,7 @@ async function decrAvatar(secs) {
           
           <div class="faq-item" onclick="toggleFaq(this)">
             <div class="faq-q">需要買什麼工具？<span class="faq-arrow">▼</span></div>
-            <div class="faq-a">課程主要使用 Claude Pro（NT$650/月）搭配 Claude Project 作為 AI 助理，其他工具會以課程內當時可用的方案與替代選項說明。</div>
+            <div class="faq-a">課程統一使用 Claude Pro（NT$650/月）搭配 Claude Project 作為 AI 助理，其他工具均為免費或課程內說明的免費方案。</div>
           </div>
           
           <div class="faq-item" onclick="toggleFaq(this)">
@@ -2829,7 +2445,7 @@ async function decrAvatar(secs) {
           
           <div class="faq-item" onclick="toggleFaq(this)">
             <div class="faq-q">可以先買課程，之後再考慮代運營嗎？<span class="faq-arrow">▼</span></div>
-            <div class="faq-a">可以。課程偏向建立能力，代運營偏向節省時間，兩個定位不同，可依你的需求搭配。</div>
+            <div class="faq-a">完全可以。課程買的是能力，代運營買的是時間，兩個定位不同，不衝突。</div>
           </div>
           
           <div class="faq-item" onclick="toggleFaq(this)">
@@ -2858,9 +2474,13 @@ async function decrAvatar(secs) {
 
   <div class="cta-section">
     <div class="cta-title">現在就開始，讓 AI 替你說話</div>
-    <div class="cta-sub">目前開放諮詢，可協助你評估 AI 自媒體內容流程是否適合現階段需求</div>
+    <div class="cta-sub">限額 8 個名額，法務審查創始免費優惠有效期間內</div>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn-gold" style="font-size:15px;padding:14px 30px" onclick="openBooking('bottom_cta')">預約免費諮詢</button>
+      <button class="btn-line" onclick="openLineConsult('bottom_cta')">
+        <svg viewBox="0 0 24 24" fill="white" width="18" height="18"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+        LINE 諮詢
+      </button>
     </div>
   </div>
 
@@ -3891,6 +3511,12 @@ async function decrAvatar(secs) {
 
 <!-- LINE FLOAT -->
 <a class="consult-float" href="https://calendar.app.google/BFEdtf1wx658dbK19" target="_blank" rel="noopener" title="預約免費諮詢" onclick="chiwaTrack('cta_click_booking',{cta_source:'floating_button',destination:'google_calendar'});chiwaTrack('generate_lead',{lead_type:'booking_click',cta_source:'floating_button'});">預約<br>諮詢</a>
+<a class="line-float" href="https://line.me/R/ti/p/@543xxzvk" target="_blank" rel="noopener" title="聯絡我們" onclick="chiwaTrack('cta_click_line',{cta_source:'floating_button',destination:'line'});">
+  <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+    <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
+  </svg>
+</a>
+<div class="line-tip">聯絡我們</div>
 
 <!-- 手機版底部導覽列 -->
 <div id="mobile-nav" style="display:none">
@@ -4760,7 +4386,7 @@ function generateSandboxMock(sys, usr, type, fmt, tone) {
       sec1_spoken = `跟你說啦，這真的不是你的問題，而是你開發客戶的方法蠻需要調整的。現在的人都很聰明，如果你一直跟他們推銷，他們只會覺得很煩，然後就直接已讀不回了。`;
       sec2_spoken = `其實要解決「${tp}」這個難題，真的蠻簡單的。你只需要把你的專業知識，變成很接地氣的短影音。用最直白的話講出對方的痛點，他們就會覺得說「欸，你真的很懂我耶」，然後就會主動找你了。`;
       sec3_spoken = `這樣子的方式，我們已經幫了超多同行在不用一直拜託客戶的情況下，每週都有精準的客戶來私訊詢價，整個工作效率直接翻倍，做起來超有成就感的。`;
-      cta_spoken = `想知道你的${ind}業務適不適合用這套內容流程嗎？可以點下面連結預約一對一諮詢，我們課堂上見。`;
+      cta_spoken = `想知道怎麼幫你的${ind}業務做到這種自動引流嗎？趕快點下面連結預約一對一免費諮詢喔，名額有限，我們課堂上見啦！`;
     }
 
     if (fmt === 'storyboard') {
@@ -4807,11 +4433,11 @@ ${cta_spoken}`;
 想知道怎麼讓客戶主動認識你嗎？專為${ind}專家打造的高效自媒體內容系統，協助你突破內容瓶頸、提升專業信任感！${ind} #短影音行銷 #專業引流 #最新AI技術
 
 【LINE 私訊推廣文】
-您好！想要讓客戶更快理解你的專業嗎？這套「自媒體內容系統」會協助${ind}專家把專業方法論轉化為清楚、有記憶點的短影音內容。你可以先預約諮詢，評估目前適不適合導入：https://calendar.app.google/BFEdtf1wx658dbK19
+您好！想要突破傳統內容瓶頸，讓客戶更快理解你的專業嗎？專為${ind}專家設計的「自媒體內容系統」正式上線！幫您將專業方法論轉化為清楚、有記憶點的短影音內容。限時開放免費諮詢名額，點擊下方連結預約：https://calendar.app.google/BFEdtf1wx658dbK19
 
 【5 個行動呼籲 CTA 短語】
 1. 點擊連結預約免費諮詢！
-2. 預約諮詢，評估適合你的導入方式。
+2. 搶拿本月專屬免費名額！
 3. 立即解鎖高效自動化引流！
 4. 私訊留言領取專家內容秘笈！
 5. 讓你的${ind}專業更有價值！
@@ -4826,7 +4452,7 @@ ${cta_spoken}`;
 問題清單：
 1. 腳本主要講述「${ind}的自媒體經營方法與思維」，並提及「${tp}」，屬於分享核心知識與心法，無誇大結果或療效之具體情節。
 2. 內容不包含「保證 100% 達成」、「絕對治癒」等涉嫌廣告法規之誇大不實字眼，風險評估極低。
-3. 建議在行動呼籲（CTA）中，保持「諮詢與分享」屬性，避免提及特定結果百分比，以降低合規風險。
+3. 建議在行動呼籲（CTA）中，保持「諮詢與分享」屬性，避免提及特定結果百分比，即可確保完全合規。
 
 修正後腳本：
 【開場鉤子】
@@ -4838,7 +4464,7 @@ ${cta_spoken}`;
 重點3：這套自媒體系統能幫助各位專家，在不削價競爭的前提下，高效率篩選出有誠意的客戶。
 
 【行動呼籲】
-想知道你的${ind}業務適不適合用這套內容流程嗎？可以點下面連結預約一對一諮詢。`;
+想知道怎麼幫你的${ind}業務做到這種自動引流嗎？趕快點下面連結預約一對一免費諮詢喔！`;
   }
 
   return `【AI 模擬回應】系統提示與輸入解析成功，這是沙盒模式返回的模擬輸出。
@@ -6616,7 +6242,7 @@ const courseData = [
   {
     id: 1,
     title: '帳號定位',
-    desc: '適合多數知識型與服務型行業，AI 輔助定位帳號，讓目標受眾更快理解你能提供什麼。一次設定約 5 分鐘，實際時間因人而異。',
+    desc: '無論任何行業，AI 輔助定位帳號，讓對的人第一眼就知道你能幫他什麼。一次設定，不超過 5 分鐘。',
     lessons: [
       { id: '1-1', title: '自媒體引流定位核心公式', duration: '08:45', vimeoId: '76979871' },
       { id: '1-2', title: 'AI 輔助精準分析目標受眾痛點', duration: '12:30', vimeoId: '513899790' },
@@ -6626,11 +6252,11 @@ const courseData = [
   {
     id: 2,
     title: '主題規劃 ＋ 腳本生成 ＋ 合規把關',
-    desc: '每月用一段時間規劃內容方向，AI 協助排好 8 支主題（實際時間因人而異）。每支腳本從主題到完稿約 15 分鐘起（實際時間因內容與修改需求而異），內建合規檢查輔助逐句把關，降低內容違規風險。',
+    desc: '每月十分鐘，AI 排好 8 支主題。每支腳本從主題到完稿不超過 15 分鐘，內建合規系統上線前逐句把關，省時也省風險。',
     lessons: [
       { id: '2-1', title: 'AI 短影音主題規劃矩陣模型', duration: '10:15', vimeoId: '76979871' },
       { id: '2-2', title: '爆款腳本的「黃金鉤子」寫法', duration: '14:20', vimeoId: '76979871' },
-      { id: '2-3', title: '利用合規把關模組降低帳號違規風險', duration: '09:40', vimeoId: '76979871' }
+      { id: '2-3', title: '利用合規把關模組降低封帳號風險', duration: '09:40', vimeoId: '76979871' }
     ]
   },
   {
@@ -6645,7 +6271,7 @@ const courseData = [
   {
     id: 4,
     title: 'AI 聲音克隆 ＋ 影片生成',
-    desc: '不想露臉，也可以用聲音口播建立內容。影片製作時間會依素材、腳本長度與審稿需求而異，協助降低重複製作成本。',
+    desc: '不想露臉，只克隆聲音做口播同樣有效。每支影片十幾分鐘出片，大幅壓低內容生產成本。',
     lessons: [
       { id: '4-1', title: '聲音克隆的乾淨錄音環境與腳本朗讀', duration: '05:50', vimeoId: '76979871' },
       { id: '4-2', title: '聲音與 AI 分身一鍵合成生成完整影片', duration: '11:25', vimeoId: '76979871' }
@@ -6662,7 +6288,7 @@ const courseData = [
   {
     id: 6,
     title: '廣告投放',
-    desc: '每支影片投放 5 分鐘，每週看數據 10 分鐘，以精準受眾設定降低無效花費，讓影片觸及最精準的客群。',
+    desc: '每支影片投放 5 分鐘，每週看數據 10 分鐘，花最少的錢讓影片觸及最精準的客群。',
     lessons: [
       { id: '6-1', title: 'TikTok 精準分類受眾廣告投放策略', duration: '11:05', vimeoId: '76979871' }
     ]
@@ -7957,48 +7583,6 @@ function extractVimeoId(value) {
   return match ? match[1] : raw;
 }
 
-function vimeoCoverUrl(vimeoId) {
-  var id = String(vimeoId || '').trim();
-  return /^[0-9]+$/.test(id) ? 'https://vumbnail.com/' + id + '.jpg' : '';
-}
-
-var CHIWA_VSL_COVER_VERSION = '20260529-1';
-var CHIWA_VSL_COVER_ASSETS = {
-  homepage: 'assets/home-vsl-cover.jpg',
-  featureLeft: 'assets/home-feature-cover-left.jpg',
-  featureRight: 'assets/home-feature-cover-right.jpg'
-};
-
-function withCoverVersion(url) {
-  if (!url) return '';
-  return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'cover=' + CHIWA_VSL_COVER_VERSION;
-}
-
-function applyVimeoCover(boxId, vimeoId, customCoverUrl) {
-  var box = document.getElementById(boxId);
-  if (!box) return;
-  var urls = [withCoverVersion(customCoverUrl), vimeoCoverUrl(vimeoId)].filter(Boolean);
-  if (!urls.length) return;
-  var idx = 0;
-  var img = new Image();
-  function tryNextCover() {
-    if (idx >= urls.length) {
-      box.style.backgroundImage = '';
-      box.classList.remove('has-cover');
-      return;
-    }
-    img.src = urls[idx++];
-  }
-  img.onload = function() {
-    box.style.backgroundImage = "url('" + img.src + "')";
-    box.classList.add('has-cover');
-  };
-  img.onerror = function() {
-    tryNextCover();
-  };
-  tryNextCover();
-}
-
 function getVSLConfig() {
   try {
     var config = JSON.parse(localStorage.getItem('chiwa_vsl_video_config'));
@@ -8043,7 +7627,6 @@ function renderVSLVideo() {
       
     </div>
   `;
-  applyVimeoCover('vsl-box-element', config.vimeoId, CHIWA_VSL_COVER_ASSETS.homepage);
 }
 
 function playVSLVideo(vimeoId) {
@@ -8127,7 +7710,6 @@ function renderVSLFeatureVideo() {
       <div class="vsl-label">點擊播放特色介紹影片</div>
     </div>
   `;
-    applyVimeoCover('vsl-feature-box-element', config.leftVimeoId, CHIWA_VSL_COVER_ASSETS.featureLeft);
   // 第二個影片框
   var wrap2 = document.getElementById('vsl-feature-video-wrap-2');
   if (wrap2) {
@@ -8137,7 +7719,6 @@ function renderVSLFeatureVideo() {
         <div class="vsl-label">點擊播放特色介紹影片</div>
       </div>
     `;
-    applyVimeoCover('vsl-feature-box-element-2', config.rightVimeoId, CHIWA_VSL_COVER_ASSETS.featureRight);
   }
 }
 

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://unpkg.com/wrangler@latest/config-schema.json",
+  "name": "rapid-grass-589dchiwa-avatar-r2",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-05-25",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "vars": {
+    "ALLOWED_ORIGIN": "https://chiwaai.com",
+    "PUBLIC_BASE_URL": "https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev",
+    "SUPABASE_URL": "https://nsauscojruqjcprvsfsn.supabase.co",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zYXVzY29qcnVxamNwcnZzZnNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjAzMTksImV4cCI6MjA5NDU5NjMxOX0.gXX7cBcqohoHqvPkZM-FFrnZVDS59g5OBJPBqH73H_w",
+    "MAX_UPLOAD_BYTES": "2147483648",
+    "DOWNLOAD_TTL_SECONDS": "86400"
+  },
+  "r2_buckets": [
+    {
+      "binding": "AVATAR_INPUTS",
+      "bucket_name": "chiwa-avatar-inputs"
+    }
+  ],
+  "triggers": {
+    "crons": ["17 19 * * *"]
+  }
+}

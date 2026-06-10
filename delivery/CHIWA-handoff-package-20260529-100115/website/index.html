@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com https://analytics.tiktok.com https://business-api.tiktok.com https://connect.facebook.net https://player.vimeo.com https://www.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://nsauscojruqjcprvsfsn.supabase.co https://nsauscojruqjcprvsfsn.storage.supabase.co wss://nsauscojruqjcprvsfsn.supabase.co https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev https://chiwa-avatar-r2.tony0928932688.workers.dev https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://analytics.tiktok.com https://business-api.tiktok.com https://connect.facebook.net https://www.facebook.com https://*.clarity.ms; frame-src https://player.vimeo.com https://vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://calendar.app.google https://p.ecpay.com.tw; upgrade-insecure-requests;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com https://analytics.tiktok.com https://business-api.tiktok.com https://player.vimeo.com https://www.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://nsauscojruqjcprvsfsn.supabase.co https://nsauscojruqjcprvsfsn.storage.supabase.co wss://nsauscojruqjcprvsfsn.supabase.co https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev https://chiwa-avatar-r2.tony0928932688.workers.dev https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://analytics.tiktok.com https://business-api.tiktok.com https://*.clarity.ms; frame-src https://player.vimeo.com https://vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://calendar.app.google https://p.ecpay.com.tw; upgrade-insecure-requests;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>吉娃AI自媒體系統</title>
 <meta name="description" content="AI自媒體系統，讓AI替你說話、做好自媒體。AI幫你想文案，幫你用你的聲音說話，只需錄一次60秒影片，AI分身替你經營短影音。">
@@ -1280,7 +1280,6 @@ const CHIWA_LINE_URL = 'https://line.me/R/ti/p/@543xxzvk';
 const CHIWA_ECPAY_URL = 'https://p.ecpay.com.tw/20FFCB5';
 const CHIWA_GA4_MEASUREMENT_ID = '';
 const CHIWA_GTM_CONTAINER_ID = 'GTM-N9XQS54H';
-const CHIWA_META_PIXEL_ID = '1568355111381071';
 const CHIWA_CLARITY_PROJECT_ID = '';
 let chiwaAnalyticsReady = false;
 let chiwaVimeoSdkPromise = null;
@@ -1294,24 +1293,6 @@ const CHIWA_TIKTOK_EVENT_MAP = {
   begin_checkout: 'InitiateCheckout',
   login_success: 'CompleteRegistration',
   vsl_start: 'ViewContent'
-};
-const CHIWA_META_EVENT_MAP = {
-  ad_landing: { name: 'ChiwaAdLanding', custom: true },
-  cta_click_booking: { name: 'Schedule' },
-  generate_lead: { name: 'Lead' },
-  cta_click_line: { name: 'Contact' },
-  begin_checkout: { name: 'InitiateCheckout' },
-  login_success: { name: 'CompleteRegistration' },
-  vsl_click_play: { name: 'ChiwaVideoClick', custom: true },
-  vsl_start: { name: 'ViewContent' },
-  vsl_resume: { name: 'ChiwaVideoResume', custom: true },
-  vsl_complete: { name: 'ChiwaVideoComplete', custom: true },
-  vsl_watch_seconds: { name: 'ChiwaVideoWatchTime', custom: true },
-  scroll_depth: { name: 'ChiwaScrollDepth', custom: true },
-  section_view: { name: 'ChiwaSectionView', custom: true },
-  page_engagement: { name: 'ChiwaPageEngagement', custom: true },
-  outbound_click: { name: 'ChiwaOutboundClick', custom: true },
-  site_click: { name: 'ChiwaSiteClick', custom: true }
 };
 let chiwaSessionStartedAt = Date.now();
 let chiwaSectionObserverReady = false;
@@ -1360,40 +1341,16 @@ function initChiwaAnalytics() {
       y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, 'clarity', 'script', CHIWA_CLARITY_PROJECT_ID);
   }
-  initChiwaMetaPixel();
   pushChiwaLandingEvent();
   initChiwaClickTracking();
   initChiwaSectionTracking();
-}
-
-function initChiwaMetaPixel() {
-  if (!CHIWA_META_PIXEL_ID || window.__chiwaMetaPixelReady) return;
-  window.__chiwaMetaPixelReady = true;
-  !function(f,b,e,v,n,t,s){
-    if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s);
-  }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-  window.fbq('init', CHIWA_META_PIXEL_ID);
-  window.fbq('track', 'PageView', {
-    page_location: location.href,
-    page_path: location.pathname || '/',
-    traffic_source: getChiwaAttribution().traffic_source || '',
-    traffic_medium: getChiwaAttribution().traffic_medium || '',
-    traffic_campaign: getChiwaAttribution().traffic_campaign || '',
-    fbclid: getChiwaAttribution().fbclid || ''
-  }, { eventID: 'chiwa_page_view_' + Date.now() });
 }
 
 function parseChiwaAttributionFromUrl() {
   const params = new URLSearchParams(location.search || '');
   const keys = [
     'ttclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content',
-    'utm_term', 'utm_campaign_name', 'utm_placement', 'campaignid',
-    'adgroupid', 'adsetid', 'adid', 'gbraid', 'gclid', 'fbclid'
+    'utm_term', 'campaignid', 'adgroupid', 'adid', 'gbraid', 'gclid', 'fbclid'
   ];
   const data = {};
   keys.forEach(function(key) {
@@ -1402,8 +1359,6 @@ function parseChiwaAttributionFromUrl() {
   });
   if (!data.utm_source && data.ttclid) data.utm_source = 'tiktok';
   if (!data.utm_medium && data.ttclid) data.utm_medium = 'paid_social';
-  if (!data.utm_source && data.fbclid) data.utm_source = 'meta';
-  if (!data.utm_medium && data.fbclid) data.utm_medium = 'paid_social';
   return data;
 }
 
@@ -1448,12 +1403,9 @@ function getChiwaAttribution() {
     traffic_campaign: sessionData.utm_campaign || '',
     traffic_content: sessionData.utm_content || '',
     traffic_term: sessionData.utm_term || '',
-    traffic_campaign_name: sessionData.utm_campaign_name || '',
-    traffic_placement: sessionData.utm_placement || '',
     ttclid: sessionData.ttclid || '',
-    fbclid: sessionData.fbclid || '',
     ad_id: sessionData.adid || '',
-    adgroup_id: sessionData.adgroupid || sessionData.adsetid || '',
+    adgroup_id: sessionData.adgroupid || '',
     campaign_id: sessionData.campaignid || '',
     first_traffic_source: firstData.utm_source || '',
     first_traffic_campaign: firstData.utm_campaign || '',
@@ -1466,7 +1418,6 @@ function pushChiwaLandingEvent() {
   const attribution = getChiwaAttribution();
   chiwaTrack('ad_landing', {
     landing_has_ttclid: !!attribution.ttclid,
-    landing_has_fbclid: !!attribution.fbclid,
     landing_source: attribution.traffic_source || 'direct_or_unknown',
     landing_medium: attribution.traffic_medium || '',
     landing_campaign: attribution.traffic_campaign || '',
@@ -1493,118 +1444,6 @@ function chiwaTrack(eventName, params) {
     window.gtag('event', eventName, payload);
   }
   pushChiwaTikTokEvent(eventName, payload);
-  pushChiwaMetaEvent(eventName, payload);
-}
-
-function buildChiwaMetaCustomData(eventName, payload) {
-  const data = {
-    content_name: payload.content_name || payload.video_title || payload.description || 'Chiwa AI',
-    content_category: payload.content_type || 'service',
-    content_type: payload.content_type || 'service',
-    content_ids: [payload.content_id || payload.video_id || 'chiwa_ai'],
-    currency: payload.currency || 'TWD',
-    page_location: payload.page_location,
-    page_path: payload.page_path,
-    traffic_source: payload.traffic_source,
-    traffic_medium: payload.traffic_medium,
-    traffic_campaign: payload.traffic_campaign,
-    traffic_campaign_name: payload.traffic_campaign_name,
-    traffic_content: payload.traffic_content,
-    traffic_placement: payload.traffic_placement,
-    fbclid: payload.fbclid,
-    cta_source: payload.cta_source,
-    destination: payload.destination,
-    lead_type: payload.lead_type,
-    video_id: payload.video_id,
-    video_placement: payload.video_placement,
-    video_progress: payload.video_progress,
-    watch_seconds: payload.watch_seconds,
-    scroll_percent: payload.scroll_percent,
-    section_id: payload.section_id,
-    section_label: payload.section_label,
-    engagement_seconds: payload.engagement_seconds,
-    engagement_reason: payload.engagement_reason,
-    click_text: payload.click_text,
-    click_url: payload.click_url,
-    click_destination: payload.click_destination,
-    click_section: payload.click_section
-  };
-  if (eventName === 'begin_checkout') {
-    data.content_name = 'Chiwa AI course checkout';
-    data.content_category = 'course';
-    data.content_type = 'product';
-    data.content_ids = ['chiwa_course'];
-  } else if (eventName === 'cta_click_booking' || eventName === 'generate_lead') {
-    data.content_name = 'Chiwa AI consultation booking';
-    data.content_category = 'consultation';
-    data.content_ids = ['chiwa_consultation'];
-  } else if (eventName === 'cta_click_line') {
-    data.content_name = 'Chiwa LINE contact';
-    data.content_category = 'contact';
-    data.content_ids = ['chiwa_line_contact'];
-  } else if (eventName === 'login_success') {
-    data.content_name = 'Chiwa student workspace';
-    data.content_category = 'account';
-    data.content_ids = ['chiwa_student_workspace'];
-  } else if (eventName === 'vsl_start') {
-    data.content_name = payload.video_title || 'Chiwa VSL video';
-    data.content_category = 'video';
-    data.content_type = 'video';
-    data.content_ids = [payload.video_id || 'chiwa_vsl'];
-  } else if (eventName === 'vsl_click_play' || eventName === 'vsl_resume' || eventName === 'vsl_complete' || eventName === 'vsl_watch_seconds' || /^vsl_progress_/.test(eventName)) {
-    data.content_name = payload.video_title || 'Chiwa landing page video';
-    data.content_category = 'video';
-    data.content_type = 'video';
-    data.content_ids = [payload.video_id || payload.video_placement || 'chiwa_vsl'];
-  } else if (eventName === 'scroll_depth') {
-    data.content_name = 'Landing page scroll ' + (payload.scroll_percent || 0) + '%';
-    data.content_category = 'landing_page_engagement';
-    data.content_ids = ['scroll_' + (payload.scroll_percent || 0)];
-  } else if (eventName === 'section_view') {
-    data.content_name = payload.section_label || payload.section_id || 'Landing page section';
-    data.content_category = 'landing_page_section';
-    data.content_ids = [payload.section_id || 'landing_section'];
-  } else if (eventName === 'page_engagement') {
-    data.content_name = 'Landing page engagement';
-    data.content_category = 'landing_page_engagement';
-    data.content_ids = [payload.page_id || 'landing_page'];
-    data.value = Number(payload.engagement_seconds || 0);
-  } else if (eventName === 'outbound_click' || eventName === 'site_click') {
-    data.content_name = payload.click_text || payload.click_id || payload.click_url || 'Landing page click';
-    data.content_category = eventName === 'outbound_click' ? 'outbound_click' : 'site_click';
-    data.content_ids = [payload.click_id || payload.click_url || payload.click_text || eventName];
-  }
-  Object.keys(data).forEach(function(key) {
-    if (data[key] === '' || data[key] == null) delete data[key];
-  });
-  return data;
-}
-
-function resolveChiwaMetaEvent(eventName) {
-  if (CHIWA_META_EVENT_MAP[eventName]) return CHIWA_META_EVENT_MAP[eventName];
-  if (/^vsl_progress_/.test(eventName)) return { name: 'ChiwaVideoProgress', custom: true };
-  return null;
-}
-
-function pushChiwaMetaEvent(eventName, payload) {
-  const metaEvent = resolveChiwaMetaEvent(eventName);
-  if (!metaEvent) return;
-  const customData = buildChiwaMetaCustomData(eventName, payload);
-  const eventOptions = { eventID: payload.event_id };
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push(Object.assign({
-    event: metaEvent.name,
-    meta_event_name: metaEvent.name,
-    chiwa_event_name: eventName,
-    event_id: payload.event_id
-  }, customData));
-  if (typeof window.fbq === 'function' && CHIWA_META_PIXEL_ID) {
-    if (metaEvent.custom) {
-      window.fbq('trackCustom', metaEvent.name, customData, eventOptions);
-    } else {
-      window.fbq('track', metaEvent.name, customData, eventOptions);
-    }
-  }
 }
 
 function pushChiwaTikTokEvent(eventName, payload) {

@@ -1,0 +1,306 @@
+function corsHeaders(request, env) {
+  const origin = request.headers.get('Origin') || '';
+  const allowed = String(env.ALLOWED_ORIGIN || 'https://chiwaai.com').split(',').map((item) => item.trim()).filter(Boolean);
+  const allowOrigin = allowed.includes(origin) ? origin : allowed[0];
+  return {
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin'
+  };
+}
+
+const ANTHROPIC_VERSION = '2023-06-01';
+const DEFAULT_MODELS = [
+  'claude-sonnet-4-5-20250929',
+  'claude-sonnet-4-20250514',
+  'claude-3-5-sonnet-20241022'
+];
+
+const TIKTOK_COMPLIANCE_RULES = `
+TikTok 廣告合規規則：
+生成出來的內容必須直接符合規則，不需要使用者手動再審查，生成出來就是合規版本。
+
+以下絕對禁止出現：
+1. 絕對性保證語言
+禁止：絕對化保證、一定有效、必定、100%成效、財務暗示。
+替換：把結果變目的或加限定詞。
+錯誤：「保證帶來客戶」
+正確：「幫你持續累積潛在客戶」
+
+2. 具體未經驗證的數字聲稱
+禁止：上百位測試、幾倍成效、翻倍、幾分之一成本。
+替換：用描述性語言取代。
+錯誤：「成本是傳統的幾分之一」
+正確：「成本比傳統方式低很多」
+
+3. 財務回報承諾
+禁止：財務暗示、結果承諾、未經驗證數字、誇大成效。
+替換：把結果變行為描述。
+錯誤：「保證達成指定結果」
+正確：「讓更多對的客戶找到你」
+
+4. 絕對性最高級
+禁止：最強、最好、業界第一、全台唯一、業界唯一。
+替換：用具體描述取代。
+錯誤：「業界最強系統」
+正確：「一套每月幫你穩定產出八支影片的系統」
+
+5. 預測性絕對聲明
+禁止：一定會成功、必然有效果、未來趨勢所有人都要用。
+替換：加限定詞或改為描述性語言。
+錯誤：「是未來的趨勢」
+正確：「是越來越多專業人士選擇的方式」
+
+可以保留的語言：
+描述性的強烈語言、情緒衝擊性的表達、有限定詞的經驗陳述、因果邏輯描述，全部保留。
+目標是踩到 TikTok 政策邊界 97 分，不是保守站在 80 分。
+只改真正違規的字，不削弱文案的說服力。`;
+
+const TAIWAN_CASUAL_TONE_RULES = `
+台灣腔口播語氣規則：
+只有當本次功能或使用者選擇「素人隨聊感」「素人隨聊語氣」或 tone=casual 時套用。
+生成出來的文案必須從頭到尾像台灣人在聊天，不像在念稿。
+
+節奏：
+每句不超過 8 個字。
+一句一行。
+每 3 到 4 句空一行。
+
+語助詞：
+平均每 3 到 5 句出現一次。
+可用：欸、啊、喔、而已、蠻、就是。
+不要每句都有，偶爾出現才自然。
+
+啦的用法：
+「啦」只出現在帶情緒張力的句子。
+否認：「不是啦」
+妥協：「好啦好啦」
+放棄：「算了啦」
+不甘願：「我不去了啦」
+輕描淡寫退讓：「不適合就算了啦」
+絕對不放在平靜陳述句的句尾。
+錯誤：「做了十五年了啦」
+正確：「做了快十五年了欸」
+
+真實感停頓：
+每篇隨機插入 2 到 4 次，放在情緒轉折點前。
+不在開場句和 CTA 句使用。
+可用：「欸……」「就是那種……」「怎麼說呢……」「然後……」「對，就是這樣。」「……」
+
+句型：
+多用自問自答：「XXX 是什麼？就是……」
+多用第三人稱帶入故事：「我有個朋友啊……」
+結尾用反問句讓觀眾對號入座。
+
+禁止：
+書面語：因此、然而、此外。改成然後、但是。
+數字書面化：「將近十年」。改成「快十年」。
+任何 emoji 和表情符號。
+每句都加語助詞。
+
+語氣控制：
+句子短 = 語速自動放慢輕鬆。
+句子長 = 語速自動穩定有重量。
+「——」= 長停頓。
+「，」= 短停頓。
+「欸」= 音調上揚。
+「啊」= 音調放鬆。
+「……」= 自動放慢拉長。`;
+
+const CONTENT_FIRST_COPY_RULES = `
+內容優先規則：
+你是專業台灣口播文案撰寫師。
+規則一：先寫完整的商品或服務相關內容，語氣詞（欸/啊/喔/啦）只佔全文 10% 以下。
+規則二：文案必須包含：開場鉤子、痛點、解法、CTA。
+規則三：禁止生成只有語氣詞沒有實質內容的文案。
+規則四：台灣繁體中文，口語化但有內容。
+規則五：台灣口語規則只能修飾內容，不能取代內容；每一句都必須提供觀點、案例、細節、原因、解法或行動。
+
+格式規定：
+- 以下格式規定優先於「每句一行」等台灣腔排版規則；若有衝突，一律以自然段落為準。
+- 自然段落，每段3-5句，段內句子連在同一行，不要每句換行。
+- 不要用標題或分隔線如---或===。
+- 不要用粗體**或任何Markdown符號。
+- 不要用#標題。
+- 句子之間自然連接，像一個人在說話。
+- 適合直接貼入語音合成工具朗讀。`;
+
+function jsonResponse(request, env, body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...corsHeaders(request, env),
+      'Content-Type': 'application/json; charset=utf-8'
+    }
+  });
+}
+
+function cleanText(value, max = 12000) {
+  return String(value || '').slice(0, max).trim();
+}
+
+function normalizeType(type) {
+  const value = String(type || '').toLowerCase();
+  if (['topics', 'script', 'marketing', 'compliance'].includes(value)) return value;
+  return 'script';
+}
+
+function basePromptFor(type) {
+  if (type === 'topics') {
+    return '你是台灣短影音選題策略師，擅長為 B2B 服務業與專業人士產出有鉤子、可拍攝、可轉成腳本的繁體中文選題。只用繁體中文，不使用 emoji。';
+  }
+  if (type === 'marketing') {
+    return '你是台灣數位行銷文案師，專門為各行各業的 TikTok 短影音創作各類優質行銷文案。必須百分之百根據使用者提供的行業與內容進行發想。風格口語或說服有力。只用繁體中文，不使用 emoji。';
+  }
+  if (type === 'compliance') {
+    return '你是台灣廣告法規審查專家，審查 TikTok 短影音腳本是否符合 TikTok 廣告政策與台灣公平交易法。只用繁體中文回答。';
+  }
+  return '你是台灣短影音腳本顧問，擅長把選題展開成自然、好拍、有說服力的繁體中文口播腳本。只用繁體中文，不使用 emoji。';
+}
+
+function shouldApplyCompliance(type) {
+  return type === 'topics' || type === 'script' || type === 'marketing';
+}
+
+function buildSystemPrompt({ type, fmt, tone, systemPrompt }) {
+  const normalized = normalizeType(type);
+  const providedSystem = cleanText(systemPrompt);
+  const parts = [
+    providedSystem || basePromptFor(normalized)
+  ].filter(Boolean);
+
+  if (shouldApplyCompliance(normalized)) {
+    parts.push('以下規則是附加安全與語氣規則，不可以覆蓋前面指定的功能邏輯、輸出格式、欄位名稱或使用者要求。');
+    parts.push(TIKTOK_COMPLIANCE_RULES);
+    parts.push(TAIWAN_CASUAL_TONE_RULES);
+    if (normalized === 'script' || normalized === 'marketing') parts.push(CONTENT_FIRST_COPY_RULES);
+  }
+
+  if (normalized === 'script') {
+    parts.push(`本次腳本格式：${fmt === 'simple' ? '純口播格式' : '分鏡腳本格式'}。本次語氣：${tone || 'casual'}。`);
+    parts.push('如果是分鏡腳本，必須保留【開場鉤子】【段落一】【段落二】【行動呼籲】以及「秒數、口說、畫面、剪輯提示」等原本結構。預設所有口說文案加總約 200 個中文字，適合 60 秒口播。台灣口語規則只套用在「口說」文案，不要讓畫面與剪輯欄位變得鬆散。');
+  }
+  if (normalized === 'marketing') {
+    parts.push('行銷文案要保留說服力與平台感；若輸出 hashtag，數量最多 5 個，且不可套用與腳本行業無關的品牌或分類標籤。');
+  }
+  if (normalized === 'topics') {
+    parts.push('選題生成必須根據學員背景與目標受眾痛點輸出 8 條；如果使用者要求隨機分配，需在 8 條中混合痛點鏡子、知識降維、迷思破解、客戶故事、選擇指南、行動催化等方向，且保留「類型」欄位。');
+  }
+  return parts.join('\n\n');
+}
+
+function modelCandidates(env) {
+  const preferred = cleanText(env.ANTHROPIC_MODEL, 128);
+  return [...new Set([preferred, ...DEFAULT_MODELS].filter(Boolean))];
+}
+
+async function callAnthropic(env, body) {
+  let lastError = null;
+  for (const model of modelCandidates(env)) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-version': ANTHROPIC_VERSION,
+        'x-api-key': env.ANTHROPIC_API_KEY
+      },
+      body: JSON.stringify({ ...body, model })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) return data;
+    lastError = data;
+    const message = String(data?.error?.message || data?.message || '');
+    if (!/model|not_found|does not exist/i.test(message)) break;
+  }
+  const err = new Error('AI_SERVICE_ERROR');
+  err.detail = lastError;
+  throw err;
+}
+
+async function verifyAuthorizedStudent(request, env) {
+  const token = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '').trim();
+  if (!token) throw Object.assign(new Error('missing_session'), { status: 401 });
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw Object.assign(new Error('auth_not_configured'), { status: 500 });
+
+  const userRes = await fetch(`${String(env.SUPABASE_URL).replace(/\/+$/, '')}/auth/v1/user`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'apikey': env.SUPABASE_ANON_KEY
+    }
+  });
+  if (!userRes.ok) throw Object.assign(new Error('invalid_session'), { status: 401 });
+  const user = await userRes.json();
+  const email = String(user.email || '').trim().toLowerCase();
+  if (!email) throw Object.assign(new Error('missing_user_email'), { status: 401 });
+
+  const baseUrl = String(env.SUPABASE_URL).replace(/\/+$/, '');
+  async function fetchStudent(column) {
+    const url = `${baseUrl}/rest/v1/students?select=id,status,google_enabled,is_admin&${column}=eq.${encodeURIComponent(email)}&limit=1`;
+    const rowRes = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': env.SUPABASE_ANON_KEY,
+        'Accept': 'application/json'
+      }
+    });
+    if (!rowRes.ok) return null;
+    const rows = await rowRes.json().catch(() => []);
+    return Array.isArray(rows) ? rows[0] : null;
+  }
+
+  const student = await fetchStudent('google_email') || await fetchStudent('email') || await fetchStudent('id');
+  if (!student) throw Object.assign(new Error('student_not_found'), { status: 403 });
+  const status = String(student.status || '').trim().toLowerCase();
+  if (['disabled', 'inactive', 'blocked', '已停權', '停權'].includes(status)) {
+    throw Object.assign(new Error('student_inactive'), { status: 403 });
+  }
+  return student;
+}
+
+export default {
+  async fetch(request, env) {
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(request, env) });
+    if (request.method !== 'POST') return jsonResponse(request, env, { error: 'method_not_allowed' }, 405);
+    if (!env.ANTHROPIC_API_KEY) return jsonResponse(request, env, { error: 'service_not_configured' }, 500);
+
+    try {
+      await verifyAuthorizedStudent(request, env);
+    } catch (error) {
+      const status = error && error.status ? error.status : 401;
+      return jsonResponse(request, env, { error: error && error.message ? error.message : 'unauthorized' }, status);
+    }
+
+    let payload;
+    try {
+      payload = await request.json();
+    } catch(e) {
+      return jsonResponse(request, env, { error: 'invalid_json' }, 400);
+    }
+
+    const userPrompt = cleanText(payload.userPrompt);
+    if (!userPrompt) return jsonResponse(request, env, { error: 'missing_user_prompt' }, 400);
+
+    const type = normalizeType(payload.type);
+    const system = buildSystemPrompt({
+      type,
+      fmt: payload.fmt || 'storyboard',
+      tone: payload.tone || 'casual',
+      systemPrompt: payload.systemPrompt
+    });
+
+    try {
+      const data = await callAnthropic(env, {
+        max_tokens: type === 'topics' ? 2400 : (type === 'script' ? 3200 : 2400),
+        temperature: type === 'compliance' ? 0.2 : 0.75,
+        system,
+        messages: [{ role: 'user', content: userPrompt }]
+      });
+      return jsonResponse(request, env, data);
+    } catch(e) {
+      console.error('ai backend error', JSON.stringify(e.detail || e.message || e));
+      return jsonResponse(request, env, { error: 'ai_service_error' }, 502);
+    }
+  }
+};
