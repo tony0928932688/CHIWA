@@ -1305,3 +1305,15 @@
     white-space: normal !important;
   }
 }
+
+#page-home .cta-section .cta-sub {
+  color: var(--chiwa-gold, var(--lp-gold)) !important;
+  font-size: 19.8px !important;
+  font-weight: 750 !important;
+}
+
+@media(max-width:900px){
+  #page-home .cta-section .cta-sub {
+    font-size: 16.5px !important;
+  }
+}
