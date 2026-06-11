@@ -4275,6 +4275,11 @@ async function decrAvatar(secs) {
         </select>
       </div>
     </div>
+    <div class="tts-speed-control" style="background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-bottom:12px">
+      <div class="label mb14">語速 <span id="tts-speed-value">1.0x</span></div>
+      <input type="range" id="tts-speed" min="0.7" max="1.5" step="0.1" value="1" style="width:100%">
+      <div style="font-size:11px;color:var(--t3);margin-top:6px">1.0x 是原速；數字越大越快，越小越慢。</div>
+    </div>
     <textarea id="ttsin" rows="4" placeholder="貼入要朗讀的腳本文字..." maxlength="10000" oninput="updateVoiceCreditButton()"></textarea>
     <div class="fl mt10">
       <button class="btn-gold" id="tts-btn" onclick="generateTTSAudio()">🎵 生成語音</button>
@@ -7221,6 +7226,8 @@ async function generateTTSAudio() {
   const btn = document.getElementById('tts-btn');
   const select = document.getElementById('tts-voice-select');
   const langSelect = document.getElementById('tts-language-select');
+  const speedInput = document.getElementById('tts-speed');
+  const speed = Math.min(1.5, Math.max(0.7, Number(speedInput && speedInput.value || 1)));
   
   if (!text) {
     toast('❌ 請先輸入要生成的腳本文案！');
@@ -7237,6 +7244,7 @@ async function generateTTSAudio() {
   }
   const okToGenerate = confirm(`🎙 即將生成語音
 文案長度：約 ${chars} 字
+語速：${speed.toFixed(1)}x
 消耗後剩餘：${_fmtCredits(Math.max(0, currentVoiceCredits - chars))} / 10,000 字
 ⚠️ 即使只是試聽也會消耗語音額度`);
   if (!okToGenerate) return;
@@ -7270,7 +7278,8 @@ async function generateTTSAudio() {
         action: 'tts',
         voice_id: select ? select.value : 'def-female',
         text,
-        language: langSelect ? langSelect.value : 'zh'
+        language: langSelect ? langSelect.value : 'zh',
+        speed
       })
     });
 
@@ -7302,6 +7311,20 @@ async function generateTTSAudio() {
     toast('❌ ' + (e.message || '語音生成失敗，請稍後再試。'));
   }
 }
+
+function initTTSSpeedControl() {
+  const speedInput = document.getElementById('tts-speed');
+  const speedValue = document.getElementById('tts-speed-value');
+  if (!speedInput || !speedValue) return;
+  const sync = () => {
+    const speed = Math.min(1.5, Math.max(0.7, Number(speedInput.value || 1)));
+    speedValue.textContent = `${speed.toFixed(1)}x`;
+  };
+  speedInput.addEventListener('input', sync);
+  sync();
+}
+
+document.addEventListener('DOMContentLoaded', initTTSSpeedControl);
 
 let avatarVideoFile = null;
 let avatarAudioFile = null;
