@@ -19,8 +19,8 @@
 
   <text x="540" y="650" text-anchor="middle"
         font-family="'Noto Sans TC','Microsoft JhengHei',Arial,sans-serif"
-        font-size="44" font-weight="800" letter-spacing="6" fill="#191919">
-    吉娃 AI 自媒體系統
+        font-size="72" font-weight="950" letter-spacing="2" fill="#191919">
+    能幫助到我嗎?
   </text>
 
   <text x="540" y="850" text-anchor="middle"
