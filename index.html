@@ -1701,6 +1701,7 @@ let currentUserData = null;
 const CHIWA_IDLE_LIMIT_MS = 24 * 60 * 60 * 1000;
 const CHIWA_LAST_ACTIVITY_KEY = 'chiwa_last_activity_at';
 const CHIWA_WORKSPACE_RESTORE_KEY = 'chiwa_workspace_restore';
+const CHIWA_WORKSPACE_TARGET_PANEL_KEY = 'chiwa_workspace_target_panel';
 const CHIWA_BOOKING_URL = 'https://calendar.app.google/BFEdtf1wx658dbK19';
 const CHIWA_LINE_URL = 'https://line.me/R/ti/p/@543xxzvk';
 const CHIWA_ECPAY_URL = 'https://p.ecpay.com.tw/20FFCB5';
@@ -2276,8 +2277,9 @@ function shouldRestoreWorkspaceFromUrl() {
   const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
   const isReload = nav && nav.type === 'reload';
   const isLoginReturn = new URLSearchParams(search).get('auth_return') === 'google';
+  const hasWorkspacePanel = !!new URLSearchParams(search).get('workspace_panel');
   const isOAuthReturn = search.includes('code=') || search.includes('access_token') || String(location.hash || '').includes('access_token');
-  return hash === 'workspace' || isLoginReturn || isOAuthReturn || (isReload && getChiwaLocal(CHIWA_WORKSPACE_RESTORE_KEY) === '1');
+  return hash === 'workspace' || hash.startsWith('workspace:') || hasWorkspacePanel || isLoginReturn || isOAuthReturn || (isReload && getChiwaLocal(CHIWA_WORKSPACE_RESTORE_KEY) === '1');
 }
 
 function getGoogleOAuthRedirectUrl() {
@@ -5021,8 +5023,22 @@ document.addEventListener('keydown', function(e) {
 });
 
 /* 頁面路由與導覽系統 */
+function requestedWorkspacePanel() {
+  const params = new URLSearchParams(location.search || '');
+  const fromQuery = params.get('workspace_panel') || params.get('panel') || '';
+  const hash = String(location.hash || '').replace(/^#\/?/, '').toLowerCase();
+  const fromHash = hash.startsWith('workspace:') ? hash.split(':')[1] : '';
+  const fromSaved = getChiwaLocal(CHIWA_WORKSPACE_TARGET_PANEL_KEY) || '';
+  const requested = String(fromQuery || fromHash || fromSaved || '').trim().toLowerCase();
+  const allowed = ['profile','topic','script','marketing','compliance','history','voice','avatar','content-coach','course','admin'];
+  if (!allowed.includes(requested)) return '';
+  removeChiwaLocal(CHIWA_WORKSPACE_TARGET_PANEL_KEY);
+  return requested;
+}
+
 function goPage(pageId) {
   console.log('goPage called:', pageId);
+  const targetWorkspacePanel = pageId === 'workspace' ? requestedWorkspacePanel() : '';
   chiwaTrack('virtual_page_view', {
     page_id: pageId,
     virtual_page_path: '/' + String(pageId || 'home')
@@ -5046,7 +5062,7 @@ function goPage(pageId) {
   if (targetPage) {
     targetPage.classList.add('active');
       if (pageId === 'workspace') {
-      const defaultPanel = 'profile';
+      const defaultPanel = targetWorkspacePanel || 'profile';
       swP(defaultPanel, sidebarItemFor(defaultPanel));
     }
   } else {
