@@ -772,6 +772,19 @@
   grid-column: 1 / -1;
 }
 
+#page-home .solutions-section-title {
+  grid-column: 1 / -1;
+  display: block !important;
+  max-width: 960px !important;
+  margin: 0 auto 18px !important;
+  text-align: center !important;
+  color: var(--chiwa-gold, var(--lp-gold)) !important;
+  font-size: clamp(40px, 5vw, 58px) !important;
+  line-height: 1.16 !important;
+  font-weight: 950 !important;
+  letter-spacing: 0 !important;
+}
+
 #page-home .split-solution-left,
 #page-home .split-solution-right {
   padding: 34px !important;
