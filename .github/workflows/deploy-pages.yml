@@ -30,6 +30,8 @@ jobs:
           cp index.html _site/
           cp privacy.html _site/
           cp terms.html _site/
+          cp landing.css _site/
+          cp lazy-workflow.html _site/
           cp CNAME _site/
           touch _site/.nojekyll
           if [ -d assets ]; then
