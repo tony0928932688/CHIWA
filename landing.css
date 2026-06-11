@@ -1198,3 +1198,91 @@
     font-size: 21px !important;
   }
 }
+
+/* Section number labels */
+#page-home .section-number-label {
+  width: min(1080px, 100%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 14px !important;
+  margin: 0 auto 28px !important;
+  color: var(--chiwa-gold, var(--lp-gold)) !important;
+  font-size: clamp(24px, 2.8vw, 34px) !important;
+  line-height: 1.2 !important;
+  font-weight: 950 !important;
+  letter-spacing: 1px !important;
+  text-align: center !important;
+}
+
+#page-home .section-number-label::before,
+#page-home .section-number-label::after {
+  content: "" !important;
+  display: block !important;
+  flex: 1 1 90px !important;
+  max-width: 360px !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, transparent, rgba(232,197,90,.42)) !important;
+}
+
+#page-home .section-number-label::after {
+  background: linear-gradient(90deg, rgba(232,197,90,.42), transparent) !important;
+}
+
+#page-home .section-label-num {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 48px !important;
+  height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(232,197,90,.48) !important;
+  background: rgba(232,197,90,.08) !important;
+  color: var(--chiwa-gold, var(--lp-gold)) !important;
+  font-size: .72em !important;
+  font-weight: 950 !important;
+  letter-spacing: .5px !important;
+}
+
+#page-home .section-label-text {
+  display: inline-block !important;
+  white-space: nowrap !important;
+}
+
+#page-home .audience-first-section > .section-number-label {
+  max-width: 1120px !important;
+  margin-bottom: 22px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 14px !important;
+  font-size: clamp(24px, 2.8vw, 34px) !important;
+  line-height: 1.2 !important;
+  font-weight: 950 !important;
+  letter-spacing: 1px !important;
+}
+
+#page-home .section-header > .section-number-label {
+  margin-bottom: 22px !important;
+}
+
+@media(max-width:900px){
+  #page-home .section-number-label {
+    gap: 10px !important;
+    font-size: clamp(22px, 7vw, 30px) !important;
+    margin-bottom: 22px !important;
+  }
+
+  #page-home .section-number-label::before,
+  #page-home .section-number-label::after {
+    flex-basis: 34px !important;
+    max-width: 90px !important;
+  }
+
+  #page-home .section-label-num {
+    min-width: 42px !important;
+    height: 32px !important;
+    padding: 0 10px !important;
+  }
+}
