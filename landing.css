@@ -490,6 +490,7 @@
 }
 
 #page-home .hero,
+#page-home .audience-first-section,
 #page-home .funnel-clarity-section,
 #page-home .vsl-feature-section,
 #page-home .vsl-standalone-video-section,
@@ -528,6 +529,21 @@
   align-items: center;
   text-align: center;
   border-bottom: 1px solid rgba(232,197,90,.16);
+}
+
+#page-home .audience-first-section {
+  padding-top: 72px !important;
+  padding-bottom: 84px !important;
+  border-bottom: 1px solid rgba(232,197,90,.16);
+}
+
+#page-home .audience-first-section .vsl-audience-title {
+  margin-bottom: 24px !important;
+}
+
+#page-home .audience-first-section .vsl-audience-image-wrap {
+  max-width: 1100px !important;
+  margin-bottom: 0 !important;
 }
 
 #page-home .hero-badge {
@@ -871,6 +887,7 @@
 
 @media(max-width:900px){
   #page-home .hero,
+  #page-home .audience-first-section,
   #page-home .funnel-clarity-section,
   #page-home .vsl-feature-section,
   #page-home .vsl-standalone-video-section,
@@ -891,6 +908,10 @@
   #page-home .hero {
     min-height: auto;
     padding-top: 84px !important;
+  }
+  #page-home .audience-first-section {
+    padding-top: 52px !important;
+    padding-bottom: 56px !important;
   }
   #page-home .hero-title {
     font-size: 34px !important;
