@@ -560,6 +560,25 @@
   margin-top: 6px;
 }
 
+#page-home .section-cta-block {
+  width: min(1180px, calc(100% - 48px)) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center !important;
+  box-sizing: border-box;
+}
+
+#page-home .section-cta-block .btn-gold {
+  max-width: 100% !important;
+  justify-content: center !important;
+  text-align: center !important;
+  white-space: normal !important;
+  line-height: 1.45 !important;
+}
+
 #page-home .btn-gold,
 #page-home .funnel-secondary-btn,
 #page-home .btn-line {
