@@ -1317,3 +1317,14 @@
     font-size: 16.5px !important;
   }
 }
+
+#page-home #funnel-decision .section-header .funnel-title {
+  max-width: 100% !important;
+  font-size: clamp(36px, 4.6vw, 54px) !important;
+}
+
+@media(max-width:900px){
+  #page-home #funnel-decision .section-header .funnel-title {
+    font-size: clamp(28px, 7vw, 36px) !important;
+  }
+}
