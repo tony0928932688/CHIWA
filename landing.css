@@ -703,6 +703,21 @@
   margin-bottom: 0 !important;
 }
 
+#page-home #vsl-main-container {
+  width: min(920px, calc(100% - 48px)) !important;
+  max-width: 920px !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+#page-home #vsl-main-container .vsl-intro-framing {
+  width: min(860px, 100%) !important;
+  max-width: 860px !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+  box-sizing: border-box;
+}
+
 #page-home .vsl-box,
 #page-home .vimeo-video-wrapper {
   border-radius: 8px !important;
@@ -808,6 +823,13 @@
   #page-home #faq {
     width: min(100% - 32px, 720px) !important;
     padding: 64px 0 !important;
+  }
+  #page-home #vsl-main-container {
+    width: calc(100% - 16px) !important;
+  }
+  #page-home #vsl-main-container .vsl-intro-framing {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
   #page-home .hero {
     min-height: auto;
