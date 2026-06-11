@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <defs>
+    <linearGradient id="gold" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f7df86"/>
+      <stop offset="0.52" stop-color="#d6a93f"/>
+      <stop offset="1" stop-color="#9f7426"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+
+  <rect width="1080" height="1920" fill="#fffaf0"/>
+  <rect x="54" y="54" width="972" height="1812" rx="58" fill="#ffffff" stroke="#e8c55a" stroke-width="7"/>
+  <rect x="86" y="86" width="908" height="1748" rx="42" fill="none" stroke="#131313" stroke-opacity="0.08" stroke-width="3"/>
+
+  <circle cx="540" cy="610" r="180" fill="#fff7df" stroke="#e8c55a" stroke-width="5"/>
+  <path d="M540 440 L580 560 L706 560 L604 634 L643 754 L540 680 L437 754 L476 634 L374 560 L500 560 Z" fill="url(#gold)" filter="url(#softShadow)"/>
+
+  <text x="540" y="1030" text-anchor="middle"
+        font-family="'Noto Sans TC','Microsoft JhengHei',Arial,sans-serif"
+        font-size="128" font-weight="950" fill="#111111">
+    變現案例
+  </text>
+
+  <line x1="250" y1="1120" x2="830" y2="1120" stroke="#e8c55a" stroke-width="5"/>
+</svg>
