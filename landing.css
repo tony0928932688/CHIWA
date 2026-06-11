@@ -699,6 +699,16 @@
   padding: 28px 18px 30px;
 }
 
+#page-home .vsl-feature-subtitle {
+  display: block !important;
+  max-width: 860px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  text-align: center !important;
+  font-size: 17px !important;
+  line-height: 1.65 !important;
+}
+
 #page-home .vsl-wrap {
   margin-bottom: 0 !important;
 }
