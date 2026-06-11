@@ -1454,3 +1454,14 @@
     padding: 0 12px !important;
   }
 }
+
+#page-home #vsl-feature-container .section-header .vsl-feature-subtitle {
+  color: #ffffff !important;
+  font-size: 22px !important;
+}
+
+@media(max-width:900px){
+  #page-home #vsl-feature-container .section-header .vsl-feature-subtitle {
+    font-size: 18px !important;
+  }
+}
