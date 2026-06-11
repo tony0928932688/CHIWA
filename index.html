@@ -2846,7 +2846,7 @@ async function decrAvatar(secs) {
 }
 
 </script>
-<link rel="stylesheet" href="landing.css?v=20260611-vsl-main-cover-22min-1">
+<link rel="stylesheet" href="landing.css?v=20260611-feature-example-cover-1">
 </head>
 <body>
 
@@ -9785,11 +9785,12 @@ function vimeoCoverUrl(vimeoId) {
   return /^[0-9]+$/.test(id) ? 'https://vumbnail.com/' + id + '.jpg' : '';
 }
 
-var CHIWA_VSL_COVER_VERSION = '20260611-22min-cover-2';
+var CHIWA_VSL_COVER_VERSION = '20260611-feature-example-cover-1';
 var CHIWA_MAIN_VSL_ID = '1200369460';
 var CHIWA_LEGACY_MAIN_VSL_IDS = { '1194740595': true };
 var CHIWA_VSL_COVER_ASSETS = {
   homepage: 'assets/vsl-main-cover-22min.svg',
+  featureExample: 'assets/vsl-feature-cover-ai-short-video.svg',
   featureLeft: 'assets/home-feature-cover-left.jpg',
   featureRight: 'assets/home-feature-cover-right.jpg'
 };
@@ -9995,7 +9996,7 @@ function renderVSLFeatureVideo() {
   var wrap1a = document.getElementById('vsl-feature-video-wrap-1a');
   if (wrap1a) {
     wrap1a.innerHTML = `
-      <div class="vsl-box" id="vsl-feature-box-element-1a" style="aspect-ratio:9/16; margin:0 auto;">
+      <div class="vsl-box vsl-feature-white-cover" id="vsl-feature-box-element-1a" style="aspect-ratio:9/16; margin:0 auto;">
         <div class="vsl-play">▶</div>
         <div class="vsl-label">點擊播放情境示範影片</div>
       </div>
@@ -10006,7 +10007,7 @@ function renderVSLFeatureVideo() {
         playVSLFeatureVideo1a(config.firstSceneVimeoId);
       });
     }
-    applyVimeoCover('vsl-feature-box-element-1a', config.firstSceneVimeoId, null);
+    applyVimeoCover('vsl-feature-box-element-1a', config.firstSceneVimeoId, CHIWA_VSL_COVER_ASSETS.featureExample);
   }
   var hideFeatureIntroVideo = wrap.classList.contains('is-temp-hidden') || wrap.style.display === 'none';
   if (hideFeatureIntroVideo) {
@@ -10029,7 +10030,7 @@ function renderVSLFeatureVideo() {
   var wrap2a = document.getElementById('vsl-feature-video-wrap-2a');
   if (wrap2a) {
     wrap2a.innerHTML = `
-        <div class="vsl-box" id="vsl-feature-box-element-2a" style="aspect-ratio:9/16; margin:0 auto;">
+        <div class="vsl-box vsl-feature-white-cover" id="vsl-feature-box-element-2a" style="aspect-ratio:9/16; margin:0 auto;">
         <div class="vsl-play">▶</div>
         <div class="vsl-label">點擊播放珠寶示範影片</div>
       </div>
@@ -10040,7 +10041,7 @@ function renderVSLFeatureVideo() {
         playVSLFeatureVideo2a(config.voiceSceneVimeoId);
       });
     }
-    applyVimeoCover('vsl-feature-box-element-2a', config.voiceSceneVimeoId, null);
+    applyVimeoCover('vsl-feature-box-element-2a', config.voiceSceneVimeoId, CHIWA_VSL_COVER_ASSETS.featureExample);
   }
   // 第二個影片框
   var wrap2 = document.getElementById('vsl-feature-video-wrap-2');
@@ -10157,6 +10158,8 @@ function playVSLFeatureVideo2a(vimeoId) {
   var box = document.getElementById('vsl-feature-box-element-2a');
   if (!box) return;
   chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'feature_voice_scene_left' });
+  box.classList.remove('vsl-feature-white-cover', 'has-cover');
+  box.style.backgroundImage = '';
   box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=0&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
   box.removeAttribute('onclick');
   attachVimeoTracking(box.querySelector('iframe'), {
@@ -10183,6 +10186,8 @@ function playVSLFeatureVideo1a(vimeoId) {
   var box = document.getElementById('vsl-feature-box-element-1a');
   if (!box) return;
   chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'feature_avatar_scene_left' });
+  box.classList.remove('vsl-feature-white-cover', 'has-cover');
+  box.style.backgroundImage = '';
   box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=0&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
   box.removeAttribute('onclick');
   attachVimeoTracking(box.querySelector('iframe'), {
