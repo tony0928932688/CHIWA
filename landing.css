@@ -750,6 +750,18 @@
   box-sizing: border-box;
 }
 
+#page-home #vsl-main-container .vsl-main-subtitle {
+  display: block !important;
+  max-width: 900px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  text-align: center !important;
+  font-size: 25px !important;
+  line-height: 1.45 !important;
+  font-weight: 800 !important;
+  color: var(--chiwa-muted, var(--lp-muted)) !important;
+}
+
 #page-home .vsl-box,
 #page-home .vimeo-video-wrapper {
   border-radius: 8px !important;
