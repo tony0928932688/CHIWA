@@ -2846,7 +2846,7 @@ async function decrAvatar(secs) {
 }
 
 </script>
-<link rel="stylesheet" href="landing.css?v=20260611-course-title-nowrap-1">
+<link rel="stylesheet" href="landing.css?v=20260611-vsl-video-1200369460">
 </head>
 <body>
 
@@ -9789,8 +9789,10 @@ function vimeoCoverUrl(vimeoId) {
 }
 
 var CHIWA_VSL_COVER_VERSION = '20260529-1';
+var CHIWA_MAIN_VSL_ID = '1200369460';
+var CHIWA_LEGACY_MAIN_VSL_IDS = { '1194740595': true };
 var CHIWA_VSL_COVER_ASSETS = {
-  homepage: 'assets/home-vsl-cover.jpg',
+  homepage: '',
   featureLeft: 'assets/home-feature-cover-left.jpg',
   featureRight: 'assets/home-feature-cover-right.jpg'
 };
@@ -9828,9 +9830,14 @@ function applyVimeoCover(boxId, vimeoId, customCoverUrl) {
 function getVSLConfig() {
   try {
     var config = JSON.parse(localStorage.getItem('chiwa_vsl_video_config'));
-    if (config && config.vimeoId && config.status) return config;
+    if (config && config.vimeoId && config.status) {
+      if (CHIWA_LEGACY_MAIN_VSL_IDS[String(config.vimeoId)]) {
+        return { vimeoId: CHIWA_MAIN_VSL_ID, status: config.status };
+      }
+      return config;
+    }
   } catch(e) {}
-  return { vimeoId: '1194740595', status: 'publish' };
+  return { vimeoId: CHIWA_MAIN_VSL_ID, status: 'publish' };
 }
 
 function saveVSLConfigFromAdmin() {
