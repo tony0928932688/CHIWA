@@ -9785,13 +9785,14 @@ function vimeoCoverUrl(vimeoId) {
   return /^[0-9]+$/.test(id) ? 'https://vumbnail.com/' + id + '.jpg' : '';
 }
 
-var CHIWA_VSL_COVER_VERSION = '20260611-monetization-cover-1';
+var CHIWA_VSL_COVER_VERSION = '20260611-workflow-cover-1';
 var CHIWA_MAIN_VSL_ID = '1200369460';
 var CHIWA_LEGACY_MAIN_VSL_IDS = { '1194740595': true };
 var CHIWA_VSL_COVER_ASSETS = {
   homepage: 'assets/vsl-main-cover-22min.svg',
   featureExample: 'assets/vsl-feature-cover-ai-short-video.svg',
   monetizationCase: 'assets/vsl-monetization-cover-case-study.svg',
+  workflowDemo: 'assets/vsl-workflow-cover-process.svg',
   featureLeft: 'assets/home-feature-cover-left.jpg',
   featureRight: 'assets/home-feature-cover-right.jpg'
 };
@@ -10085,7 +10086,7 @@ function renderVSLFeatureVideo() {
   var workflowDemoWrap = document.getElementById('vsl-workflow-demo-video-wrap');
   if (workflowDemoWrap) {
     workflowDemoWrap.innerHTML = `
-        <div class="vsl-box" id="vsl-workflow-demo-box-element" style="aspect-ratio:9/16; margin:0 auto;">
+        <div class="vsl-box vsl-feature-white-cover" id="vsl-workflow-demo-box-element" style="aspect-ratio:9/16; margin:0 auto;">
         <div class="vsl-play">▶</div>
         <div class="vsl-label">點擊播放系統示範影片</div>
       </div>
@@ -10096,7 +10097,7 @@ function renderVSLFeatureVideo() {
         playVSLWorkflowDemoVideo(config.workflowDemoVimeoId);
       });
     }
-    applyVimeoCover('vsl-workflow-demo-box-element', config.workflowDemoVimeoId, null);
+    applyVimeoCover('vsl-workflow-demo-box-element', config.workflowDemoVimeoId, CHIWA_VSL_COVER_ASSETS.workflowDemo);
   }
   var courseWrap = document.getElementById('vsl-course-preview-video-wrap');
   if (courseWrap) {
@@ -10133,6 +10134,8 @@ function playVSLWorkflowDemoVideo(vimeoId) {
   var box = document.getElementById('vsl-workflow-demo-box-element');
   if (!box) return;
   chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'workflow_demo' });
+  box.classList.remove('vsl-feature-white-cover', 'has-cover');
+  box.style.backgroundImage = '';
   box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=0&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
   box.removeAttribute('onclick');
   attachVimeoTracking(box.querySelector('iframe'), {
