@@ -1275,6 +1275,12 @@
   margin-bottom: 0 !important;
 }
 
+#page-home #vsl-course-preview-container .section-header .lp-h2 {
+  max-width: 100% !important;
+  font-size: clamp(32px, 3.8vw, 46px) !important;
+  white-space: nowrap !important;
+}
+
 @media(max-width:900px){
   #page-home .section-number-label {
     gap: 10px !important;
@@ -1292,5 +1298,10 @@
     min-width: 42px !important;
     height: 32px !important;
     padding: 0 10px !important;
+  }
+
+  #page-home #vsl-course-preview-container .section-header .lp-h2 {
+    font-size: clamp(26px, 7vw, 32px) !important;
+    white-space: normal !important;
   }
 }
