@@ -1267,6 +1267,14 @@
   margin-bottom: 22px !important;
 }
 
+#page-home #vsl-monetization-case-container > .section-header {
+  margin-bottom: 18px !important;
+}
+
+#page-home #vsl-monetization-case-container .section-header .lp-h2 {
+  margin-bottom: 0 !important;
+}
+
 @media(max-width:900px){
   #page-home .section-number-label {
     gap: 10px !important;
