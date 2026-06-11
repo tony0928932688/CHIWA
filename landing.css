@@ -709,6 +709,18 @@
   line-height: 1.65 !important;
 }
 
+#page-home .vsl-video-styles-title {
+  display: block !important;
+  max-width: 900px !important;
+  margin: 34px auto 24px !important;
+  text-align: center !important;
+  color: var(--chiwa-gold, var(--lp-gold)) !important;
+  font-size: clamp(26px, 3vw, 34px) !important;
+  line-height: 1.28 !important;
+  font-weight: 950 !important;
+  letter-spacing: 0 !important;
+}
+
 #page-home .vsl-course-preview-subtitle {
   display: block !important;
   max-width: 860px !important;
