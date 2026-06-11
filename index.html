@@ -2846,7 +2846,7 @@ async function decrAvatar(secs) {
 }
 
 </script>
-<link rel="stylesheet" href="landing.css?v=20260611-decision-title-fit-1">
+<link rel="stylesheet" href="landing.css?v=20260611-vsl-main-cover-22min-1">
 </head>
 <body>
 
@@ -9785,11 +9785,11 @@ function vimeoCoverUrl(vimeoId) {
   return /^[0-9]+$/.test(id) ? 'https://vumbnail.com/' + id + '.jpg' : '';
 }
 
-var CHIWA_VSL_COVER_VERSION = '20260529-1';
+var CHIWA_VSL_COVER_VERSION = '20260611-22min-cover-1';
 var CHIWA_MAIN_VSL_ID = '1200369460';
 var CHIWA_LEGACY_MAIN_VSL_IDS = { '1194740595': true };
 var CHIWA_VSL_COVER_ASSETS = {
-  homepage: '',
+  homepage: 'assets/vsl-main-cover-22min.svg',
   featureLeft: 'assets/home-feature-cover-left.jpg',
   featureRight: 'assets/home-feature-cover-right.jpg'
 };
@@ -9884,7 +9884,7 @@ function renderVSLVideo() {
         先看完，你大概就會知道自己比較適合哪一條路。不確定也沒關係，最後預約一次免費諮詢，我們幫你判斷。
       </p>
     </div>
-    <div class="vsl-box" id="vsl-box-element" onclick="playVSLVideo('${config.vimeoId}')" style="width:min(430px,100%);margin:0 auto;">
+    <div class="vsl-box vsl-main-white-cover" id="vsl-box-element" onclick="playVSLVideo('${config.vimeoId}')" style="width:min(430px,100%);margin:0 auto;">
       <div class="vsl-play">▶</div>
       <div class="vsl-label">點擊播放完整服務說明影片</div>
     </div>
@@ -9902,6 +9902,8 @@ function playVSLVideo(vimeoId) {
   var box = document.getElementById('vsl-box-element');
   if (!box) return;
   chiwaTrack('vsl_click_play', { video_id: String(vimeoId), video_placement: 'homepage_vsl' });
+  box.classList.remove('vsl-main-white-cover', 'has-cover');
+  box.style.backgroundImage = '';
   box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&api=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:16px;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
   box.removeAttribute('onclick');
   attachVimeoTracking(box.querySelector('iframe'), {
