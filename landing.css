@@ -471,3 +471,368 @@
     font-size: 13px !important;
   }
 }
+
+/* ── 21. Layout shell v4: clear section rhythm, function-safe ── */
+#page-home {
+  --chiwa-page: #08090f;
+  --chiwa-band: #0d1018;
+  --chiwa-band-2: #111420;
+  --chiwa-panel: rgba(18, 21, 32, .92);
+  --chiwa-panel-soft: rgba(255,255,255,.035);
+  --chiwa-line: rgba(232,197,90,.22);
+  --chiwa-line-soft: rgba(255,255,255,.1);
+  --chiwa-text: #f0f1f6;
+  --chiwa-muted: rgba(240,241,246,.68);
+  --chiwa-gold: #e8c55a;
+  background: var(--chiwa-page) !important;
+  color: var(--chiwa-text);
+  overflow-x: hidden;
+}
+
+#page-home .hero,
+#page-home .funnel-clarity-section,
+#page-home .vsl-feature-section,
+#page-home .vsl-standalone-video-section,
+#page-home .split-solutions-container,
+#page-home .funnel-decision-section,
+#page-home .funnel-not-fit-section,
+#page-home #faq,
+#page-home .cta-section {
+  width: min(1180px, calc(100% - 48px)) !important;
+  margin: 0 auto !important;
+  padding: 88px 0 !important;
+  box-sizing: border-box;
+}
+
+#page-home .funnel-clarity-section,
+#page-home .vsl-standalone-video-section,
+#page-home .funnel-decision-section,
+#page-home .funnel-not-fit-section {
+  max-width: none !important;
+}
+
+#page-home .funnel-clarity-section > *,
+#page-home .vsl-standalone-video-section > *,
+#page-home .funnel-decision-section > *,
+#page-home .funnel-not-fit-section > * {
+  width: min(1060px, 100%);
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+#page-home .hero {
+  min-height: 76vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border-bottom: 1px solid rgba(232,197,90,.16);
+}
+
+#page-home .hero-badge {
+  font-size: 15px !important;
+  letter-spacing: 2px !important;
+  padding: 9px 18px !important;
+  border-radius: 999px !important;
+  background: rgba(232,197,90,.08) !important;
+  border-color: rgba(232,197,90,.32) !important;
+}
+
+#page-home .hero-title {
+  max-width: 960px;
+  font-size: 48px !important;
+  line-height: 1.18 !important;
+  letter-spacing: 0 !important;
+  margin: 0 0 22px !important;
+}
+
+#page-home .hero-sub {
+  max-width: 720px !important;
+  font-size: 17px !important;
+  line-height: 1.9 !important;
+  color: var(--chiwa-muted) !important;
+  margin-bottom: 32px !important;
+}
+
+#page-home .hero-btns {
+  gap: 14px !important;
+  margin-top: 6px;
+}
+
+#page-home .btn-gold,
+#page-home .funnel-secondary-btn,
+#page-home .btn-line {
+  min-height: 44px;
+  border-radius: 999px !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+}
+
+#page-home .funnel-kicker {
+  font-size: 14px !important;
+  letter-spacing: 1px !important;
+  color: var(--chiwa-gold) !important;
+  margin-bottom: 14px !important;
+}
+
+#page-home .funnel-title,
+#page-home .lp-h2,
+#page-home .vsl-audience-title {
+  font-size: 36px !important;
+  line-height: 1.24 !important;
+  letter-spacing: 0 !important;
+  margin-bottom: 16px !important;
+}
+
+#page-home .funnel-copy,
+#page-home .solutions-intro-copy,
+#page-home .section-p,
+#page-home .section-copy {
+  max-width: 780px !important;
+  font-size: 16px !important;
+  line-height: 1.95 !important;
+  color: var(--chiwa-muted) !important;
+}
+
+#page-home .funnel-panel,
+#page-home .vsl-feature-copy,
+#page-home .vsl-monetization-copy,
+#page-home .vsl-course-preview-copy,
+#page-home .split-solution-left,
+#page-home .split-solution-right,
+#page-home .faq-column,
+#page-home .brandish-card {
+  border-radius: 8px !important;
+  border: 1px solid var(--chiwa-line-soft) !important;
+  background: var(--chiwa-panel) !important;
+  box-shadow: 0 18px 42px rgba(0,0,0,.24) !important;
+}
+
+#page-home .funnel-panel {
+  padding: 44px !important;
+}
+
+#page-home .funnel-pill-grid,
+#page-home .split-cards-grid,
+#page-home .tech-badges-grid,
+#page-home .funnel-decision-grid,
+#page-home .funnel-not-fit-grid {
+  gap: 18px !important;
+}
+
+#page-home .funnel-pill,
+#page-home .split-card-item,
+#page-home .tech-badge-card,
+#page-home .funnel-decision-card,
+#page-home .funnel-not-fit-card,
+#page-home .faq-item,
+#page-home .course-appendix {
+  border-radius: 8px !important;
+  border: 1px solid var(--chiwa-line-soft) !important;
+  background: var(--chiwa-panel-soft) !important;
+}
+
+#page-home .funnel-pill,
+#page-home .split-card-item,
+#page-home .tech-badge-card {
+  padding: 22px !important;
+}
+
+#page-home .split-card-title,
+#page-home .timeline-step-title,
+#page-home .faq-q {
+  font-size: 16px !important;
+  line-height: 1.45 !important;
+  color: var(--chiwa-text) !important;
+}
+
+#page-home .split-card-desc,
+#page-home .timeline-step-desc,
+#page-home .faq-a,
+#page-home .course-appendix .split-card-desc {
+  font-size: 15px !important;
+  line-height: 1.85 !important;
+  color: var(--chiwa-muted) !important;
+}
+
+#page-home .vsl-feature-section {
+  width: min(1260px, calc(100% - 48px)) !important;
+}
+
+#page-home .vsl-feature-copy,
+#page-home .vsl-monetization-copy,
+#page-home .vsl-course-preview-copy {
+  max-width: 860px !important;
+  padding: 30px 34px !important;
+  margin-bottom: 34px !important;
+}
+
+#page-home .vsl-feature-category-grid {
+  max-width: 1120px !important;
+  gap: 28px !important;
+}
+
+#page-home .vsl-feature-category {
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.025);
+  padding: 28px 18px 30px;
+}
+
+#page-home .vsl-wrap {
+  margin-bottom: 0 !important;
+}
+
+#page-home .vsl-box,
+#page-home .vimeo-video-wrapper {
+  border-radius: 8px !important;
+  border: 1px solid rgba(232,197,90,.22) !important;
+  overflow: hidden;
+}
+
+#page-home .split-solutions-container {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 28px !important;
+  align-items: start;
+  border-top: 1px solid rgba(232,197,90,.14);
+  border-bottom: 1px solid rgba(232,197,90,.14);
+}
+
+#page-home .split-solutions-container > .funnel-kicker,
+#page-home .split-solutions-container > .funnel-title,
+#page-home .split-solutions-container > .solutions-intro-copy {
+  grid-column: 1 / -1;
+}
+
+#page-home .split-solution-left,
+#page-home .split-solution-right {
+  padding: 34px !important;
+}
+
+#page-home .column-badge {
+  width: fit-content;
+  border-radius: 999px !important;
+  margin-bottom: 20px !important;
+}
+
+#page-home .column-title,
+#page-home .column-title-stacked {
+  font-size: 28px !important;
+  line-height: 1.25 !important;
+  margin-bottom: 14px !important;
+}
+
+#page-home .column-subtitle {
+  font-size: 16px !important;
+  line-height: 1.85 !important;
+  margin-bottom: 28px !important;
+}
+
+#page-home .lp-price-block {
+  padding: 18px 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(232,197,90,.22);
+  background: rgba(232,197,90,.045);
+}
+
+#page-home .course-workflow-spotlight {
+  border-radius: 8px !important;
+}
+
+#page-home #faq {
+  max-width: 1180px !important;
+}
+
+#page-home .faq-split-container {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px !important;
+}
+
+#page-home .faq-column {
+  padding: 28px !important;
+}
+
+#page-home .faq-column-title,
+#page-home .faq-sub-title {
+  color: var(--chiwa-gold) !important;
+}
+
+#page-home .cta-section {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 86px 24px !important;
+  border-top: 1px solid rgba(232,197,90,.16);
+  background: #0b0d14 !important;
+}
+
+#page-home .cta-title {
+  font-size: 38px !important;
+}
+
+#page-home .cta-sub {
+  max-width: 720px;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+@media(max-width:900px){
+  #page-home .hero,
+  #page-home .funnel-clarity-section,
+  #page-home .vsl-feature-section,
+  #page-home .vsl-standalone-video-section,
+  #page-home .split-solutions-container,
+  #page-home .funnel-decision-section,
+  #page-home .funnel-not-fit-section,
+  #page-home #faq {
+    width: min(100% - 32px, 720px) !important;
+    padding: 64px 0 !important;
+  }
+  #page-home .hero {
+    min-height: auto;
+    padding-top: 84px !important;
+  }
+  #page-home .hero-title {
+    font-size: 34px !important;
+  }
+  #page-home .hero-sub {
+    font-size: 15px !important;
+  }
+  #page-home .funnel-title,
+  #page-home .lp-h2,
+  #page-home .vsl-audience-title,
+  #page-home .cta-title {
+    font-size: 28px !important;
+  }
+  #page-home .funnel-panel,
+  #page-home .split-solution-left,
+  #page-home .split-solution-right,
+  #page-home .faq-column {
+    padding: 24px !important;
+  }
+  #page-home .split-solutions-container,
+  #page-home .faq-split-container,
+  #page-home .funnel-decision-grid,
+  #page-home .funnel-not-fit-grid {
+    grid-template-columns: 1fr !important;
+  }
+  #page-home .vsl-feature-category-grid {
+    grid-template-columns: 1fr !important;
+    max-width: 420px !important;
+  }
+  #page-home .vsl-feature-category {
+    padding: 22px 14px 24px;
+  }
+  #page-home .hero-btns,
+  #page-home .funnel-cta-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  #page-home .hero-btns > *,
+  #page-home .funnel-cta-row > * {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
