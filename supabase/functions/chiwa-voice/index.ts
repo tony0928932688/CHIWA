@@ -21,6 +21,36 @@ function cleanText(value: unknown, max = 1200) {
   return String(value || "").slice(0, max).trim();
 }
 
+function normalizeEmail(value: unknown) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function cleanIdentity(value: unknown) {
+  return String(value || "").trim();
+}
+
+function getAuthIdentity(user: any) {
+  const email = normalizeEmail(user?.email);
+  const authUid = cleanIdentity(user?.id);
+  let provider = cleanIdentity(user?.app_metadata?.provider);
+  let lineUserId = "";
+  const identities = Array.isArray(user?.identities) ? user.identities : [];
+  for (const identity of identities) {
+    const identityProvider = cleanIdentity(identity?.provider);
+    if (!provider && identityProvider) provider = identityProvider;
+    if (/line/i.test(identityProvider)) {
+      const data = identity?.identity_data || {};
+      lineUserId = cleanIdentity(identity?.provider_id || data.sub || data.user_id || data.userId || data.id);
+      break;
+    }
+  }
+  const metadata = user?.user_metadata || {};
+  if (!lineUserId && /line/i.test(provider)) {
+    lineUserId = cleanIdentity(metadata.sub || metadata.user_id || metadata.userId || metadata.provider_id || metadata.id);
+  }
+  return { email, authUid, provider, lineUserId };
+}
+
 function languageCode(value: unknown) {
   const v = String(value || "zh").toLowerCase();
   if (["zh", "en", "ja", "ko"].includes(v)) return v;
@@ -104,13 +134,32 @@ function publicStudent(row: any) {
 async function getStudent(supabase: any, token: string) {
   const { data: userData, error } = await supabase.auth.getUser(token);
   if (error || !userData?.user) throw new Error("unauthorized");
-  const email = String(userData.user.email || "").trim().toLowerCase();
-  let query = supabase.from("students").select("*").limit(1);
-  if (email) query = query.or(`google_email.eq.${email},email.eq.${email},id.eq.${email}`);
-  else query = query.eq("id", userData.user.id);
-  const { data, error: rowError } = await query.maybeSingle();
-  if (rowError || !data) throw new Error("student_not_found");
-  return data;
+  const identity = getAuthIdentity(userData.user);
+  const checks: Array<{ column: string; value: string }> = [];
+  if (identity.email) {
+    checks.push(
+      { column: "google_email", value: identity.email },
+      { column: "email", value: identity.email },
+      { column: "id", value: identity.email },
+    );
+  }
+  if (identity.lineUserId) checks.push({ column: "line_user_id", value: identity.lineUserId });
+  if (identity.authUid) {
+    checks.push(
+      { column: "line_auth_uid", value: identity.authUid },
+      { column: "id", value: identity.authUid },
+    );
+  }
+  for (const check of checks) {
+    const { data, error: rowError } = await supabase
+      .from("students")
+      .select("*")
+      .eq(check.column, check.value)
+      .limit(1)
+      .maybeSingle();
+    if (!rowError && data) return data;
+  }
+  throw new Error("student_not_found");
 }
 
 async function proxyLegacy(req: Request, token: string, body?: BodyInit) {

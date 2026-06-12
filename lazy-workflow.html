@@ -100,6 +100,7 @@ textarea{min-height:110px;resize:vertical}
 .btns{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .btn{border:none;border-radius:999px;padding:10px 18px;font-weight:900;cursor:pointer;background:var(--gold);color:#08080c}
 .btn.secondary{background:transparent;color:var(--t1);border:1.5px solid var(--bdr2)}
+.btn.line{background:#06C755;color:#fff}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .card{border:1px solid var(--bdr);background:rgba(255,255,255,.025);border-radius:12px;padding:13px}
@@ -207,7 +208,10 @@ textarea.subtitle-box{display:block;width:100%;min-height:260px;resize:vertical;
   <div id="auth-box" class="panel on" style="display:none">
     <h2>需要先登入學員帳號</h2>
     <div class="hint">登入後才能讀取你的帳號定位、AI 額度、語音發音人與形象克隆權限。</div>
-    <button class="btn" id="login-btn">使用 Google 登入</button>
+    <div class="btns">
+      <button class="btn" id="login-btn">使用 Google 登入</button>
+      <button class="btn line" id="line-login-btn">使用 LINE 登入</button>
+    </div>
   </div>
 
   <div id="app" class="grid" style="display:none">
@@ -717,6 +721,7 @@ const HISTORY_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-history`;
 const VIDEO_RENDER_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-video-render`;
 const AVATAR_R2_URL = 'https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev';
 const AI_BACKEND_URL = 'https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev/';
+const LINE_OAUTH_PROVIDER = 'custom:line';
 let sb = null;
 function getSupabaseClient(){
   if(!window.supabase || !window.supabase.createClient){
@@ -904,6 +909,11 @@ function restoreWorkflowProgress(){
 function authRedirectUrl(){
   if(isLocalFileMode() || location.hostname !== 'chiwaai.com') return liveWorkflowUrl();
   return location.href.split('#')[0];
+}
+function authLoginOptions(provider){
+  const options = { redirectTo: authRedirectUrl() };
+  if(provider === LINE_OAUTH_PROVIDER) options.scopes = 'openid profile email';
+  return options;
 }
 async function authedFetch(url, body){
   const t = await token();
@@ -2005,7 +2015,8 @@ async function init(){
   if($('btn-profile-cancel')) $('btn-profile-cancel').onclick = () => { fillProfileForm(); setProfileEditor(false); };
   if($('btn-profile-save')) $('btn-profile-save').onclick = saveProfile;
   const client = getSupabaseClient();
-  $('login-btn').onclick = () => client.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: authRedirectUrl() } });
+  $('login-btn').onclick = () => client.auth.signInWithOAuth({ provider:'google', options: authLoginOptions('google') });
+  if($('line-login-btn')) $('line-login-btn').onclick = () => client.auth.signInWithOAuth({ provider:LINE_OAUTH_PROVIDER, options: authLoginOptions(LINE_OAUTH_PROVIDER) });
   $('login-state').textContent = '讀取登入狀態中...';
   const { data } = await withTimeout(client.auth.getSession(), 8000, '登入狀態讀取逾時，請重新整理或重新登入。');
   state.user = data && data.session && data.session.user;
@@ -2014,7 +2025,7 @@ async function init(){
     $('auth-box').style.display = 'block';
     return;
   }
-  $('login-state').textContent = `已登入：${state.user.email || ''}`;
+  $('login-state').textContent = `已登入：${state.user.email || state.user.user_metadata?.name || state.user.id || ''}`;
   $('app').style.display = 'grid';
   $('auth-box').style.display = 'none';
   try{

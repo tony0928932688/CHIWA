@@ -590,6 +590,8 @@ textarea:focus,input:focus,select:focus,.tinput:focus{border-color:var(--gold);b
 .google-btn{display:flex;align-items:center;gap:10px;background:#fff;color:#3c4043;border:1px solid #dadce0;border-radius:100px;padding:10px 20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:box-shadow .2s;width:100%;justify-content:center}
 .google-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .google-btn svg{width:18px;height:18px}
+.line-login-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:1px solid rgba(6,199,85,.7);border-radius:100px;background:#06C755;color:#fff;padding:10px 20px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:filter .2s,transform .2s}
+.line-login-btn:hover{filter:brightness(1.04);transform:translateY(-1px)}
 .verified-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(68,204,136,.1);border:1px solid rgba(68,204,136,.3);color:var(--green);font-size:12px;font-weight:700;padding:6px 14px;border-radius:100px}
 .vt-result{background:rgba(232,197,90,.06);border:1px solid rgba(232,197,90,.2);border-radius:14px;padding:24px;text-align:center;margin-top:20px}
 .vt-result-icon{font-size:40px;margin-bottom:10px}
@@ -2276,14 +2278,25 @@ function shouldRestoreWorkspaceFromUrl() {
   const search = String(location.search || '');
   const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
   const isReload = nav && nav.type === 'reload';
-  const isLoginReturn = new URLSearchParams(search).get('auth_return') === 'google';
+  const authReturn = new URLSearchParams(search).get('auth_return');
+  const isLoginReturn = authReturn === 'google' || authReturn === 'line';
   const hasWorkspacePanel = !!new URLSearchParams(search).get('workspace_panel');
   const isOAuthReturn = search.includes('code=') || search.includes('access_token') || String(location.hash || '').includes('access_token');
   return hash === 'workspace' || hash.startsWith('workspace:') || hasWorkspacePanel || isLoginReturn || isOAuthReturn || (isReload && getChiwaLocal(CHIWA_WORKSPACE_RESTORE_KEY) === '1');
 }
 
+const CHIWA_LINE_OAUTH_PROVIDER = 'custom:line';
+
+function getOAuthRedirectUrl(provider) {
+  return location.origin + location.pathname + '?auth_return=' + encodeURIComponent(provider || 'google');
+}
+
 function getGoogleOAuthRedirectUrl() {
-  return location.origin + location.pathname + '?auth_return=google';
+  return getOAuthRedirectUrl('google');
+}
+
+function getLineOAuthRedirectUrl() {
+  return getOAuthRedirectUrl('line');
 }
 
 function setWorkspaceHash(active) {
@@ -2313,7 +2326,7 @@ function setAdminOnlyFeatureVisibility() {
 
 async function callChiwaSecure(action, payload) {
   const token = await getVoiceSessionToken();
-  if (!token) throw new Error('請使用 Google 帳號登入後再操作。');
+  if (!token) throw new Error('請先使用學員帳號登入後再操作。');
   const res = await fetch(CHIWA_SECURE_API_URL, {
     method: 'POST',
     headers: {
@@ -2327,12 +2340,60 @@ async function callChiwaSecure(action, payload) {
   return data;
 }
 
-async function finishStudentLogin(data, loginId) {
+function getLoginMethodLabel(method) {
+  return method === 'line' ? 'LINE' : 'Google';
+}
+
+function inferOAuthLoginMethod(user) {
+  const authReturn = new URLSearchParams(location.search || '').get('auth_return');
+  if (authReturn === 'line') return 'line';
+  if (authReturn === 'google') return 'google';
+  const providers = [];
+  try {
+    if (user && user.app_metadata && user.app_metadata.provider) providers.push(user.app_metadata.provider);
+    if (user && Array.isArray(user.identities)) {
+      user.identities.forEach(function(identity) {
+        if (identity && identity.provider) providers.push(identity.provider);
+      });
+    }
+  } catch(e) {}
+  return providers.some(function(provider) { return /line/i.test(String(provider || '')); }) ? 'line' : 'google';
+}
+
+function getLineBindingCodeFromUser(user) {
+  if (!user) return '';
+  const candidates = [];
+  try {
+    if (Array.isArray(user.identities)) {
+      user.identities.forEach(function(identity) {
+        const data = identity && identity.identity_data || {};
+        if (identity && /line/i.test(String(identity.provider || ''))) {
+          candidates.push(identity.provider_id, data.sub, data.user_id, data.userId, data.id);
+        }
+      });
+    }
+    const meta = user.user_metadata || {};
+    candidates.push(meta.sub, meta.user_id, meta.userId, meta.provider_id, user.id);
+  } catch(e) {}
+  return String(candidates.find(function(value) { return String(value || '').trim(); }) || user.id || '').trim();
+}
+
+async function getCurrentOAuthUser() {
+  try {
+    if (!_SB || !_SB.auth) return null;
+    const { data } = await _SB.auth.getSession();
+    return data && data.session && data.session.user || null;
+  } catch(e) {
+    return null;
+  }
+}
+
+async function finishStudentLogin(data, loginId, loginMethod) {
   currentUser = data.id || loginId;
   currentUserData = data;
   applyWorkspaceMode();
   chiwaTrack('login_success', {
-    login_method: 'google',
+    login_method: loginMethod || 'google',
     student_id: currentUser,
     is_admin: !!data.is_admin
   });
@@ -2426,26 +2487,29 @@ async function findAuthorizedStudentByEmail(email) {
   return unique[0] || null;
 }
 
-async function loginWithGoogleEmail(email) {
+async function loginWithOAuthStudent(loginMethod, loginId) {
   const err = document.getElementById('lerr');
+  const label = getLoginMethodLabel(loginMethod);
   try {
     const secure = await callChiwaSecure('profile', {});
     const student = secure && secure.student;
-    if (!student) throw new Error('此 Google 帳號尚未開通學員權限。');
+    if (!student) throw new Error(`此 ${label} 帳號尚未開通學員權限。`);
     if (err) err.style.display = 'none';
-    await finishStudentLogin(student, email);
+    await finishStudentLogin(student, loginId, loginMethod);
     if (secure.reset) toast('新週期開始，AI 次數、語音字數與影像克隆秒數已自動重置。');
   } catch(e) {
-    console.error('Google login profile error:', e);
-    const raw = e && e.message ? e.message : 'Google 登入驗證失敗，請稍後再試。';
+    console.error(label + ' login profile error:', e);
+    const raw = e && e.message ? e.message : `${label} 登入驗證失敗，請稍後再試。`;
     const likelyNotOpened = /尚未開通|未開通|not.?found|not.?authorized|unauthorized|forbidden|permission|403|401|student/i.test(raw);
     clearWorkspaceRestore();
     setWorkspaceHash(false);
+    const noticeUser = loginMethod === 'line' ? await getCurrentOAuthUser() : null;
+    const lineBindingCode = noticeUser ? getLineBindingCodeFromUser(noticeUser) : '';
     if (_SB && _SB.auth && typeof _SB.auth.signOut === 'function') {
       await _SB.auth.signOut().catch(function(){});
     }
     if (likelyNotOpened) {
-      showGoogleAccountNotOpenedNotice(email);
+      await showOAuthAccountNotOpenedNotice(loginMethod, loginId, lineBindingCode);
     } else if (err) {
       goPage('login');
       err.style.display = 'block';
@@ -2454,34 +2518,46 @@ async function loginWithGoogleEmail(email) {
   }
 }
 
-function showGoogleAccountNotOpenedNotice(email) {
+async function loginWithGoogleEmail(email) {
+  await loginWithOAuthStudent('google', email);
+}
+
+async function showOAuthAccountNotOpenedNotice(loginMethod, account, forcedLineCode) {
   const loginPanel = document.getElementById('login-panel');
   const err = document.getElementById('lerr');
-  let wrap = document.getElementById('google-account-not-opened');
+  let wrap = document.getElementById('oauth-account-not-opened');
   const supportEmail = 'chivashorts@gmail.com';
-  const account = String(email || '').trim();
+  const label = getLoginMethodLabel(loginMethod);
+  const accountText = String(account || '').trim();
+  const user = forcedLineCode ? null : await getCurrentOAuthUser();
+  const lineCode = loginMethod === 'line' ? (forcedLineCode || getLineBindingCodeFromUser(user)) : '';
   const subject = encodeURIComponent('學員帳號開通協助');
-  const body = encodeURIComponent(`您好，我想確認吉娃 AI 學員帳號是否已開通。\n\nGoogle 帳號：${account || '請填入你的 Google Email'}\n`);
+  const body = encodeURIComponent(`您好，我想確認吉娃 AI 學員帳號是否已開通。\n\n登入方式：${label}\n${loginMethod === 'line' ? `LINE 綁定碼：${lineCode || '未取得'}\n` : `Google 帳號：${accountText || '請填入你的 Google Email'}\n`}`);
   goPage('login');
   if (!wrap) {
     wrap = document.createElement('div');
-    wrap.id = 'google-account-not-opened';
+    wrap.id = 'oauth-account-not-opened';
     if (err && err.parentNode) err.parentNode.insertBefore(wrap, err);
     else if (loginPanel) loginPanel.appendChild(wrap);
     else document.body.appendChild(wrap);
   }
   wrap.style.cssText = 'display:block;background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.35);border-radius:12px;padding:12px 14px;margin:12px 0;color:#eeeef2;text-align:left;font-family:\'Noto Sans TC\',sans-serif;';
   wrap.innerHTML = `
-    <div style="font-size:15px;font-weight:900;color:#ff9a9a;margin-bottom:6px;">此 Google 帳號尚未開通</div>
+    <div style="font-size:15px;font-weight:900;color:#ff9a9a;margin-bottom:6px;">此 ${label} 帳號尚未開通</div>
     <div style="font-size:12px;line-height:1.75;color:#d9d9e8;margin-bottom:10px;">
-      ${account ? `你目前登入的是 <b>${escapeHtml(account)}</b>，` : ''}此帳號尚未列入付費學員名單。若你已完成付款，請聯繫吉娃客服協助開通。
+      ${accountText ? `你目前登入的是 <b>${escapeHtml(accountText)}</b>，` : ''}此帳號尚未列入付費學員名單。若你已完成付款，請聯繫吉娃客服協助開通。
+      ${lineCode ? `<br>LINE 綁定碼：<b>${escapeHtml(lineCode)}</b>` : ''}
     </div>
     <a href="mailto:${supportEmail}?subject=${subject}&body=${body}" style="display:inline-flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box;border-radius:10px;background:#e8c55a;color:#17120a;font-weight:900;padding:10px 12px;text-decoration:none;">聯繫客服：${supportEmail}</a>
   `;
   if (err) {
     err.style.display = 'block';
-    err.textContent = '請確認付款資料與登入的 Google 帳號是否一致。';
+    err.textContent = `請確認付款資料與登入的 ${label} 帳號是否一致。`;
   }
+}
+
+function showGoogleAccountNotOpenedNotice(email) {
+  return showOAuthAccountNotOpenedNotice('google', email);
 }
 
 function getBlockedOAuthUserAgentName() {
@@ -2536,7 +2612,7 @@ function showSafeBrowserNotice(appName) {
 async function doGoogleLogin() {
   const err = document.getElementById('lerr');
   const blockedBrowser = getBlockedOAuthUserAgentName();
-  const oldNotOpened = document.getElementById('google-account-not-opened');
+  const oldNotOpened = document.getElementById('oauth-account-not-opened');
   const oldBrowserNotice = document.getElementById('safe-browser-notice');
   if (oldNotOpened) oldNotOpened.remove();
   if (oldBrowserNotice) oldBrowserNotice.remove();
@@ -2568,6 +2644,37 @@ async function doGoogleLogin() {
   }
 }
 
+async function doLineLogin() {
+  const err = document.getElementById('lerr');
+  const oldNotOpened = document.getElementById('oauth-account-not-opened');
+  const oldBrowserNotice = document.getElementById('safe-browser-notice');
+  if (oldNotOpened) oldNotOpened.remove();
+  if (oldBrowserNotice) oldBrowserNotice.remove();
+  if (err) err.style.display = 'none';
+  chiwaTrack('login_click', { login_method: 'line' });
+  if (!_SB || !_SB.auth) {
+    if (err) { err.style.display='block'; err.textContent='LINE 登入尚未載入，請重新整理後再試'; }
+    return;
+  }
+  try {
+    markWorkspaceRestore();
+    const { error } = await _SB.auth.signInWithOAuth({
+      provider: CHIWA_LINE_OAUTH_PROVIDER,
+      options: {
+        redirectTo: getLineOAuthRedirectUrl(),
+        scopes: 'openid profile email'
+      }
+    });
+    if (error) throw error;
+  } catch(e) {
+    console.error('line login error:', e);
+    if (err) {
+      err.style.display = 'block';
+      err.textContent = 'LINE 登入尚未完成設定，請先使用 Google 登入或聯繫管理員。';
+    }
+  }
+}
+
 async function restoreGoogleLoginSession() {
   if (!_SB || !_SB.auth) return;
   try {
@@ -2593,15 +2700,17 @@ async function restoreGoogleLoginSession() {
     }
 
     const { data } = await _SB.auth.getSession();
-    const email = data && data.session && data.session.user && data.session.user.email;
-    if (email && !currentUser) {
-      await loginWithGoogleEmail(email);
-    } else if (!email) {
+    const user = data && data.session && data.session.user;
+    const email = user && user.email;
+    if (user && !currentUser) {
+      const method = inferOAuthLoginMethod(user);
+      await loginWithOAuthStudent(method, method === 'line' ? (email || getLineBindingCodeFromUser(user)) : email);
+    } else if (!user) {
       clearWorkspaceRestore();
       setWorkspaceHash(false);
     }
   } catch(e) {
-    console.warn('google session restore skipped');
+    console.warn('oauth session restore skipped');
   }
 }
 
@@ -2631,9 +2740,9 @@ async function doLogin() {
   const err = document.getElementById('lerr');
   if (err) {
     err.style.display = 'block';
-    err.textContent = '為了保護學員資料，請使用 Google 帳號登入。';
+    err.textContent = '為了保護學員資料，請使用 Google 或 LINE 學員帳號登入。';
   }
-  toast('請使用 Google 帳號登入。');
+  toast('請使用 Google 或 LINE 學員帳號登入。');
 }
 
 // 格式化秒數為 MM:SS
@@ -3638,7 +3747,7 @@ async function decrAvatar(secs) {
       <!-- 登入面板 -->
       <div class="login-panel" id="login-panel">
         <div class="login-logo">吉娃 AI</div>
-        <div class="login-sub">請使用已授權的 Google 帳號登入</div>
+        <div class="login-sub">請使用已授權的 Google 或 LINE 帳號登入</div>
         <div class="login-field" style="display:none"><label>帳號</label><input type="text" id="lu" placeholder="請輸入帳號" class="tinput" style="background:var(--card2)"></div>
         <div class="login-field" style="display:none">
           <label>密碼</label>
@@ -3655,7 +3764,11 @@ async function decrAvatar(secs) {
           </svg>
           <span style="font-weight:700">Google 帳號登入</span>
         </button>
-        <div class="login-err" id="lerr">請使用 Google 帳號登入</div>
+        <button class="line-login-btn" onclick="doLineLogin()" style="margin-top:10px">
+          <span style="font-weight:1000">LINE</span>
+          <span>LINE 帳號登入</span>
+        </button>
+        <div class="login-err" id="lerr">請使用 Google 或 LINE 學員帳號登入</div>
         <div class="login-links">
           <span class="login-link" onclick="goPage('home')">← 回首頁</span>
         </div>
@@ -4520,11 +4633,14 @@ async function decrAvatar(secs) {
 
     <!-- 學員管理表單與搜尋 -->
     <div style="background: var(--card); border: 1px solid var(--bdr); border-radius: 14px; padding: 20px; margin-bottom: 24px;">
-      <div style="font-size: 14px; font-weight: 700; margin-bottom: 6px; color: var(--t1);">➕ 開通 / 更新付費學員 Google 帳號</div>
-      <div style="font-size: 12px; color: var(--t2); line-height: 1.7; margin-bottom: 14px;">學員付款後，在這裡輸入他的 Google Email。之後學員用同一個 Google 帳號登入，就會被放行到 Workspace。</div>
+      <div style="font-size: 14px; font-weight: 700; margin-bottom: 6px; color: var(--t1);">➕ 開通 / 更新付費學員登入權限</div>
+      <div style="font-size: 12px; color: var(--t2); line-height: 1.7; margin-bottom: 14px;">學員付款後，在這裡輸入 Google Email；若要用 LINE 登入，再填入 LINE User ID 或學員未開通提示裡顯示的 LINE 綁定碼。</div>
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
         <div style="flex: 1.2; min-width: 220px;">
           <input type="text" id="adm-new-u" placeholder="學員 Google Email，例如 student@gmail.com" class="tinput" style="background: var(--card2)">
+        </div>
+        <div style="flex: 1.1; min-width: 220px;">
+          <input type="text" id="adm-new-line" placeholder="LINE User ID / 綁定碼，可先留空" class="tinput" style="background: var(--card2)">
         </div>
         <div style="flex: .8; min-width: 160px;">
           <input type="text" id="adm-new-name" placeholder="學員姓名 / 暱稱" class="tinput" style="background: var(--card2)">
@@ -4556,6 +4672,7 @@ async function decrAvatar(secs) {
           <thead>
             <tr>
               <th>Google Email / 帳號</th>
+              <th>LINE 綁定</th>
               <th>姓名</th>
               <th>目前狀態</th>
               <th>方案 / 備註</th>
@@ -5059,7 +5176,7 @@ function goPage(pageId) {
     setWorkspaceHash(false);
   }
   if (pageId === 'voice-trial') {
-    toast('此功能僅開放已授權學員，請先用 Google 帳號登入。');
+    toast('此功能僅開放已授權學員，請先用學員帳號登入。');
     goPage('login');
     return;
   }
@@ -5208,7 +5325,7 @@ function selC(el) {
 
 async function callChiwaProfile(action, payload) {
   const token = await getVoiceSessionToken();
-  if (!token) throw new Error('請使用 Google 登入後再設定帳號定位。');
+  if (!token) throw new Error('請使用學員帳號登入後再設定帳號定位。');
   const res = await fetch(CHIWA_PROFILE_FUNCTION_URL, {
     method: 'POST',
     headers: {
@@ -6485,7 +6602,7 @@ function coachSetBadge(text, cls) {
 
 function coachErrorMessage(error, fallback) {
   const raw = String(error && error.message || error || '').trim();
-  if (/missing_authorization|invalid_session|login|session|jwt|unauthorized|401/i.test(raw)) return '請先使用 Google 帳號登入後再操作。';
+  if (/missing_authorization|invalid_session|login|session|jwt|unauthorized|401/i.test(raw)) return '請先使用學員帳號登入後再操作。';
   if (/setup_missing|client|secret|redirect|credential|token_encryption|state_secret/i.test(raw)) return 'TikTok 開發者憑證尚未在後端設定完成，目前不能正式連接。';
   if (/tiktok_not_connected|not_connected/i.test(raw)) return '尚未連接 TikTok 成效資料。';
   if (/not_found|404/i.test(raw)) return '內容教練後端路由尚未部署，前端入口已就緒。';
@@ -6728,7 +6845,7 @@ async function analyzeTikTokCoach() {
 
 function voiceServiceErrorMessage(error, fallback) {
   const raw = String(error && error.message || error || '').trim();
-  if (/session|login|jwt|unauthorized|forbidden/i.test(raw)) return '請使用 Google 登入後再使用語音功能。';
+  if (/session|login|jwt|unauthorized|forbidden/i.test(raw)) return '請使用學員帳號登入後再使用語音功能。';
   if (/quota|credits|seconds|minutes|limit|insufficient/i.test(raw)) return '語音額度不足，請確認剩餘字數後再試。';
   if (/audio|file|clip|format|mime/i.test(raw)) return '音檔格式或內容無法辨識，請改用清楚的 MP3、WAV 或 M4A 音檔。';
   if (/network|fetch|timeout|temporarily/i.test(raw)) return '語音服務暫時連線不穩，請稍後再試。';
@@ -6737,7 +6854,7 @@ function voiceServiceErrorMessage(error, fallback) {
 
 async function callChiwaVoiceJson(action, payload) {
   const token = await getVoiceSessionToken();
-  if (!token) throw new Error('請使用 Google 登入後再使用語音克隆功能。');
+  if (!token) throw new Error('請使用學員帳號登入後再使用語音克隆功能。');
   const res = await fetch(CHIWA_VOICE_FUNCTION_URL, {
     method: 'POST',
     headers: {
@@ -7015,7 +7132,7 @@ async function cloneV() {
   
   const token = await getVoiceSessionToken();
   if (!token) {
-    toast('❌ 請使用 Google 登入後再使用語音克隆。');
+    toast('❌ 請使用學員帳號登入後再使用語音克隆。');
     return;
   }
 
@@ -7261,7 +7378,7 @@ async function generateTTSAudio() {
 
   try {
     const token = await getVoiceSessionToken();
-    if (!token) throw new Error('請使用 Google 登入後再生成語音。');
+    if (!token) throw new Error('請使用學員帳號登入後再生成語音。');
     if (!(await syncVoiceDropdownBeforeTTS(select))) {
       load.style.display = 'none';
       btn.disabled = false;
@@ -7408,7 +7525,7 @@ function handleAvatarFileUpload(event, type) {
 
 async function callChiwaAvatarJson(action, payload) {
   const token = await getVoiceSessionToken();
-  if (!token) throw new Error('請使用 Google 登入後再使用形象克隆功能。');
+  if (!token) throw new Error('請使用學員帳號登入後再使用形象克隆功能。');
   const res = await fetch(CHIWA_AVATAR_FUNCTION_URL, {
     method: 'POST',
     headers: {
@@ -7947,7 +8064,7 @@ async function loadAvatarSourceLibrary() {
   else if (box) box.innerHTML = '<div class="avatar-source-card avatar-source-empty">正在讀取形象素材...</div>';
   try {
     const token = await getVoiceSessionToken();
-    if (!token) throw new Error('請使用 Google 登入後再讀取形象素材。');
+    if (!token) throw new Error('請使用學員帳號登入後再讀取形象素材。');
     const data = await avatarR2Json('/avatar/profile/list?limit=5', {
       method: 'GET',
       headers: { 'Authorization': 'Bearer ' + token }
@@ -8259,7 +8376,7 @@ async function generateAvatarClone() {
 
   try {
     const token = await getVoiceSessionToken();
-    if (!token) throw new Error('請使用 Google 登入後再使用形象克隆。');
+    if (!token) throw new Error('請使用學員帳號登入後再使用形象克隆。');
     if (avatarPollTimer) clearTimeout(avatarPollTimer);
     if (btn) btn.disabled = true;
     if (load) load.style.display = 'flex';
@@ -9039,6 +9156,27 @@ function adminStudentEmail(s) {
   return String((s && (s.google_email || s.email || s.id || s.username)) || '').trim();
 }
 
+function adminStudentLineBinding(s) {
+  return String((s && (s.line_user_id || s.line_auth_uid || s.line_id || '')) || '').trim();
+}
+
+function isLikelyUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || '').trim());
+}
+
+function applyLineBindingToPayload(payload, value) {
+  const raw = String(value || '').trim();
+  payload.line_enabled = !!raw;
+  if (!raw) {
+    payload.line_user_id = null;
+    payload.line_auth_uid = null;
+    return payload;
+  }
+  if (isLikelyUuid(raw)) payload.line_auth_uid = raw;
+  else payload.line_user_id = raw;
+  return payload;
+}
+
 function adminDomKey(id) {
   return btoa(unescape(encodeURIComponent(String(id || '')))).replace(/[^a-zA-Z0-9]/g, '');
 }
@@ -9063,7 +9201,7 @@ renderAdminPanel = async function() {
   const unitSelect = document.getElementById('adm-course-unit-select');
   if (unitSelect && unitSelect.children.length === 0) initAdminCourseSelects();
 
-  tbody.innerHTML = '<tr><td colspan="8" style="color:var(--t2);padding:18px">正在讀取學員授權資料...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="9" style="color:var(--t2);padding:18px">正在讀取學員授權資料...</td></tr>';
   let rows = [];
   let sourceText = 'Supabase';
   try {
@@ -9089,7 +9227,7 @@ renderAdminPanel = async function() {
       voice_minutes: s.voice_minutes,
       avatar_minutes: s[AVATAR_MINUTES_KEY]
     }));
-    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);padding:18px">讀取 Supabase 失敗：${escapeHtml(e.message || '權限或連線異常')}。目前顯示本機備援資料，正式上線前需修正資料庫權限。</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="color:var(--red);padding:18px">讀取 Supabase 失敗：${escapeHtml(e.message || '權限或連線異常')}。目前顯示本機備援資料，正式上線前需修正資料庫權限。</td></tr>`;
   }
 
   totalNum.textContent = rows.length;
@@ -9101,6 +9239,7 @@ renderAdminPanel = async function() {
     tbody.innerHTML = rows.map(s => {
       const id = adminStudentId(s);
       const email = adminStudentEmail(s);
+      const lineBinding = adminStudentLineBinding(s);
       const key = adminDomKey(id);
       const isBanned = s.status === '已停權';
       const badgeClass = isBanned ? 'us-expired' : 'us-active';
@@ -9110,6 +9249,7 @@ renderAdminPanel = async function() {
       return `
         <tr>
           <td style="font-weight:700">${escapeHtml(email || id)}</td>
+          <td><input id="adm-line-${key}" class="tinput" value="${escapeHtml(lineBinding)}" placeholder="LINE ID / 綁定碼" style="background:var(--card2);min-width:150px"></td>
           <td>${escapeHtml(s.name || '—')}</td>
           <td><span class="ustatus ${badgeClass}">${statusText}</span></td>
           <td><input id="adm-note-${key}" class="tinput" value="${escapeHtml(s.note || s.plan || '')}" style="background:var(--card2);min-width:130px"></td>
@@ -9169,6 +9309,7 @@ async function saveStudentQuotaFromAdmin(encodedId) {
   const voice = Number(document.getElementById('adm-voice-' + key)?.value || '10000');
   const avatar = Number(document.getElementById('adm-avatar-' + key)?.value || '1800');
   const note = document.getElementById('adm-note-' + key)?.value.trim() || '';
+  const lineBinding = document.getElementById('adm-line-' + key)?.value.trim() || '';
   if (!_SB) {
     toast('❌ 資料庫尚未載入，無法儲存');
     return;
@@ -9183,8 +9324,14 @@ async function saveStudentQuotaFromAdmin(encodedId) {
     avatar_seconds: Number.isFinite(avatar) ? Math.round(avatar) : 1800
   };
   if (note) payload.note = note;
+  if (lineBinding) applyLineBindingToPayload(payload, lineBinding);
 
   let { error } = await _SB.from('students').update(payload).eq('id', id);
+  if (error && lineBinding && /line_(user_id|auth_uid|enabled)|schema cache|column/i.test(error.message || '')) {
+    toast('❌ LINE 綁定欄位尚未建立，請先執行 Supabase LINE 登入 SQL');
+    adminLog(`⚠️ LINE 綁定儲存失敗：${id}，${error.message || 'unknown error'}`);
+    return;
+  }
   if (error && note) {
     delete payload.note;
     ({ error } = await _SB.from('students').update(payload).eq('id', id));
@@ -9202,6 +9349,7 @@ async function saveStudentQuotaFromAdmin(encodedId) {
 
 addNewStudentFromAdmin = async function() {
   const emailInput = document.getElementById('adm-new-u');
+  const lineInput = document.getElementById('adm-new-line');
   const nameInput = document.getElementById('adm-new-name');
   const noteInput = document.getElementById('adm-new-note');
   const aiInput = document.getElementById('adm-new-ai');
@@ -9210,14 +9358,19 @@ addNewStudentFromAdmin = async function() {
   if (!emailInput || !noteInput) return;
 
   const email = emailInput.value.trim().toLowerCase();
+  const lineBinding = lineInput ? lineInput.value.trim() : '';
   const name = nameInput ? nameInput.value.trim() : '';
   const note = noteInput.value.trim() || 'AI自媒體自學課程';
   const ai = parseInt(aiInput?.value || '300', 10);
   const voice = Number(voiceInput?.value || '10000');
   const avatar = Number(avatarInput?.value || '1800');
 
-  if (!email || !email.includes('@')) {
-    toast('❌ 請輸入正確的學員 Google Email');
+  if (!email && !lineBinding) {
+    toast('❌ 請至少輸入 Google Email 或 LINE 綁定碼');
+    return;
+  }
+  if (email && !email.includes('@')) {
+    toast('❌ 請輸入正確的學員 Google Email，或留空改填 LINE 綁定碼');
     return;
   }
   if (!_SB) {
@@ -9225,10 +9378,11 @@ addNewStudentFromAdmin = async function() {
     return;
   }
 
+  const rowId = email || ('line_' + lineBinding.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 80));
   const basePayload = {
-    id: email,
+    id: rowId,
     password: 'GOOGLE_LOGIN_ONLY',
-    name: name || email.split('@')[0],
+    name: name || (email ? email.split('@')[0] : 'LINE學員'),
     status: '正常',
     is_admin: false,
     ai_usage: Number.isFinite(ai) ? ai : 300,
@@ -9238,14 +9392,21 @@ addNewStudentFromAdmin = async function() {
     voice_seconds: Number.isFinite(voice) ? Math.round((voice / 150) * 60) : 4000,
     avatar_seconds: Number.isFinite(avatar) ? Math.round(avatar) : 1800
   };
-  const fullPayload = Object.assign({}, basePayload, {
+  const fullPayload = Object.assign({}, basePayload, email ? {
     email: email,
-    google_email: email,
+    google_email: email
+  } : {}, {
     note: note,
     plan: note
   });
+  if (lineBinding) applyLineBindingToPayload(fullPayload, lineBinding);
 
   let { error } = await _SB.from('students').upsert(fullPayload, { onConflict: 'id' });
+  if (error && lineBinding && /line_(user_id|auth_uid|enabled)|schema cache|column/i.test(error.message || '')) {
+    toast('❌ LINE 綁定欄位尚未建立，請先執行 Supabase LINE 登入 SQL');
+    adminLog(`⚠️ LINE 開通失敗：${email || rowId}，${error.message || 'unknown error'}`);
+    return;
+  }
   if (error) {
     ({ error } = await _SB.from('students').upsert(basePayload, { onConflict: 'id' }));
   }
@@ -9255,12 +9416,13 @@ addNewStudentFromAdmin = async function() {
     return;
   }
 
-  adminLog(`➕ 學員開通：${email}，AI ${basePayload.ai_usage} 次，語音 ${basePayload.voice_credits} 字，影像克隆 ${basePayload.avatar_seconds} 秒。`);
+  adminLog(`➕ 學員開通：${email || rowId}，AI ${basePayload.ai_usage} 次，語音 ${basePayload.voice_credits} 字，影像克隆 ${basePayload.avatar_seconds} 秒。`);
   emailInput.value = '';
+  if (lineInput) lineInput.value = '';
   if (nameInput) nameInput.value = '';
   noteInput.value = '';
   await renderAdminPanel();
-  toast(`✅ 已開通 ${email} 的 Google 登入權限`);
+  toast(`✅ 已開通 ${email || rowId} 的學員登入權限`);
 };
 
 // 備用靜態進度宣告，已融合至動態進度中
@@ -9757,19 +9919,19 @@ function resetVoiceTrialSteps() {
 }
 
 function simulateGoogleLogin() {
-  toast('正式版不開放免費體驗，請使用已開通的學員 Google 帳號登入。');
+  toast('正式版不開放免費體驗，請使用已開通的學員帳號登入。');
 }
 
 function sendSMSCode() {
-  toast('正式版不開放簡訊測試體驗，請使用已開通的學員 Google 帳號登入。');
+  toast('正式版不開放簡訊測試體驗，請使用已開通的學員帳號登入。');
 }
 
 function verifySMSCode() {
-  toast('正式版不開放測試驗證碼，請使用已開通的學員 Google 帳號登入。');
+  toast('正式版不開放測試驗證碼，請使用已開通的學員帳號登入。');
 }
 
 function enterVoiceTrialWorkspace() {
-  toast('正式版不開放體驗帳號，請使用已開通的學員 Google 帳號登入。');
+  toast('正式版不開放體驗帳號，請使用已開通的學員帳號登入。');
 }
 
 /* === 首頁 VSL 銷講影片管理與動態渲染邏輯 === */

@@ -25,6 +25,32 @@ function normalizeEmail(value: unknown) {
   return String(value || "").trim().toLowerCase();
 }
 
+function cleanIdentity(value: unknown) {
+  return String(value || "").trim();
+}
+
+function getAuthIdentity(user: any) {
+  const email = normalizeEmail(user?.email);
+  const authUid = cleanIdentity(user?.id);
+  let provider = cleanIdentity(user?.app_metadata?.provider);
+  let lineUserId = "";
+  const identities = Array.isArray(user?.identities) ? user.identities : [];
+  for (const identity of identities) {
+    const identityProvider = cleanIdentity(identity?.provider);
+    if (!provider && identityProvider) provider = identityProvider;
+    if (/line/i.test(identityProvider)) {
+      const data = identity?.identity_data || {};
+      lineUserId = cleanIdentity(identity?.provider_id || data.sub || data.user_id || data.userId || data.id);
+      break;
+    }
+  }
+  const metadata = user?.user_metadata || {};
+  if (!lineUserId && /line/i.test(provider)) {
+    lineUserId = cleanIdentity(metadata.sub || metadata.user_id || metadata.userId || metadata.provider_id || metadata.id);
+  }
+  return { email, authUid, provider, lineUserId };
+}
+
 function cleanText(value: unknown, max = 160) {
   return String(value || "").replace(/\u0000/g, "").trim().slice(0, max);
 }
@@ -79,14 +105,32 @@ async function getAuthorizedStudent(req: Request) {
   const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
   if (userError) throw Object.assign(new Error("invalid_session"), { status: 401 });
 
-  const email = normalizeEmail(userData.user?.email);
-  if (!email) throw Object.assign(new Error("missing_user_email"), { status: 401 });
+  const identity = getAuthIdentity(userData.user);
+  if (!identity.email && !identity.lineUserId && !identity.authUid) {
+    throw Object.assign(new Error("missing_user_identity"), { status: 401 });
+  }
 
-  for (const column of ["google_email", "email", "id"]) {
+  const checks: Array<{ column: string; value: string }> = [];
+  if (identity.email) {
+    checks.push(
+      { column: "google_email", value: identity.email },
+      { column: "email", value: identity.email },
+      { column: "id", value: identity.email },
+    );
+  }
+  if (identity.lineUserId) checks.push({ column: "line_user_id", value: identity.lineUserId });
+  if (identity.authUid) {
+    checks.push(
+      { column: "line_auth_uid", value: identity.authUid },
+      { column: "id", value: identity.authUid },
+    );
+  }
+
+  for (const check of checks) {
     const { data, error } = await supabaseAdmin
       .from("students")
       .select("*")
-      .eq(column, email)
+      .eq(check.column, check.value)
       .limit(1);
     if (!error && Array.isArray(data) && data[0]) {
       if (isInactiveStatus(data[0].status)) {

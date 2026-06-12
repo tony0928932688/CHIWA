@@ -30,6 +30,37 @@ function normalizeEmail(value: unknown) {
   return String(value || "").trim().toLowerCase();
 }
 
+function cleanIdentity(value: unknown) {
+  return String(value || "").trim();
+}
+
+function getAuthIdentity(user: any) {
+  const email = normalizeEmail(user?.email);
+  const authUid = cleanIdentity(user?.id);
+  let provider = cleanIdentity(user?.app_metadata?.provider);
+  let lineUserId = "";
+  const identities = Array.isArray(user?.identities) ? user.identities : [];
+  for (const identity of identities) {
+    const identityProvider = cleanIdentity(identity?.provider);
+    if (!provider && identityProvider) provider = identityProvider;
+    if (/line/i.test(identityProvider)) {
+      const data = identity?.identity_data || {};
+      lineUserId = cleanIdentity(identity?.provider_id || data.sub || data.user_id || data.userId || data.id);
+      break;
+    }
+  }
+  const metadata = user?.user_metadata || {};
+  if (!lineUserId && /line/i.test(provider)) {
+    lineUserId = cleanIdentity(metadata.sub || metadata.user_id || metadata.userId || metadata.provider_id || metadata.id);
+  }
+  return { email, authUid, provider, lineUserId };
+}
+
+function isInactiveStatus(value: unknown) {
+  const status = String(value || "").trim().toLowerCase();
+  return ["disabled", "inactive", "blocked"].includes(status);
+}
+
 function round1(value: number) {
   return Math.max(0, Math.round(value * 10) / 10);
 }
@@ -78,23 +109,33 @@ function addDays(date: Date, days: number) {
   return next;
 }
 
-async function getAuthEmail(req: Request) {
+async function getAuthIdentityFromRequest(req: Request) {
   const authHeader = req.headers.get("authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
   if (!token) throw new Error("missing_session");
   const { data, error } = await supabaseAdmin.auth.getUser(token);
   if (error) throw new Error("invalid_session");
-  const email = normalizeEmail(data.user?.email);
-  if (!email) throw new Error("missing_user_email");
-  return email;
+  const identity = getAuthIdentity(data.user);
+  if (!identity.email && !identity.lineUserId && !identity.authUid) throw new Error("missing_user_identity");
+  return identity;
 }
 
-async function findStudentByEmail(email: string) {
-  const checks = [
-    { column: "google_email", value: email },
-    { column: "email", value: email },
-    { column: "id", value: email },
-  ];
+async function findStudentByAuthIdentity(identity: { email?: string; lineUserId?: string; authUid?: string }) {
+  const checks: Array<{ column: string; value: string }> = [];
+  if (identity.email) {
+    checks.push(
+      { column: "google_email", value: identity.email },
+      { column: "email", value: identity.email },
+      { column: "id", value: identity.email },
+    );
+  }
+  if (identity.lineUserId) checks.push({ column: "line_user_id", value: identity.lineUserId });
+  if (identity.authUid) {
+    checks.push(
+      { column: "line_auth_uid", value: identity.authUid },
+      { column: "id", value: identity.authUid },
+    );
+  }
   const matches: any[] = [];
   for (const check of checks) {
     const { data, error } = await supabaseAdmin.from("students").select("*").eq(check.column, check.value);
@@ -108,8 +149,8 @@ async function findStudentByEmail(email: string) {
     return true;
   });
   unique.sort((a, b) => {
-    const aActive = !a.status || a.status === "正常" ? 1 : 0;
-    const bActive = !b.status || b.status === "正常" ? 1 : 0;
+    const aActive = isInactiveStatus(a.status) ? 0 : 1;
+    const bActive = isInactiveStatus(b.status) ? 0 : 1;
     if (aActive !== bActive) return bActive - aActive;
     if (!!a.is_admin !== !!b.is_admin) return b.is_admin ? 1 : -1;
     if (!!a.google_enabled !== !!b.google_enabled) return b.google_enabled ? 1 : -1;
@@ -119,10 +160,10 @@ async function findStudentByEmail(email: string) {
 }
 
 async function getCurrentStudent(req: Request, allowInactive = false) {
-  const email = await getAuthEmail(req);
-  const student = await findStudentByEmail(email);
+  const identity = await getAuthIdentityFromRequest(req);
+  const student = await findStudentByAuthIdentity(identity);
   if (!student) throw new Error("student_not_found");
-  if (!allowInactive && student.status && student.status !== "正常") throw new Error("student_inactive");
+  if (!allowInactive && isInactiveStatus(student.status)) throw new Error("student_inactive");
   return student;
 }
 
