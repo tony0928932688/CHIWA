@@ -933,7 +933,7 @@ async function authedFetch(url, body){
 }
 function avatarErrorText(error, fallback = '形象克隆送出失敗，請稍後再試。'){
   const raw = String(error && error.message || error || fallback);
-  if(/file_exceeds_avatar_provider_limit/i.test(raw)) return `這支形象影片超過 ${avatarProviderVideoLimitText()}，供應商可能無法建立任務。請改上傳壓縮版或選用小於 ${avatarProviderVideoLimitText()} 的形象素材。`;
+  if(/file_exceeds_avatar_provider_limit|avatar_video_too_large/i.test(raw)) return raw.includes('｜') ? raw.split('｜').slice(1).join('｜').trim() : `這支形象影片超過 ${avatarProviderVideoLimitText()}，供應商可能無法建立任務。請改上傳壓縮版或選用小於 ${avatarProviderVideoLimitText()} 的形象素材。`;
   if(/voice_signed_url_refresh_failed/i.test(raw)) return '語音連結已過期或暫時無法重新建立，請回到第三步重新生成或重新選用語音後再送形象克隆。';
   if(/avatar_video_signed_url_refresh_failed/i.test(raw)) return '形象素材連結已過期或暫時無法重新建立，請先按「刷新」重新讀取形象素材，或重新選用/上傳形象影片後再送出。';
   if(/avatar_student_task_already_running/i.test(raw)) return '你目前已有一個數字人任務正在生成，系統會完成後才能送出下一支。請稍後到素材管理刷新，或等待本頁自動查詢。';
@@ -944,7 +944,7 @@ function avatarErrorText(error, fallback = '形象克隆送出失敗，請稍後
     return detail ? `形象克隆服務目前沒有成功建立任務：${detail}` : '形象克隆服務目前沒有成功建立任務，可能是供應商暫時失敗或素材連結無法讀取。請重新送出一次；如果連續失敗，請換一組形象素材或稍後再試。';
   }
   if(/missing_task_id|avatar_submit_missing_task_id/i.test(raw)) return '形象克隆服務沒有回傳任務編號，系統無法自動查詢結果。請刷新素材管理確認是否已生成；如果沒有出現，請重新送出一次。';
-  if(/video_url_invalid|audio_url_invalid|invalid_url/i.test(raw)) return '影片或語音連結暫時無法讀取，請重新上傳後再試。';
+  if(/video_url_unreachable|audio_url_unreachable|video_url_invalid|audio_url_invalid|invalid_url/i.test(raw)) return raw.includes('｜') ? raw.split('｜').slice(1).join('｜').trim() : '影片或語音連結暫時無法讀取，請重新上傳後再試。';
   return raw || fallback;
 }
 function extractAvatarTaskId(data){
