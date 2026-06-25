@@ -14,7 +14,6 @@ const MAX_ACTIVE_TASKS_PER_STUDENT = 1;
 const MAX_ACTIVE_TASKS_GLOBAL = 3;
 const ACTIVE_TASK_WINDOW_HOURS = 6;
 const ACTIVE_AVATAR_STATUSES = ["RUNNING", "PENDING", "QUEUED", "PROCESSING"];
-const PROVIDER_MAX_VIDEO_BYTES = 30 * 1024 * 1024;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://chiwaai.com",
@@ -72,12 +71,6 @@ function neutralError(message = "avatar_service_failed", status = 500) {
 
 function inputError(message: string, detail: string, status = 400, extra: Record<string, unknown> = {}) {
   return jsonResponse({ error: message, detail, ...extra }, status);
-}
-
-function formatBytes(bytes: number) {
-  if (!Number.isFinite(bytes) || bytes <= 0) return "";
-  if (bytes >= 1024 * 1024) return `${Math.round((bytes / 1024 / 1024) * 10) / 10}MB`;
-  return `${Math.max(1, Math.round(bytes / 1024))}KB`;
 }
 
 function safeProviderText(value: unknown) {
@@ -237,7 +230,7 @@ function assertUrl(value: unknown, field: string) {
   return raw;
 }
 
-async function probeProviderInputUrl(url: string, field: string, maxBytes = 0) {
+async function probeProviderInputUrl(url: string, field: string) {
   let res: Response;
   try {
     res = await fetch(url, {
@@ -265,17 +258,6 @@ async function probeProviderInputUrl(url: string, field: string, maxBytes = 0) {
   }
 
   const contentLength = Number(res.headers.get("content-length") || 0);
-  if (maxBytes && Number.isFinite(contentLength) && contentLength > maxBytes) {
-    return {
-      error: inputError(
-        "avatar_video_too_large",
-        `這支形象素材 ${formatBytes(contentLength)}，超過供應商約 ${formatBytes(maxBytes)} 的限制。請改上傳壓縮版，或選用小於 ${formatBytes(maxBytes)} 的形象素材。`,
-        413,
-        { contentLength, maxBytes },
-      ),
-    };
-  }
-
   return { contentLength, contentType: res.headers.get("content-type") || "" };
 }
 
@@ -411,10 +393,8 @@ async function handleSubmitUrls(req: Request, body: any) {
 
   const videoUrl = assertUrl(body.video_url, "video_url");
   const audioUrl = assertUrl(body.audio_url, "audio_url");
-  const videoProbe = await probeProviderInputUrl(videoUrl, "video_url", PROVIDER_MAX_VIDEO_BYTES);
+  const videoProbe = await probeProviderInputUrl(videoUrl, "video_url");
   if (videoProbe.error) return videoProbe.error;
-  const audioProbe = await probeProviderInputUrl(audioUrl, "audio_url");
-  if (audioProbe.error) return audioProbe.error;
 
   const started = await startProviderTask(apiKey, videoUrl, audioUrl);
   if (started.error) return started.error;
