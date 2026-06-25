@@ -932,8 +932,33 @@ function avatarErrorText(error, fallback = '形象克隆送出失敗，請稍後
   if(/avatar_student_task_already_running/i.test(raw)) return '你目前已有一個數字人任務正在生成，系統會完成後才能送出下一支。請稍後到素材管理刷新，或等待本頁自動查詢。';
   if(/avatar_system_busy/i.test(raw)) return '目前數字人生成同時使用人數較多，請稍後再送出。';
   if(/avatar_quota_not_enough/i.test(raw)) return '影像克隆額度不足，請聯繫管理員調整額度。';
+  if(/missing_task_id|avatar_submit_missing_task_id/i.test(raw)) return '形象克隆任務已送出，但系統沒有回傳任務編號。請先刷新素材管理確認是否已生成；如果沒有出現，請重新送出一次。';
   if(/video_url_invalid|audio_url_invalid|invalid_url/i.test(raw)) return '影片或語音連結暫時無法讀取，請重新上傳後再試。';
   return raw || fallback;
+}
+function extractAvatarTaskId(data){
+  if(!data || typeof data !== 'object') return '';
+  const candidates = [
+    data.taskId,
+    data.task_id,
+    data.id,
+    data.runId,
+    data.run_id,
+    data.data && data.data.taskId,
+    data.data && data.data.task_id,
+    data.data && data.data.id,
+    data.result && data.result.taskId,
+    data.result && data.result.task_id,
+    data.result && data.result.id,
+    data.task && data.task.taskId,
+    data.task && data.task.task_id,
+    data.task && data.task.id
+  ];
+  for(const value of candidates){
+    const taskId = String(value || '').trim();
+    if(taskId) return taskId;
+  }
+  return '';
 }
 async function aiCall(type, systemPrompt, userPrompt, tone){
   const t = await token();
@@ -2943,7 +2968,13 @@ async function submitAvatar(){
       audio_path:state.voiceItem.id || 'workflow-tts',
       duration_seconds:state.voiceAudioSeconds
     });
-    state.avatarTaskId = data.taskId;
+    const taskId = extractAvatarTaskId(data);
+    if(!taskId){
+      console.error('avatar submit missing task id', data);
+      throw new Error('avatar_submit_missing_task_id');
+    }
+    data.taskId = taskId;
+    state.avatarTaskId = taskId;
     saveWorkflowProgress();
     status('avatar-status', data.activeTask ? '已有數字人任務正在生成，已自動接回查詢，不需要重新上傳。' : '任務已送出，正在查詢結果...','warn');
     pollAvatar();
@@ -2954,7 +2985,9 @@ async function submitAvatar(){
 }
 async function pollAvatar(){
   try{
-    const data = await authedFetch(AVATAR_API_URL, { action:'query', taskId:state.avatarTaskId });
+    const taskId = String(state.avatarTaskId || '').trim();
+    if(!taskId) throw new Error('missing_task_id');
+    const data = await authedFetch(AVATAR_API_URL, { action:'query', taskId });
     if(data.student){ state.student = data.student; updateQuota(); }
     if(data.status === 'SUCCESS' && (data.previewUrl || data.downloadUrl)){
       state.avatarResult = data;

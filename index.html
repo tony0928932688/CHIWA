@@ -7581,12 +7581,38 @@ function avatarErrorText(error, fallback) {
   if (/avatar_system_busy/i.test(raw)) return '目前形象克隆同時生成數已滿，請稍後再送出。';
   if (/avatar_task_still_running/i.test(raw)) return '這支影片仍在生成中，完成或失敗後才能刪除。';
   if (/avatar_output_delete_failed/i.test(raw)) return '影片刪除暫時失敗，請稍後再試或聯絡管理員。';
+  if (/missing_task_id|avatar_submit_missing_task_id/i.test(raw)) return '形象克隆任務已送出，但系統沒有回傳任務編號。請先刷新素材管理確認是否已生成；如果沒有出現，請重新送出一次。';
   if (/part_too_large/i.test(raw)) return '單一上傳分片超過系統限制，請重新送出後系統會自動調整。';
   if (/413|payload too large|request entity too large/i.test(raw)) return '目前大檔上傳服務暫時無法接收這個檔案，請稍後再試或聯絡管理員。';
   if (/mime|type/i.test(raw)) return '檔案格式被儲存空間拒絕，請改用 MP4 影片與 WAV/MP3 音檔後再試。';
   if (/size|too large|payload/i.test(raw)) return '儲存空間拒絕這次上傳，請確認檔案大小符合目前系統上限。';
   if (/row-level security|policy|permission|unauthorized|jwt/i.test(raw)) return '登入授權已失效，請重新整理網頁並用 Google 登入後再試。';
   return raw;
+}
+
+function extractAvatarTaskId(data) {
+  if (!data || typeof data !== 'object') return '';
+  const candidates = [
+    data.taskId,
+    data.task_id,
+    data.id,
+    data.runId,
+    data.run_id,
+    data.data && data.data.taskId,
+    data.data && data.data.task_id,
+    data.data && data.data.id,
+    data.result && data.result.taskId,
+    data.result && data.result.task_id,
+    data.result && data.result.id,
+    data.task && data.task.taskId,
+    data.task && data.task.task_id,
+    data.task && data.task.id
+  ];
+  for (const value of candidates) {
+    const taskId = String(value || '').trim();
+    if (taskId) return taskId;
+  }
+  return '';
 }
 
 function avatarDateText(value) {
@@ -8311,7 +8337,13 @@ function renderAvatarTaskResult(data) {
 }
 
 async function pollAvatarTask(taskId) {
-  if (!taskId) return;
+  taskId = String(taskId || '').trim();
+  if (!taskId) {
+    const message = avatarErrorText('missing_task_id', '查詢形象克隆任務失敗');
+    avatarRenderBox('❌ ' + escapeHtml(message), 'error');
+    toast('❌ ' + message);
+    return;
+  }
   try {
     const data = await callChiwaAvatarJson('query', { taskId });
     if (data.student) {
@@ -8429,12 +8461,18 @@ async function generateAvatarClone() {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.detail || data.error || '形象克隆提交失敗');
+    const taskId = extractAvatarTaskId(data);
+    if (!taskId) {
+      console.error('avatar submit missing task id', data);
+      throw new Error('avatar_submit_missing_task_id');
+    }
+    data.taskId = taskId;
 
     avatarTaskStartedAt = Date.now();
     renderAvatarTaskResult(data);
     loadAvatarLibrary();
     toast('✅ 形象克隆任務已送出，系統會自動查詢結果。');
-    pollAvatarTask(data.taskId);
+    pollAvatarTask(taskId);
   } catch(e) {
     if (load) load.style.display = 'none';
     if (btn) btn.disabled = false;

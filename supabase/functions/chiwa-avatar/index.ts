@@ -174,6 +174,30 @@ function assertUrl(value: unknown, field: string) {
   return raw;
 }
 
+function extractTaskId(payload: any) {
+  const candidates = [
+    payload?.taskId,
+    payload?.task_id,
+    payload?.id,
+    payload?.runId,
+    payload?.run_id,
+    payload?.data?.taskId,
+    payload?.data?.task_id,
+    payload?.data?.id,
+    payload?.result?.taskId,
+    payload?.result?.task_id,
+    payload?.result?.id,
+    payload?.task?.taskId,
+    payload?.task?.task_id,
+    payload?.task?.id,
+  ];
+  for (const value of candidates) {
+    const taskId = String(value || "").trim();
+    if (taskId) return taskId;
+  }
+  return "";
+}
+
 function normalizeSeconds(value: unknown) {
   return Math.max(1, Number.parseInt(String(value || "0"), 10) || 0);
 }
@@ -248,11 +272,12 @@ async function startProviderTask(apiKey: string, videoValue: string, audioValue:
     }),
   });
   const runData = await readJsonOrText(runRes);
-  if (!runRes.ok || !runData?.taskId) {
+  const taskId = extractTaskId(runData);
+  if (!runRes.ok || !taskId) {
     console.error("avatar_submit_failed", JSON.stringify(runData));
     return { error: neutralError("avatar_submit_failed", runRes.status || 500) };
   }
-  return { data: runData };
+  return { data: { ...runData, taskId } };
 }
 
 async function insertTask(student: any, runData: any, requestedSeconds: number, videoFile: string, audioFile: string) {
