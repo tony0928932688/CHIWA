@@ -929,6 +929,7 @@ async function authedFetch(url, body){
 }
 function avatarErrorText(error, fallback = '形象克隆送出失敗，請稍後再試。'){
   const raw = String(error && error.message || error || fallback);
+  if(/voice_signed_url_refresh_failed/i.test(raw)) return '語音連結已過期或暫時無法重新建立，請回到第三步重新生成或重新選用語音後再送形象克隆。';
   if(/avatar_student_task_already_running/i.test(raw)) return '你目前已有一個數字人任務正在生成，系統會完成後才能送出下一支。請稍後到素材管理刷新，或等待本頁自動查詢。';
   if(/avatar_system_busy/i.test(raw)) return '目前數字人生成同時使用人數較多，請稍後再送出。';
   if(/avatar_quota_not_enough/i.test(raw)) return '影像克隆額度不足，請聯繫管理員調整額度。';
@@ -1515,6 +1516,22 @@ function renderTtsItems(items){
   }).join('');
   box.querySelectorAll('[data-tts-download]').forEach(btn => btn.onclick = () => downloadTtsItem(btn.getAttribute('data-tts-download') || ''));
   box.querySelectorAll('[data-tts-delete]').forEach(btn => btn.onclick = () => deleteTtsItem(btn.getAttribute('data-tts-delete') || ''));
+}
+async function refreshCurrentVoiceItem(){
+  if(!state.voiceItem || !state.voiceItem.id) return state.voiceItem;
+  const data = await authedFetch(VOICE_API_URL, { action:'list_tts' });
+  const items = Array.isArray(data.items) ? data.items : [];
+  state.ttsItems = items;
+  if(data.student){ state.student = data.student; updateQuota(); }
+  const id = String(state.voiceItem.id || '');
+  const fresh = items.find(item => String(item && item.id || '') === id);
+  if(!fresh || !fresh.playUrl) throw new Error('voice_signed_url_refresh_failed');
+  state.voiceItem = { ...state.voiceItem, ...fresh };
+  if($('voice-result')){
+    $('voice-result').innerHTML = `<audio controls preload="metadata" src="${esc(state.voiceItem.playUrl)}"></audio><div class="status ok">語音連結已更新，可繼續送形象克隆。</div>`;
+  }
+  saveWorkflowProgress();
+  return state.voiceItem;
 }
 async function downloadTtsItem(id){
   if(!id) return;
@@ -2940,6 +2957,8 @@ async function submitAvatar(){
   if(!confirm(`確認送出形象克隆？\n語音長度：約 ${state.voiceAudioSeconds} 秒\n成功完成後才會扣影像克隆秒數。`)) return;
   $('btn-avatar').disabled = true;
   try{
+    status('avatar-status','正在更新語音連結...','warn');
+    const voiceItem = await refreshCurrentVoiceItem();
     let uploaded;
     if(isLocalAvatarSource(state.selectedAvatarSource) && state.selectedAvatarSource.uploadPromise){
       status('avatar-status','正在等待形象素材保存完成...','warn');
@@ -2964,9 +2983,9 @@ async function submitAvatar(){
     const data = await authedFetch(AVATAR_API_URL, {
       action:'submit_urls',
       video_url:uploaded.signedUrl,
-      audio_url:state.voiceItem.playUrl,
+      audio_url:voiceItem.playUrl,
       video_path:uploaded.key || uploaded.path,
-      audio_path:state.voiceItem.id || 'workflow-tts',
+      audio_path:voiceItem.id || 'workflow-tts',
       duration_seconds:state.voiceAudioSeconds
     });
     const taskId = extractAvatarTaskId(data);
