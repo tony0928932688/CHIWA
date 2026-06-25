@@ -69,6 +69,58 @@ function neutralError(message = "avatar_service_failed", status = 500) {
   return jsonResponse({ error: message }, status);
 }
 
+function safeProviderText(value: unknown) {
+  return String(value || "")
+    .trim()
+    .replace(/https?:\/\/\S+/g, "[url]")
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [redacted]")
+    .slice(0, 240);
+}
+
+function providerFailureDetail(payload: any, status: number) {
+  const code = safeProviderText(
+    payload?.code ||
+      payload?.errorCode ||
+      payload?.error_code ||
+      payload?.data?.code ||
+      payload?.result?.code ||
+      "",
+  );
+  const message = [
+    payload?.message,
+    payload?.msg,
+    payload?.error,
+    payload?.errorMessage,
+    payload?.error_message,
+    payload?.detail,
+    payload?.promptTips,
+    payload?.failedReason,
+    payload?.data?.message,
+    payload?.data?.msg,
+    payload?.data?.error,
+    payload?.result?.message,
+    payload?.result?.msg,
+  ]
+    .map((item) => {
+      if (item && typeof item === "object") return safeProviderText(JSON.stringify(item));
+      return safeProviderText(item);
+    })
+    .find(Boolean);
+
+  if (code && message) return `供應商回覆 ${code}: ${message}`;
+  if (message) return `供應商回覆：${message}`;
+  if (code) return `供應商回覆代碼：${code}`;
+  return `供應商未建立任務（HTTP ${status || 500}）。`;
+}
+
+function providerSubmitError(payload: any, status: number) {
+  return jsonResponse({
+    error: "avatar_submit_failed",
+    detail: providerFailureDetail(payload, status),
+    providerStatus: status || 500,
+  }, status || 500);
+}
+
 function publicStudent(row: any) {
   const voiceCredits = row.voice_credits ?? 10000;
   const voiceMinutes = row.voice_minutes ?? (row.voice_seconds === null || row.voice_seconds === undefined ? 60 : Math.round((Number(row.voice_seconds) / 60) * 10) / 10);
@@ -274,8 +326,9 @@ async function startProviderTask(apiKey: string, videoValue: string, audioValue:
   const runData = await readJsonOrText(runRes);
   const taskId = extractTaskId(runData);
   if (!runRes.ok || !taskId) {
+    const failureStatus = runRes.ok ? 502 : (runRes.status || 500);
     console.error("avatar_submit_failed", JSON.stringify(runData));
-    return { error: neutralError("avatar_submit_failed", runRes.status || 500) };
+    return { error: providerSubmitError(runData, failureStatus) };
   }
   return { data: { ...runData, taskId } };
 }
