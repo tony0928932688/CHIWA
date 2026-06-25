@@ -722,6 +722,7 @@ const VIDEO_RENDER_API_URL = `${SUPABASE_URL}/functions/v1/chiwa-video-render`;
 const AVATAR_R2_URL = 'https://rapid-grass-589dchiwa-avatar-r2.tony0928932688.workers.dev';
 const AI_BACKEND_URL = 'https://delicate-unit-52chiwa-ai-backend.tony0928932688.workers.dev/';
 const LINE_OAUTH_PROVIDER = 'custom:line';
+const AVATAR_PROVIDER_MAX_VIDEO_BYTES = 30 * 1024 * 1024;
 let sb = null;
 function getSupabaseClient(){
   if(!window.supabase || !window.supabase.createClient){
@@ -932,6 +933,7 @@ async function authedFetch(url, body){
 }
 function avatarErrorText(error, fallback = '形象克隆送出失敗，請稍後再試。'){
   const raw = String(error && error.message || error || fallback);
+  if(/file_exceeds_avatar_provider_limit/i.test(raw)) return `這支形象影片超過 ${avatarProviderVideoLimitText()}，供應商可能無法建立任務。請改上傳壓縮版或選用小於 ${avatarProviderVideoLimitText()} 的形象素材。`;
   if(/voice_signed_url_refresh_failed/i.test(raw)) return '語音連結已過期或暫時無法重新建立，請回到第三步重新生成或重新選用語音後再送形象克隆。';
   if(/avatar_video_signed_url_refresh_failed/i.test(raw)) return '形象素材連結已過期或暫時無法重新建立，請先按「刷新」重新讀取形象素材，或重新選用/上傳形象影片後再送出。';
   if(/avatar_student_task_already_running/i.test(raw)) return '你目前已有一個數字人任務正在生成，系統會完成後才能送出下一支。請稍後到素材管理刷新，或等待本頁自動查詢。';
@@ -2681,7 +2683,7 @@ function replaceLocalAvatarSource(localKey, savedItem){
   return savedItem;
 }
 function avatarSelectionReady(){
-  return !!(state.avatarVideoFile || (state.selectedAvatarSource && !isLocalAvatarSource(state.selectedAvatarSource)));
+  return avatarHasSelection() && !avatarSelectionTooLarge();
 }
 function updateAvatarSubmitButton(){
   const btn = $('btn-avatar');
@@ -2732,6 +2734,27 @@ function avatarSourceSizeText(bytes){
   if(!size) return '';
   if(size >= 1024 * 1024) return `${(size / 1024 / 1024).toFixed(1)}MB`;
   return `${Math.max(1, Math.round(size / 1024))}KB`;
+}
+function avatarProviderVideoLimitText(){
+  return `${Math.round(AVATAR_PROVIDER_MAX_VIDEO_BYTES / 1024 / 1024)}MB`;
+}
+function avatarSourceExceedsProviderLimit(item){
+  return Number(item && item.size || 0) > AVATAR_PROVIDER_MAX_VIDEO_BYTES;
+}
+function avatarSelectedSourceSize(){
+  if(state.avatarVideoFile && state.avatarVideoFile.size) return Number(state.avatarVideoFile.size || 0);
+  if(state.selectedAvatarSource && state.selectedAvatarSource.size) return Number(state.selectedAvatarSource.size || 0);
+  return 0;
+}
+function avatarSelectionTooLarge(){
+  return avatarSelectedSourceSize() > AVATAR_PROVIDER_MAX_VIDEO_BYTES;
+}
+function avatarHasSelection(){
+  return !!(state.avatarVideoFile || (state.selectedAvatarSource && !isLocalAvatarSource(state.selectedAvatarSource)));
+}
+function avatarProviderLimitMessage(size){
+  const sizeText = avatarSourceSizeText(size || avatarSelectedSourceSize()) || '目前選用素材';
+  return `這支形象素材 ${sizeText}，超過供應商約 ${avatarProviderVideoLimitText()} 的限制。請改上傳壓縮版，或選用小於 ${avatarProviderVideoLimitText()} 的形象素材。`;
 }
 function renderAvatarSourceLibrary(items){
   const box = $('avatar-source-list');
@@ -2866,6 +2889,10 @@ function selectAvatarSourceProfile(key){
     if($('avatar-video')) $('avatar-video').value = '';
     $('video-status').textContent = '已選用素材：' + (item.name || '形象素材');
   }
+  if(avatarSourceExceedsProviderLimit(item)){
+    status('avatar-status', avatarProviderLimitMessage(item.size), 'err');
+    if($('video-status')) $('video-status').textContent = `${$('video-status').textContent}（超過 ${avatarProviderVideoLimitText()}，請上傳壓縮版）`;
+  }
   updateAvatarSubmitButton();
   renderAvatarSourceLibrary(state.avatarSourceProfiles);
 }
@@ -2911,6 +2938,7 @@ async function deleteAvatarSourceProfile(key){
 }
 function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
 async function uploadVideoToR2(file, onProgress){
+  if(Number(file && file.size || 0) > AVATAR_PROVIDER_MAX_VIDEO_BYTES) throw new Error('file_exceeds_avatar_provider_limit');
   const t = await token();
   const create = await r2Json('/avatar/multipart/create', {
     method:'POST',
@@ -2957,7 +2985,8 @@ async function uploadVideoToR2(file, onProgress){
 }
 async function submitAvatar(){
   if(!state.voiceItem || !state.voiceItem.playUrl){ status('avatar-status','請先完成語音並確認。','err'); return; }
-  if(!avatarSelectionReady()){ status('avatar-status','請先選用或上傳形象影片。','err'); return; }
+  if(!avatarHasSelection()){ status('avatar-status','請先選用或上傳形象影片。','err'); return; }
+  if(avatarSelectionTooLarge()){ status('avatar-status', avatarProviderLimitMessage(), 'err'); return; }
   if(!confirm(`確認送出形象克隆？\n語音長度：約 ${state.voiceAudioSeconds} 秒\n成功完成後才會扣影像克隆秒數。`)) return;
   $('btn-avatar').disabled = true;
   try{
@@ -3041,6 +3070,16 @@ function selectVideo(file){
     state.avatarVideoFile = null;
     state.selectedAvatarSource = null;
     $('video-status').textContent = '尚未選擇影片';
+    updateAvatarSubmitButton();
+    renderAvatarSourceLibrary(state.avatarSourceProfiles);
+    return;
+  }
+  if(Number(file.size || 0) > AVATAR_PROVIDER_MAX_VIDEO_BYTES){
+    state.avatarVideoFile = null;
+    state.selectedAvatarSource = null;
+    if($('avatar-video')) $('avatar-video').value = '';
+    $('video-status').textContent = `這支影片 ${(file.size/1024/1024).toFixed(1)}MB，超過 ${avatarProviderVideoLimitText()}，請改選壓縮版。`;
+    status('avatar-status', avatarProviderLimitMessage(file.size), 'err');
     updateAvatarSubmitButton();
     renderAvatarSourceLibrary(state.avatarSourceProfiles);
     return;
